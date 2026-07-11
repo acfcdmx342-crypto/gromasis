@@ -98,15 +98,14 @@
         </div>
     </div>
 </div>
-
 <div class="modal fade" id="modalApp" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title" id="mTitle">Registro</h5>
+            <div class="modal-header bg-dark text-white py-3">
+                <h5 class="modal-title fw-bold" id="mTitle">Registro</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-4">
                 <input type="hidden" id="fID">
                 <div class="row">
                     <div id="secEmpresa" class="col-md-6 mb-3 d-none">
@@ -130,26 +129,26 @@
                         <div class="col-md-6"><label class="form-label fw-bold small">Usuario Acceso</label><input type="text" id="uUsu" class="form-control"></div>
                         <div class="col-md-6"><label class="form-label fw-bold small">Contraseña</label><input type="password" id="uPass" class="form-control"></div>
                     </div>
-                    <div id="secIndividual" class="col-12 mt-3">
-                        <label class="form-label fw-bold small" id="lblNom">Nombre / Descripción</label>
+                    <div id="secIndividual" class="col-12">
+                        <label class="form-label fw-bold small mb-1" id="lblNom">Nombre / Descripción</label>
                         <input type="text" id="fNom" class="form-control">
                     </div>
-                    <div id="secMasivo" class="col-12 d-none mt-3">
-                        <textarea id="fMasivo" class="form-control" rows="5" placeholder="Uno por línea o CSV para matriz (Art, Mod, Des, Mar, Cant)"></textarea>
-                    </div>
-                    <div id="secToggleMasivo" class="col-12 form-check form-switch d-none mt-3 ms-3">
-                        <input class="form-check-input" type="checkbox" id="checkMasivo">
-                        <label class="form-check-label small fw-bold" for="checkMasivo">Activar Carga Masiva</label>
+                    <div id="secMasivo" class="col-12 d-none">
+                        <label class="form-label fw-bold small mb-1">Nombres de Empresas (Una por línea)</label>
+                        <textarea id="fMasivo" class="form-control" rows="5" placeholder="EMPRESA ALFA&#10;EMPRESA BETA&#10;EMPRESA GAMMA"></textarea>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer bg-light">
-                <button class="btn btn-primary w-100" id="btnSave">Guardar Información</button>
+            <div class="modal-footer flex-column bg-light border-0 px-4 pb-4">
+                <div id="secToggleMasivo" class="w-100 form-check form-switch mb-3 d-none">
+                    <input class="form-check-input" type="checkbox" id="checkMasivo">
+                    <label class="form-check-label small fw-bold text-secondary" for="checkMasivo">Activar Carga Masiva</label>
+                </div>
+                <button class="btn btn-primary w-100 py-2 fw-bold fs-6" id="btnSave">Guardar Información</button>
             </div>
         </div>
     </div>
 </div>
-
 <div class="modal fade" id="modalEmpresas" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
@@ -415,8 +414,7 @@
             if(diag) diag.value = z;
         }
     };
-
-    window.showModal = (path, id = "") => {
+window.showModal = (path, id = "") => {
         const item = id ? store[path][id] : {};
         document.getElementById("fID").value = id;
         
@@ -455,8 +453,13 @@
             document.getElementById("uUsu").value = item.usuario || "";
             document.getElementById("uPass").value = item.pass || "";
         }
+        
         document.getElementById("fNom").value = item.nombre || "";
-        if (!id) document.getElementById("secToggleMasivo").classList.remove('d-none');
+        
+        // Mostrar switch de carga masiva únicamente si es un registro NUEVO en EMPRESAS
+        if (!id && path === 'empresas') {
+            document.getElementById("secToggleMasivo").classList.remove('d-none');
+        }
         
         document.getElementById("fEmp").onchange = (e) => {
             if(['sucursales', 'usuarios'].includes(path)){
@@ -468,8 +471,7 @@
 
         new bootstrap.Modal(document.getElementById("modalApp")).show();
     };
-
-    document.getElementById("btnSave").onclick = async () => {
+  document.getElementById("btnSave").onclick = async () => {
         const id = document.getElementById("fID").value;
         const isM = document.getElementById("checkMasivo").checked;
         let data = {};
@@ -497,24 +499,26 @@
         }
 
         try {
-            if (isM) {
+            if (isM && currentPath === 'empresas') {
                 const lineas = document.getElementById("fMasivo").value.split('\n').filter(l => l.trim());
+                if(lineas.length === 0) {
+                    Swal.fire("Atención", "Por favor ingresa al menos el nombre de una empresa.", "warning");
+                    return;
+                }
                 for (let l of lineas) {
-                    let d = { ...data };
-                    if (['redes_inalambricas', 'personal'].includes(currentPath)) {
-                        const p = l.split(',').map(x => x.trim().toUpperCase());
-                        d = { articulos: p[0], modelo: p[1]||"", descripcion: p[2]||"", marca: p[3]||"", cantidad: p[4]||"", ...data };
-                    } else { d.nombre = l.trim().toUpperCase(); }
-                    await push(ref(db, currentPath), d);
+                    await push(ref(db, currentPath), { nombre: l.trim().toUpperCase() });
                 }
             } else {
+                if(!isM && !['redes_inalambricas', 'personal'].includes(currentPath) && !data.nombre) {
+                    Swal.fire("Atención", "El campo Nombre no puede estar vacío.", "warning");
+                    return;
+                }
                 id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
             }
             bootstrap.Modal.getInstance(document.getElementById("modalApp")).hide();
             Swal.fire({ icon: "success", title: "Guardado", timer: 800, showConfirmButton: false });
         } catch (e) { Swal.fire("Error", e.message, "error"); }
     };
-
     window.del = async (p, id) => {
         const res = await Swal.fire({ title: '¿Eliminar?', icon: 'warning', showCancelButton: true });
         if (res.isConfirmed) await remove(ref(db, `${p}/${id}`));
