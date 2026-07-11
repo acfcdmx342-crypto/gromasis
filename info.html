@@ -183,14 +183,7 @@
             store[path] = s.val() || {};
             if (loadsPending > 0) loadsPending--;
             if (loadsPending === 0) {
-                const urlParams = new URLSearchParams(window.location.search);
-                if (currentPath === '') {
-                    if (urlParams.get('tipo') === 'colorcenter') {
-                        document.body.classList.add('hide-menu');
-                        render('colorcenter');
-                    }
-                }
-                else if (currentPath === path) {
+               else if (currentPath === path) {
                     render(path);
                 }
             }
