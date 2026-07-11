@@ -176,12 +176,19 @@
     let store = { redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, sucursales: {}, usuarios: {} };
     let currentPath = '';
     let loadsPending = Object.keys(store).length;
-
+const urlParams = new URLSearchParams(window.location.search);
+if (currentPath === '') {
+    if (urlParams.get('tipo') === 'colorcenter') {
+        document.body.classList.add('hide-menu');
+        render('colorcenter');
+    }
+}
     Object.keys(store).forEach(path => {
         onValue(ref(db, path), (s) => {
             store[path] = s.val() || {};
             if (loadsPending > 0) loadsPending--;
             if (loadsPending === 0) {
+                
                else if (currentPath === path) {
                     render(path);
                 }
