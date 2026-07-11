@@ -1,813 +1,1467 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Catálogos Administrativos</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        :root { --dark: #0f172a; --accent: #38bdf8; --cctv-blue: #0070c0; --cctv-green: #38b050; --tech-purple: #6366f1; }
-        body { background: #f1f5f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
-        .sidebar { 
-            width: 240px; 
-            min-height: 100vh; 
-            background: var(--dark); 
-            color: white; 
-            position: fixed; 
-            z-index: 1000; 
-            transition: all 0.3s;
-            left: 0;
-        }
-        .sidebar a { color: #94a3b8; text-decoration: none; padding: 12px 20px; display: block; transition: 0.3s; cursor: pointer; font-size: 0.9rem; }
-        .sidebar a:hover { background: #1e293b; color: var(--accent); }
-        .sidebar a.active { color: white; border-left: 4px solid var(--accent); background: #1e293b; }
-        .main-content { 
-            margin-left: 240px; 
-            padding: 20px; 
-            transition: all 0.3s;
-        }
-        body.hide-menu .sidebar { display: none !important; }
-        body.hide-menu .main-content { margin-left: 0 !important; }
-        body.hide-menu .btn-toggle { display: none !important; }
-        @media (max-width: 768px) {
-            .sidebar { left: -240px; }
-            .sidebar.active { left: 0; }
-            .main-content { margin-left: 0; }
-            .main-content.shifted { margin-left: 0; filter: blur(2px); pointer-events: none; }
-        }
-        .table-container { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 300px; }
-        th { font-size: 0.7rem; color: #64748b; text-transform: uppercase; text-align: center; background: #f8fafc !important; }
-        td { vertical-align: middle; text-align: center; font-size: 0.85rem; }
-        input[type="text"], input[type="email"], select, textarea { text-transform: uppercase; }
-        .cctv-header { background: var(--cctv-blue); color: white; font-weight: bold; padding: 5px 15px; margin-bottom: 10px; border-radius: 4px; }
-        .tech-header { background: var(--tech-purple); color: white; font-weight: bold; padding: 5px 15px; margin-bottom: 10px; border-radius: 4px; }
-        .cctv-green-header { background: var(--cctv-green); color: white; font-weight: bold; padding: 5px 15px; margin-top: 15px; }
-        .cctv-label { background: #e9ecef; font-weight: bold; font-size: 0.75rem; border: 1px solid #dee2e6; padding: 4px 8px; }
-        .cctv-input { border: 1px solid #dee2e6; padding: 4px 8px; font-size: 0.8rem; width: 100%; }
-        .item-box { border: 1px solid #dee2e6; padding: 10px; background: #fff; height: 100%; position: relative; border-radius: 4px; }
-        .signature-line { border-top: 1px solid #000; margin-top: 40px; font-size: 0.7rem; text-align: center; }
-        .btn-toggle { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 1001; width: 50px; height: 50px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        @media (max-width: 768px) { .btn-toggle { display: block; } }
-        
-        .pdf-header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .pdf-actions { display: flex; gap: 8px; }
-        .btn-print { background-color: #212529; color: white; border: none; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: 0.2s; cursor: pointer;}
-        .btn-back { background-color: #dc3545; color: white; border: none; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: 0.2s; cursor: pointer;}
-        .btn-print:hover, .btn-back:hover { opacity: 0.8; transform: scale(1.05); }
-
-        .btn-remove-item { border: none; background: transparent; color: #dc3545; padding: 0; line-height: 1; transition: 0.2s; }
-        .btn-remove-item:hover { transform: scale(1.2); }
-        #empresa-tree { padding-left: 28px; }
-        #empresa-tree .form-check { padding-left: 1.75rem; }
-        #empresa-tree .form-check-input { margin-left: -1.45rem; }
-        .tree-level { border-left: 1px solid #e2e8f0; margin-left: 10px; padding-left: 16px; }
-        .tree-row { padding: 4px 0; }
-        .tree-select-all { color: #0d6efd; font-weight: 600; }
-        .tree-muted { color: #94a3b8; font-size: 0.78rem; padding: 4px 0 8px 28px; }
-
-        @media print {
-            .no-print { display: none !important; }
-            .sidebar { display: none !important; }
-            .main-content { margin-left: 0 !important; padding: 0 !important; }
-            .table-container { box-shadow: none !important; border: none !important; }
-            #capture-area { border: none !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+<title>
+Catálogos Administrativos
+Grupo Roma
+</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+:root{
+--dark:#0f172a;
+--primary:#2563eb;
+--success:#16a34a;
+--danger:#dc2626;
+--warning:#f59e0b;
+--gray:#f1f5f9;
+--border:#d7dde7;
+--shadow:0 8px 20px rgba(0,0,0,.08);
+}
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+body{
+background:#eef3f8;
+overflow-x:hidden;
+}
+.sidebar{
+width:250px;
+background:var(--dark);
+position:fixed;
+left:0;
+top:0;
+bottom:0;
+color:#FFF;
+overflow:auto;
+z-index:999;
+}
+.logo{
+padding:20px;
+text-align:center;
+font-weight:bold;
+font-size:20px;
+border-bottom:1px solid rgba(255,255,255,.08);
+}
+.logo span{
+color:#38bdf8;
+}
+.sidebar a{
+display:block;
+padding:14px 20px;
+color:#cbd5e1;
+text-decoration:none;
+transition:.25s;
+}
+.sidebar a:hover{
+background:#1e293b;
+color:white;
+padding-left:28px;
+}
+.sidebar a.active{
+background:#2563eb;
+color:white;
+}
+.main{
+margin-left:250px;
+padding:25px;
+}
+.card-dashboard{
+border:none;
+border-radius:12px;
+box-shadow:var(--shadow);
+}
+.table-container{
+background:white;
+border-radius:14px;
+padding:20px;
+box-shadow:var(--shadow);
+}
+.table thead{
+background:#f8fafc;
+}
+.table th{
+font-size:.75rem;
+text-transform:uppercase;
+}
+.table td{
+font-size:.85rem;
+vertical-align:middle;
+}
+.status-activo{
+background:#16a34a;
+color:white;
+padding:4px 12px;
+border-radius:20px;
+font-size:12px;
+}
+.status-baja{
+background:#dc2626;
+color:white;
+padding:4px 12px;
+border-radius:20px;
+font-size:12px;
+}
+.badge-cctv{
+background:#2563eb;
+}
+.badge-pdv{
+background:#16a34a;
+}
+.badge-ambos{
+background:#7c3aed;
+}
+.search-box{
+max-width:350px;
+}
+.pagination{
+margin-top:15px;
+}
+img.preview{
+width:80px;
+height:80px;
+object-fit:cover;
+border-radius:10px;
+border:1px solid #CCC;
+} 
+.modal-content{
+border-radius:15px;
+}
+.form-control,
+.form-select{
+text-transform:uppercase;
+}
+.btn{
+border-radius:10px;
+}
+@media(max-width:900px){
+.sidebar{
+left:-250px;
+}
+.sidebar.show{
+left:0;
+}
+.main{
+margin-left:0;
+}
+}
+</style>
 </head>
 <body>
-
-<button class="btn btn-dark btn-toggle" onclick="toggleSidebar()"><i class="bi bi-list fs-4"></i></button>
-
-<div class="sidebar" id="sidebar">
-    <div class="text-center py-4 border-bottom border-secondary mb-2"><h6 class="mb-0 fw-bold text-white">CATÁLOGOS</h6></div>
-    <a onclick="render('matriz')" id="link-matriz"><i class="bi bi-hdd-network me-2"></i> Matriz Tecnología</a>
-    <a onclick="render('matrizcctv')" id="link-matrizcctv"><i class="bi bi-camera-video me-2"></i> Matriz de CCTV</a>
-    <a onclick="render('zonas')" id="link-zonas"><i class="bi bi-geo-alt me-2"></i> Zonas</a>
-    <a onclick="render('empresas')" id="link-empresas"><i class="bi bi-building me-2"></i> Empresas</a>
-    <a onclick="render('sucursales')" id="link-sucursales"><i class="bi bi-shop me-2"></i> Sucursales</a>
-    <a onclick="render('usuarios')" id="link-usuarios"><i class="bi bi-person-lines-fill me-2"></i> Usuarios</a>
-    <div class="text-center py-2 border-top border-secondary mt-2"><h6 class="mb-0 fw-bold text-white small">FORMATOS</h6></div>
-    <a onclick="render('formato_cctv')" id="link-formato_cctv"><i class="bi bi-file-earmark-text me-2"></i> Formato CCTV</a>
-    <a onclick="render('formato_tech')" id="link-formato_tech"><i class="bi bi-laptop me-2"></i> Formato Tecnología</a>
+<div class="sidebar">
+<div class="logo">
+<span>GRUPO</span>
+ROMA
 </div>
-
-<div class="main-content" id="main-content">
-    <div id="view" class="table-container">
-        <div class="text-center py-5 text-muted">
-            <i class="bi bi-cloud-check display-1"></i>
-            <h4 class="mt-3">Bienvenido al Sistema</h4>
-            <p>Selecciona un módulo en el menú lateral.</p>
-        </div>
-    </div>
+<a id="menuDashboard">
+<i class="bi bi-speedometer2"></i>
+Dashboard
+</a>
+<a id="menuPersonal">
+<i class="bi bi-people-fill"></i>
+Información Personal
+</a>
+<a id="menuRedes">
+<i class="bi bi-wifi"></i>
+Redes Inalámbricas
+</a>
+<a id="menuEmpresas">
+<i class="bi bi-building"></i>
+Empresas
+</a>
+<a id="menuZonas">
+<i class="bi bi-map"></i>
+Zonas
+</a>
+<a id="menuSucursales">
+<i class="bi bi-shop"></i>
+Sucursales
+</a>
+<a id="menuUsuarios">
+<i class="bi bi-person-badge"></i>
+Usuarios
+</a>
+<a id="menuColor">
+<i class="bi bi-palette"></i>
+Color Center
+</a>
 </div>
-
-<div class="modal fade" id="modalApp" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title" id="mTitle">Registro</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="fID">
-                <div class="row">
-                    <div id="secEmpresa" class="col-md-6 mb-3 d-none">
-                        <label class="form-label fw-bold small">Empresa</label>
-                        <select id="fEmp" class="form-select"></select>
-                    </div>
-                    <div id="secZona" class="col-md-6 mb-3 d-none">
-                        <label class="form-label fw-bold small">Zona</label>
-                        <select id="fZona" class="form-select"></select>
-                    </div>
-                    <div id="secMatriz" class="d-none row g-3">
-                        <div class="col-md-6"><label class="form-label fw-bold small">Artículos</label><input type="text" id="mArt" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold small">Modelo</label><input type="text" id="mMod" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold small">Descripción</label><input type="text" id="mDes" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold small">Marca</label><input type="text" id="mMar" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold small">Cantidad</label><input type="number" id="mCant" class="form-control"></div>
-                    </div>
-                    <div id="secUsuarios" class="d-none row g-3">
-                        <div class="col-md-6"><label class="form-label fw-bold small">Departamento</label><input type="text" id="uDep" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold small">Puesto</label><input type="text" id="uPue" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold small">Usuario Acceso</label><input type="text" id="uUsu" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold small">Contraseña</label><input type="password" id="uPass" class="form-control"></div>
-                    </div>
-                    <div id="secIndividual" class="col-12 mt-3">
-                        <label class="form-label fw-bold small" id="lblNom">Nombre / Descripción</label>
-                        <input type="text" id="fNom" class="form-control">
-                    </div>
-                    <div id="secMasivo" class="col-12 d-none mt-3">
-                        <textarea id="fMasivo" class="form-control" rows="5" placeholder="Uno por línea o CSV para matriz (Art, Mod, Des, Mar, Cant)"></textarea>
-                    </div>
-                    <div id="secToggleMasivo" class="col-12 form-check form-switch d-none mt-3 ms-3">
-                        <input class="form-check-input" type="checkbox" id="checkMasivo">
-                        <label class="form-check-label small fw-bold" for="checkMasivo">Activar Carga Masiva</label>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer bg-light">
-                <button class="btn btn-primary w-100" id="btnSave">Guardar Información</button>
-            </div>
-        </div>
-    </div>
+<div class="main">
+<div id="contenido"></div>
 </div>
-<div class="modal fade" id="modalEmpresas" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
+<!-- ==========================================
+MODAL PRINCIPAL
+========================================== -->
 
-      <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title">Asignar sucursales</h5>
-        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-
-      <div class="modal-body" id="empresa-tree">
-        <!-- Aquí se genera dinámicamente -->
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-primary" onclick="guardarAsignacion()">Guardar</button>
-      </div>
-
-    </div>
-  </div>
+<div class="modal fade" id="modalRegistro" tabindex="-1">
+<div class="modal-dialog modal-xl modal-dialog-scrollable">
+<div class="modal-content">
+<div class="modal-header bg-dark text-white">
+<h5 class="modal-title" id="tituloModal">
+Nuevo Registro
+</h5>
+<button class="btn-close btn-close-white"
+data-bs-dismiss="modal">
+</button>
+</div>
+<div class="modal-body" id="modalBody">
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary"
+data-bs-dismiss="modal">
+Cancelar
+</button>
+   <button class="btn btn-primary"
+id="btnGuardar">
+<i class="bi bi-floppy"></i>
+Guardar
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- ==========================================
+MODAL VISOR DE IMAGEN
+========================================== -->
+<div class="modal fade"
+id="modalImagen"
+tabindex="-1">
+<div class="modal-dialog modal-lg modal-dialog-centered">
+<div class="modal-content">
+<div class="modal-header">
+<h5>
+Vista previa
+</h5>
+<button class="btn-close"
+data-bs-dismiss="modal">
+</button>
+</div>
+<div class="modal-body text-center">
+<img
+id="imagenGrande"
+style="max-width:100%;max-height:600px;">
+</div>
+</div>
+</div>
+</div>
+<!-- ==========================================
+MODAL CONFIRMACION
+========================================== -->
+<div class="modal fade"
+id="modalConfirmar"
+tabindex="-1">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header bg-danger text-white">
+<h5>
+Confirmar eliminación
+</h5>
+</div>
+<div class="modal-body">
+¿Desea eliminar el registro?
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary"
+data-bs-dismiss="modal">
+Cancelar
+</button>
+<button class="btn btn-danger"
+id="btnEliminar">
+Eliminar
+</button>
+</div>
+</div>
+</div>
 </div>
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-    
-    const config = { databaseURL: "https://mydbu-fbc33-default-rtdb.firebaseio.com/" };
-    const db = getDatabase(initializeApp(config));
-    let store = { matriz: {}, matrizcctv: {}, zonas: {}, empresas: {}, sucursales: {}, usuarios: {} };
-    let currentPath = '';
-    let loadsPending = Object.keys(store).length;
-
-    Object.keys(store).forEach(path => {
-        onValue(ref(db, path), (s) => {
-            store[path] = s.val() || {};
-            if (loadsPending > 0) loadsPending--;
-       if (loadsPending === 0) {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (currentPath === '') {
-        if (urlParams.get('tipo') === 'cctv') {
-            document.body.classList.add('hide-menu');
-            render('formato_cctv');
-        }
-        else if (urlParams.get('tipo') === 'tech') {
-            document.body.classList.add('hide-menu');
-            render('formato_tech');
-        }
-    }
-    else if (currentPath === path) {
-        render(path);
-    }
+import { initializeApp }
+from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+getDatabase,
+ref,
+push,
+update,
+remove,
+onValue
 }
-        });
-    });
-
-    window.render = (path) => {
-        currentPath = path;
-        document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
-        document.getElementById(`link-${path}`)?.classList.add('active');
-        
-        if (path === 'formato_cctv') { 
-        renderFormato('CCTV');
-        return;
-        }
-        if (path === 'formato_tech') { 
-        renderFormato('TECH');
-        return; 
-        }
-        
-        const items = store[path];
-        const keys = Object.keys(items);
-        let html = `<div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="fw-bold m-0">${path.toUpperCase()}</h4>
-                        <button class="btn btn-dark" onclick="showModal('${path}')"><i class="bi bi-plus-lg"></i> Nuevo</button>
-                    </div>`;
-        
-        if (keys.length === 0) {
-            html += `<div class="text-center py-5 text-muted">No hay registros</div>`;
-        } else {
-            html += `<div class="table-responsive"><table class="table table-hover border">
-                <thead><tr>
-                    ${['usuarios','sucursales','zonas'].includes(path) ? '<th>Empresa</th>' : ''}
-                    ${['usuarios','sucursales'].includes(path) ? '<th>Zona</th>' : ''}
-                    ${path.includes('matriz') ? '<th>Artículos</th><th>Modelo</th><th>Descripción</th><th>Marca</th><th>Cant.</th>' : '<th class="text-start">Nombre</th>'}
-                    <th class="text-end">Acciones</th>
-                </tr></thead><tbody>`;
-            keys.forEach(id => {
-                const r = items[id];
-                html += `<tr>
-                    ${['usuarios','sucursales','zonas'].includes(path) ? `<td><small>${r.empresa || '-'}</small></td>` : ''}
-                    ${['usuarios','sucursales'].includes(path) ? `<td><small>${r.zona || '-'}</small></td>` : ''}
-                    ${path.includes('matriz') ? 
-                        `<td class="text-start fw-bold">${r.articulos || '-'}</td><td>${r.modelo || '-'}</td><td><small>${r.descripcion || '-'}</small></td><td>${r.marca || '-'}</td><td>${r.cantidad || '-'}</td>` : 
-                        `<td class="text-start">${r.nombre}</td>`
-                    }
-                    <td class="text-end">
-                        <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
-                       ${path === 'usuarios' ? `
-                            <button class="btn btn-sm btn-outline-success border-0" onclick="openEmpresaModal('${id}')"><i class="bi bi-building"></i></button>` : ''} 
-                    </td>
-                </tr>`;
-            });
-            html += `</tbody></table></div>`;
-        }
-        document.getElementById("view").innerHTML = html;
-    };
-
-    function renderFormato(tipo) {
-        const isCctv = tipo === 'CCTV';
-        const storeKey = isCctv ? 'matrizcctv' : 'matriz';
-        const title = isCctv ? 'Requisición de CCTV' : 'Requisición de Tecnología';
-        const colorVar = isCctv ? '--cctv-blue' : '--tech-purple';
-        
-        const today = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const urlParams = new URLSearchParams(window.location.search);
-        const nURL = urlParams.get('n')?.toUpperCase() || "";
-        const pURL = urlParams.get('p')?.toUpperCase() || "";
-        
-        const usuariosArr = Object.values(store.usuarios);
-        const usuarioEncontrado = usuariosArr.find(u => 
-            (u.nombre && u.nombre.toUpperCase() === nURL) || 
-            (u.usuario && u.usuario.toUpperCase() === nURL)
-        );
-
-        const fNombre = usuarioEncontrado?.nombre || (nURL !== "NOMBRE" && nURL !== "" ? nURL : "SOPORTE");
-        const fPuesto = usuarioEncontrado?.puesto || (pURL !== "PUESTO" && pURL !== "" ? pURL : "TECNICO");
-
-        const emps = Object.values(store.empresas).map(e => e.nombre).sort();
-        const arts = Object.values(store[storeKey]).map(m => m.articulos).filter((v, i, a) => a.indexOf(v) === i).sort();
-
-        let html = `
-            <div id="capture-area" class="p-4" style="width: 100%; max-width: 900px; margin: auto; background: white; border: 1px solid #ccc;">
-                <div class="pdf-header-container">
-                    <div style="flex-grow: 1;">
-                        <h3 class="fw-bold m-0" style="color: var(${colorVar})">${title}</h3>
-                    </div>
-                    <div class="pdf-actions no-print">
-                        <button class="btn-print" onclick="window.print()" title="Imprimir Formato">
-                            <i class="bi bi-printer-fill fs-5"></i>
-                        </button>
-                        <button class="btn-back" onclick="window.location.href='tecnologia.html'" title="Regresar">
-                            <i class="bi bi-arrow-left-circle-fill fs-5"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="${isCctv ? 'cctv-header' : 'tech-header'}">Datos del Solicitante</div>
-                <div class="row g-0 mb-4 border">
-                    <div class="col-md-7 border-end">
-                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Nombre:</div><input type="text" class="cctv-input" value="${fNombre}" readonly></div>
-                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Puesto:</div><input type="text" class="cctv-input" value="${fPuesto}" readonly></div>
-                        <div class="d-flex"><div class="cctv-label" style="width: 120px;">Empresa:</div>
-                            <select class="cctv-input" id="form-empresa-select" onchange="window.updateFormZonas(this.value)">
-                                <option value="">SELECCIONE...</option>
-                                ${emps.map(e => `<option value="${e}">${e}</option>`).join('')}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Fecha:</div><div class="cctv-input bg-light">${today}</div></div>
-                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Zona:</div><select class="cctv-input" id="form-zona-select" onchange="window.updateFormSucursales(this.value)"><option value="">ZONA</option></select></div>
-                        <div class="d-flex"><div class="cctv-label" style="width: 120px;">Sucursal:</div><select class="form-select cctv-input" id="form-sucursal-select"><option value="">SUCURSAL</option></select></div>
-                    </div>
-                </div>
-                <div class="${isCctv ? 'cctv-header' : 'tech-header'}">Requerimiento de equipo</div>
-                <div class="row g-2 row-cols-1 row-cols-md-2 row-cols-lg-3" id="items-container">
-                    ${Array.from({length: 6}, (_, i) => generateItemHTML(i + 1, arts, storeKey)).join('')}
-                </div>
-                <div class="text-center mt-3 no-print">
-                    <button class="btn btn-primary btn-sm rounded-pill px-4" onclick="window.addNewItem('${storeKey}')"><i class="bi bi-plus-circle me-2"></i>Añadir más artículos</button>
-                </div>
-                <div class="mt-4 border p-2">
-                    <label class="small fw-bold">Observaciones adicionales o artículos no listados:</label>
-                    <textarea class="form-control mt-1" rows="2"></textarea>
-                </div>
-                <div class="cctv-green-header">Diagnóstico Realizado por Soporte en Zona</div>
-                <div class="border p-3">
-                    <div class="row mb-3">
-                        <div class="col-md-6 d-flex"><span class="small fw-bold me-2">Zona:</span><input type="text" class="border-bottom border-0 w-100" id="diag-zona-display" readonly></div>
-                        <div class="col-md-6 d-flex"><span class="small fw-bold me-2">Responsable:</span><input type="text" class="border-bottom border-0 w-100" value="${fNombre}" readonly></div>
-                    </div>
-                    <textarea class="form-control" rows="3" placeholder="Comentarios..."></textarea>
-                </div>
-                <div class="row mt-5">
-                    <div class="col-4"><div class="signature-line"><strong>SOLICITA</strong><br>${fNombre}</div></div>
-                    <div class="col-4"><div class="signature-line"><strong>REVISA</strong><br>Coordinador de Soporte</div></div>
-                    <div class="col-4"><div class="signature-line"><strong>AUTORIZA</strong><br>Gerente de Sistemas</div></div>
-                </div>
-            </div>`;
-        document.getElementById("view").innerHTML = html;
-  }
-    function generateItemHTML(i, articulos, storeKey) {
-        return `<div class="col item-row" id="row-${i}"><div class="item-box">
-            <div class="d-flex mb-2 align-items-center justify-content-between">
-                <div class="d-flex align-items-center">
-                    <span class="small fw-bold label-index me-2" style="font-size: 0.8rem">Cant. art. ${i}:</span>
-                    <input type="number" class="form-control form-control-sm" style="width: 60px" placeholder="0">
-                </div>
-                <button class="btn-remove-item no-print" onclick="window.removeItem('row-${i}')" title="Eliminar item">
-                    <i class="bi bi-trash fs-6"></i>
-                </button>
-            </div>
-            <div class="bg-dark text-white text-center small py-1 mb-2" style="font-size: 0.75rem; font-weight: bold;">Seleccionar artículo:</div>
-            <select class="form-select form-select-sm mb-1 select-art" onchange="window.fillProductData(this, '${i}', '${storeKey}')" style="font-size: 0.8rem">
-                <option value="">SELECCIONE...</option>
-                ${articulos.map(art => `<option value="${art}">${art}</option>`).join('')}
-            </select>
-            <input type="text" id="mod-${i}" class="form-control form-control-sm mb-1 input-mod" placeholder="MODELO" readonly style="font-size: 0.75rem; background-color: #f8fafc;">
-            <input type="text" id="bottom-des-${i}" class="form-control form-control-sm mb-1 input-des" placeholder="DESCRIPCIÓN" readonly style="font-size: 0.75rem; background-color: #f8fafc;">
-            <input type="text" id="mar-${i}" class="form-control form-control-sm input-mar" placeholder="MARCA" readonly style="font-size: 0.75rem; background-color: #f8fafc;">
-        </div></div>`;
-    }
-
-    window.removeItem = (id) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.remove();
-            const container = document.getElementById('items-container');
-            const rows = container.querySelectorAll('.item-row');
-            
-            rows.forEach((row, index) => {
-                const newIdx = index + 1;
-                row.id = `row-${newIdx}`;
-                
-                const label = row.querySelector('.label-index');
-                if(label) label.innerText = `Cant. art. ${newIdx}:`;
-                
-                const sel = row.querySelector('.select-art');
-                const oldOnchange = sel.getAttribute('onchange');
-                const storeKey = oldOnchange.match(/'([^']+)'\)$/)[1];
-                sel.setAttribute('onchange', `window.fillProductData(this, '${newIdx}', '${storeKey}')`);
-                
-                row.querySelector('.input-mod').id = `mod-${newIdx}`;
-                row.querySelector('.input-des').id = `bottom-des-${newIdx}`;
-                row.querySelector('.input-mar').id = `mar-${newIdx}`;
-                
-                const removeBtn = row.querySelector('.btn-remove-item');
-                removeBtn.setAttribute('onclick', `window.removeItem('row-${newIdx}')`);
-            });
-        }
-    };
-
-    window.addNewItem = (storeKey) => {
-        const container = document.getElementById('items-container');
-        const nextId = container.querySelectorAll('.item-row').length + 1;
-        const arts = Object.values(store[storeKey]).map(m => m.articulos).filter((v, i, a) => a.indexOf(v) === i).sort();
-        const temp = document.createElement('div');
-        temp.className = "col item-row";
-        temp.id = `row-${nextId}`;
-        temp.innerHTML = generateItemHTML(nextId, arts, storeKey);
-        container.appendChild(temp);
-    };
-
-    window.fillProductData = (sel, idx, storeKey) => {
-        const p = Object.values(store[storeKey]).find(m => m.articulos === sel.value);
-        document.getElementById(`mod-${idx}`).value = p?.modelo || "";
-        document.getElementById(`bottom-des-${idx}`).value = p?.descripcion || "";
-        document.getElementById(`mar-${idx}`).value = p?.marca || "";
-    };
-
-    window.updateFormZonas = (emp) => {
-        const zs = Object.values(store.zonas).filter(z => z.empresa === emp).map(z => z.nombre).sort();
-        const sel = document.getElementById("form-zona-select");
-        if(sel) {
-            sel.innerHTML = '<option value="">ZONA</option>' + zs.map(z => `<option value="${z}">${z}</option>`).join('');
-            document.getElementById("form-sucursal-select").innerHTML = '<option value="">SUCURSAL</option>';
-        }
-    };
-
-    window.updateFormSucursales = (z) => {
-        const ss = Object.values(store.sucursales).filter(s => s.zona === z).map(s => s.nombre).sort();
-        const sel = document.getElementById("form-sucursal-select");
-        if(sel) {
-            sel.innerHTML = '<option value="">SUCURSAL</option>' + ss.map(s => `<option value="${s}">${s}</option>`).join('');
-            const diag = document.getElementById("diag-zona-display");
-            if(diag) diag.value = z;
-        }
-    };
-
-    window.showModal = (path, id = "") => {
-        const item = id ? store[path][id] : {};
-        document.getElementById("fID").value = id;
-        document.getElementById("mTitle").innerText = (id ? 'Editar ' : 'Nuevo ') + path.toUpperCase();
-        
-        ['secEmpresa', 'secZona', 'secUsuarios', 'secMatriz', 'secMasivo', 'secToggleMasivo'].forEach(s => document.getElementById(s).classList.add('d-none'));
-        document.getElementById("secIndividual").classList.remove('d-none');
-        document.getElementById("checkMasivo").checked = false;
-
-        if (path.includes('matriz')) {
-            document.getElementById("secIndividual").classList.add('d-none');
-            document.getElementById("secMatriz").classList.remove('d-none');
-            document.getElementById("mArt").value = item.articulos || "";
-            document.getElementById("mMod").value = item.modelo || "";
-            document.getElementById("mDes").value = item.descripcion || "";
-            document.getElementById("mMar").value = item.marca || "";
-            document.getElementById("mCant").value = item.cantidad || "";
-        }
-        if (['zonas', 'sucursales', 'usuarios'].includes(path)) {
-            document.getElementById("secEmpresa").classList.remove('d-none');
-            const emps = Object.values(store.empresas).map(e => e.nombre).sort();
-            const fEmp = document.getElementById("fEmp");
-            fEmp.innerHTML = '<option value="">SELECCIONE...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
-            
-            if(item.empresa) {
-               const zs = Object.values(store.zonas).filter(z => z.empresa === item.empresa).map(z => z.nombre).sort();
-               document.getElementById("secZona").classList.remove('d-none');
-               document.getElementById("fZona").innerHTML = zs.map(z => `<option value="${z}" ${item.zona === z ? 'selected' : ''}>${z}</option>`).join('');
-            }
-        }
-        if (path === 'usuarios') {
-            document.getElementById("secUsuarios").classList.remove('d-none');
-            document.getElementById("uDep").value = item.departamento || "";
-            document.getElementById("uPue").value = item.puesto || "";
-            document.getElementById("uUsu").value = item.usuario || "";
-            document.getElementById("uPass").value = item.pass || "";
-        }
-        document.getElementById("fNom").value = item.nombre || "";
-        if (!id) document.getElementById("secToggleMasivo").classList.remove('d-none');
-        
-        document.getElementById("fEmp").onchange = (e) => {
-            if(['sucursales', 'usuarios'].includes(path)){
-                const zs = Object.values(store.zonas).filter(z => z.empresa === e.target.value).map(z => z.nombre).sort();
-                document.getElementById("secZona").classList.remove('d-none');
-                document.getElementById("fZona").innerHTML = zs.map(z => `<option value="${z}">${z}</option>`).join('');
-            }
-        };
-
-        new bootstrap.Modal(document.getElementById("modalApp")).show();
-    };
-
-    document.getElementById("btnSave").onclick = async () => {
-        const id = document.getElementById("fID").value;
-        const isM = document.getElementById("checkMasivo").checked;
-        let data = {};
-
-        if (currentPath.includes('matriz')) {
-            data = { 
-                articulos: document.getElementById("mArt").value.toUpperCase(), 
-                modelo: document.getElementById("mMod").value.toUpperCase(), 
-                descripcion: document.getElementById("mDes").value.toUpperCase(), 
-                marca: document.getElementById("mMar").value.toUpperCase(),
-                cantidad: document.getElementById("mCant").value
-            };
-        } else {
-            data.nombre = document.getElementById("fNom").value.toUpperCase();
-        }
-
-        if (['zonas', 'sucursales', 'usuarios'].includes(currentPath)) data.empresa = document.getElementById("fEmp").value;
-        if (['sucursales', 'usuarios'].includes(currentPath)) data.zona = document.getElementById("fZona").value;
-        
-        if (currentPath === 'usuarios') {
-            data.departamento = document.getElementById("uDep").value.toUpperCase();
-            data.puesto = document.getElementById("uPue").value.toUpperCase();
-            data.usuario = document.getElementById("uUsu").value;
-            data.pass = document.getElementById("uPass").value;
-        }
-
-        try {
-            if (isM) {
-                const lineas = document.getElementById("fMasivo").value.split('\n').filter(l => l.trim());
-                for (let l of lineas) {
-                    let d = { ...data };
-                    if (currentPath.includes('matriz')) {
-                        const p = l.split(',').map(x => x.trim().toUpperCase());
-                        d = { articulos: p[0], modelo: p[1]||"", descripcion: p[2]||"", marca: p[3]||"", cantidad: p[4]||"", ...data };
-                    } else { d.nombre = l.trim().toUpperCase(); }
-                    await push(ref(db, currentPath), d);
-                }
-            } else {
-                id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
-            }
-            bootstrap.Modal.getInstance(document.getElementById("modalApp")).hide();
-            Swal.fire({ icon: "success", title: "Guardado", timer: 800, showConfirmButton: false });
-        } catch (e) { Swal.fire("Error", e.message, "error"); }
-    };
-
-    window.del = async (p, id) => {
-        const res = await Swal.fire({ title: '¿Eliminar?', icon: 'warning', showCancelButton: true });
-        if (res.isConfirmed) await remove(ref(db, `${p}/${id}`));
-    };
-
-    window.toggleSidebar = () => {
-        document.getElementById('sidebar').classList.toggle('active');
-        document.getElementById('main-content').classList.toggle('shifted');
-    };
-
-    document.getElementById("checkMasivo").onchange = (e) => {
-        document.getElementById(currentPath.includes('matriz') ? "secMatriz" : "secIndividual").classList.toggle('d-none', e.target.checked);
-        if (currentPath === 'usuarios') document.getElementById("secUsuarios").classList.toggle('d-none', e.target.checked);
-        document.getElementById("secMasivo").classList.toggle('d-none', !e.target.checked);
-    };
-  let currentUserId = null;
-
-window.openEmpresaModal = (userId) => {
-    currentUserId = userId;
-
-    const empresas = Object.values(store.empresas);
-
-    let html = '';
-
-    empresas.forEach(emp => {
-        html += `
-        <div class="form-check mb-2">
-            <input 
-                class="form-check-input emp-check" 
-                type="checkbox" 
-                value="${emp.nombre}" 
-                id="emp-${emp.nombre}">
-            
-            <label class="form-check-label fw-semibold" for="emp-${emp.nombre}">
-                ${emp.nombre}
-            </label>
-        </div>
-        `;
-    });
-
-    document.getElementById("empresa-tree").innerHTML = html;
-
-    new bootstrap.Modal(document.getElementById("modalEmpresas")).show();
-};  
-    window.guardarAsignacion = () => {
-    const seleccionadas = [];
-
-    document.querySelectorAll(".emp-check:checked").forEach(chk => {
-        seleccionadas.push(chk.value);
-    });
-
-    console.log("Empresas asignadas a usuario:", currentUserId, seleccionadas);
-
-    Swal.fire({
-        icon: "success",
-        title: "Asignación guardada",
-        text: "Se asignaron correctamente las empresas",
-        timer: 1200,
-        showConfirmButton: false
-    });
-
-    bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
+from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {
+getStorage,
+ref as storageRef,
+uploadBytes,
+getDownloadURL,
+deleteObject
+}
+from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+    const firebaseConfig={
+apiKey:"AIzaSyA4GwttgySZzOfQs3W2__rukt9kT7qH47k",
+authDomain:"gromasis-9c094.firebaseapp.com",
+databaseURL:"https://gromasis-9c094-default-rtdb.firebaseio.com",
+projectId:"gromasis-9c094",
+storageBucket:"gromasis-9c094.appspot.com",
+messagingSenderId:"285915864016",
+appId:"1:285915864016:web:13df7d85715486e1f237d5"
 };
-
-    const cleanAsignacionId = (txt) => String(txt || '').replace(/[^a-zA-Z0-9_-]/g, '_');
-
-    const getAsignacionUsuario = () => {
-        const asignacion = store.usuarios[currentUserId]?.asignacionSucursales;
-        return Array.isArray(asignacion) ? asignacion : [];
-    };
-
-    const getEmpresaAsignada = (empresa) => getAsignacionUsuario().find(a => a.empresa === empresa);
-
-    const getZonaAsignada = (empresa, zona) => {
-        const emp = getEmpresaAsignada(empresa);
-        return emp?.zonas?.find(z => z.zona === zona);
-    };
-
-    const syncAllSucursalesCheck = (empresa, zona) => {
-        const allCheck = document.querySelector(`.all-suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`);
-        if (!allCheck) return;
-
-        const sucursales = Array.from(document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`));
-        const seleccionadas = sucursales.filter(chk => chk.checked);
-        allCheck.checked = sucursales.length > 0 && seleccionadas.length === sucursales.length;
-        allCheck.indeterminate = seleccionadas.length > 0 && seleccionadas.length < sucursales.length;
-    };
-
-    const syncAllSucursalesChecks = () => {
-        document.querySelectorAll(".all-suc-check").forEach(chk => {
-            syncAllSucursalesCheck(chk.dataset.empresa, chk.dataset.zona);
-        });
-    };
-
-    const buildAsignacionTree = () => {
-        const empresas = Object.values(store.empresas).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
-
-        if (!empresas.length) {
-            return '<div class="text-center text-muted py-4">No hay empresas registradas.</div>';
-        }
-
-        return empresas.map(emp => {
-            const empresa = emp.nombre || '';
-            const empId = `emp-${cleanAsignacionId(empresa)}`;
-            const empresaAsignada = getEmpresaAsignada(empresa);
-            const empresaChecked = empresaAsignada ? 'checked' : '';
-            const empresaVisible = empresaAsignada ? '' : 'd-none';
-            const zonas = Object.values(store.zonas)
-                .filter(z => z.empresa === empresa)
-                .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
-
-            const zonasHtml = zonas.length ? zonas.map(z => {
-                const zona = z.nombre || '';
-                const zonaId = `zona-${cleanAsignacionId(empresa)}-${cleanAsignacionId(zona)}`;
-                const zonaAsignada = getZonaAsignada(empresa, zona);
-                const zonaChecked = zonaAsignada ? 'checked' : '';
-                const zonaVisible = zonaAsignada ? '' : 'd-none';
-                const sucursalesSeleccionadas = zonaAsignada?.sucursales || [];
-                const sucursales = Object.values(store.sucursales)
-                    .filter(s => s.empresa === empresa && s.zona === zona)
-                    .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
-                const allSucId = `all-${cleanAsignacionId(empresa)}-${cleanAsignacionId(zona)}`;
-                const todasSeleccionadas = sucursales.length > 0 && sucursales.every(s => sucursalesSeleccionadas.includes(s.nombre || ''));
-                const allSucChecked = todasSeleccionadas ? 'checked' : '';
-
-                const sucursalesHtml = sucursales.length ? sucursales.map(s => {
-                    const sucursal = s.nombre || '';
-                    const sucId = `suc-${cleanAsignacionId(empresa)}-${cleanAsignacionId(zona)}-${cleanAsignacionId(sucursal)}`;
-                    const sucChecked = sucursalesSeleccionadas.includes(sucursal) ? 'checked' : '';
-                    return `
-                        <div class="form-check tree-row">
-                            <input class="form-check-input suc-check" type="checkbox" value="${sucursal}" id="${sucId}" data-empresa="${empresa}" data-zona="${zona}" ${sucChecked}>
-                            <label class="form-check-label small" for="${sucId}">${sucursal}</label>
-                        </div>`;
-                }).join('') : '<div class="tree-muted">Sin sucursales registradas en esta zona.</div>';
-                const seleccionarTodasHtml = sucursales.length ? `
-                    <div class="form-check tree-row">
-                        <input class="form-check-input all-suc-check" type="checkbox" id="${allSucId}" data-empresa="${empresa}" data-zona="${zona}" ${allSucChecked}>
-                        <label class="form-check-label small tree-select-all" for="${allSucId}">Seleccionar todas las sucursales</label>
-                    </div>` : '';
-
-                return `
-                    <div class="mb-1">
-                        <div class="form-check tree-row">
-                            <input class="form-check-input zona-check" type="checkbox" value="${zona}" id="${zonaId}" data-empresa="${empresa}" ${zonaChecked}>
-                            <label class="form-check-label small fw-semibold" for="${zonaId}">${zona}</label>
-                        </div>
-                        <div class="tree-level sucursal-group ${zonaVisible}" data-empresa="${empresa}" data-zona="${zona}">
-                            ${seleccionarTodasHtml}
-                            ${sucursalesHtml}
-                        </div>
-                    </div>`;
-            }).join('') : '<div class="tree-muted">Sin zonas registradas para esta empresa.</div>';
-
-            return `
-                <div class="mb-2">
-                    <div class="form-check tree-row">
-                        <input class="form-check-input emp-check" type="checkbox" value="${empresa}" id="${empId}" ${empresaChecked}>
-                        <label class="form-check-label fw-semibold" for="${empId}">${empresa}</label>
-                    </div>
-                    <div class="tree-level zona-group ${empresaVisible}" data-empresa="${empresa}">
-                        ${zonasHtml}
-                    </div>
-                </div>`;
-        }).join('');
-    };
-
-window.openEmpresaModal = (userId) => {
-    currentUserId = userId;
-    document.getElementById("empresa-tree").innerHTML = buildAsignacionTree();
-    syncAllSucursalesChecks();
-    new bootstrap.Modal(document.getElementById("modalEmpresas")).show();
+const app=initializeApp(firebaseConfig);
+const db=getDatabase(app);
+const storage=getStorage(app);
+let catalogoActual="dashboard";
+let datos={
+personal:{},
+redes:{},
+colorcenter:{},
+empresas:{},
+zonas:{},
+sucursales:{},
+usuarios:{}
 };
+let paginaActual=1;
+let registrosPagina=10;
+let filtroBusqueda="";
+let ordenCampo="";
+let ordenAsc=true;
+let idEditar="";
+let imagenDosificador=null;
+let imagenRevolvedora=null;
+    Object.keys(datos).forEach(tabla=>{
+onValue(
+ref(db,tabla),
+snapshot=>{
+datos[tabla]=snapshot.val()||{};
+if(catalogoActual===tabla){
+render();
+}
+});
+});
+function dashboard(){
+let html=`
+<div class="row g-4">
+<div class="col-md-3">
+<div class="card card-dashboard">
+<div class="card-body">
+<h6>
+PERSONAL
+</h6>
+<h2>
+${Object.keys(datos.personal).length}
+</h2>
+</div>
+</div>
+</div>
+<div class="col-md-3">
+<div class="card card-dashboard">
+<div class="card-body">
+<h6>
+REDES
+</h6>
+<h2>
+${Object.keys(datos.redes).length}
+</h2>
+</div>
+</div>
+</div>
+<div class="col-md-3">
+<div class="card card-dashboard">
+<div class="card-body">
+<h6>
+EMPRESAS
+</h6>
+<h2>
+${Object.keys(datos.empresas).length}
+</h2>
+</div>
+</div>
+</div>
+<div class="col-md-3">
+<div class="card card-dashboard">
+<div class="card-body">
+<h6>
+COLOR CENTER
+</h6>
+<h2>
+${Object.keys(datos.colorcenter).length}
+</h2>
+</div>
+</div>
+</div>
+</div>
+<br>
+<div class="table-container">
+<h4>
+Bienvenido
+</h4>
+<p>
+Seleccione un catálogo del menú lateral.
+</p>
+</div>
+`;
+document.getElementById("contenido").innerHTML=html;
+}
+  function buscador(){
+return`
+<div class="row mb-3">
+<div class="col-md-5">
+<input
+class="form-control"
+placeholder="Buscar..."
+onkeyup="buscar(this.value)">
+</div>
+<div class="col-md-3">
+<select
+class="form-select"
+onchange="cambiarPagina(this.value)">
+<option value="10">
+10 registros
+</option>
+<option value="25">
+25 registros
+</option>
+<option value="50">
+50 registros
+</option>
+<option value="100">
+100 registros
+</option>
+<option value="999999">
+Todos
+</option>
+</select>
+</div>
+<div class="col-md-4 text-end">
+<button
+class="btn btn-success"
+onclick="exportarExcel()">
+<i class="bi bi-file-earmark-excel"></i>
+Excel
+</button>
+<button
+class="btn btn-primary"
+onclick="nuevoRegistro()">
+<i class="bi bi-plus-circle"></i>
+Nuevo
+</button>
+</div>
+</div>
+`;
+}  
+function paginacion(total){
 
-    document.getElementById("empresa-tree").addEventListener("change", (e) => {
-        const target = e.target;
+let paginas=Math.ceil(total/registrosPagina);
 
-        if (target.classList.contains("emp-check")) {
-            const empresa = target.value;
-            const grupoZonas = document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`);
-            grupoZonas?.classList.toggle("d-none", !target.checked);
-            if (!target.checked) {
-                grupoZonas?.querySelectorAll("input[type='checkbox']").forEach(chk => {
-                    chk.checked = false;
-                    chk.indeterminate = false;
-                    if (chk.classList.contains("zona-check")) {
-                        document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(chk.value)}"]`)?.classList.add("d-none");
-                    }
-                });
-            }
-        }
+let html='';
 
-        if (target.classList.contains("zona-check")) {
-            const empresa = target.dataset.empresa;
-            const zona = target.value;
-            const grupoSucursales = document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`);
-            grupoSucursales?.classList.toggle("d-none", !target.checked);
+html+='<nav>';
 
-            if (target.checked) {
-                const empresaCheck = document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`);
-                empresaCheck.checked = true;
-                document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
-            } else {
-                grupoSucursales?.querySelectorAll(".suc-check, .all-suc-check").forEach(chk => {
-                    chk.checked = false;
-                    chk.indeterminate = false;
-                });
-            }
-        }
+html+='<ul class="pagination justify-content-center">';
 
-        if (target.classList.contains("all-suc-check")) {
-            const empresa = target.dataset.empresa;
-            const zona = target.dataset.zona;
-            const checked = target.checked;
+for(let i=1;i<=paginas;i++){
 
-            document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
-            document.querySelector(`.zona-check[data-empresa="${CSS.escape(empresa)}"][value="${CSS.escape(zona)}"]`).checked = true;
-            document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
-            document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`)?.classList.remove("d-none");
-            document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`).forEach(chk => chk.checked = checked);
-            target.indeterminate = false;
-        }
+html+=`
 
-        if (target.classList.contains("suc-check") && target.checked) {
-            const empresa = target.dataset.empresa;
-            const zona = target.dataset.zona;
-            document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
-            document.querySelector(`.zona-check[data-empresa="${CSS.escape(empresa)}"][value="${CSS.escape(zona)}"]`).checked = true;
-            document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
-            document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`)?.classList.remove("d-none");
-        }
+<li class="page-item
 
-        if (target.classList.contains("suc-check")) {
-            syncAllSucursalesCheck(target.dataset.empresa, target.dataset.zona);
-        }
-    });
+${paginaActual==i?'active':''}">
 
-    window.guardarAsignacion = async () => {
-    if (!currentUserId) return;
+<a
 
-    const asignacionSucursales = [];
+class="page-link"
 
-    document.querySelectorAll(".emp-check:checked").forEach(empChk => {
-        const empresa = empChk.value;
-        const zonas = [];
+href="#"
 
-        document.querySelectorAll(`.zona-check[data-empresa="${CSS.escape(empresa)}"]:checked`).forEach(zonaChk => {
-            const zona = zonaChk.value;
-            const sucursales = Array.from(document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]:checked`))
-                .map(chk => chk.value);
+onclick="irPagina(${i})">
 
-            zonas.push({ zona, sucursales });
-        });
+${i}
 
-        asignacionSucursales.push({ empresa, zonas });
-    });
+</a>
 
-    try {
-        await update(ref(db, `usuarios/${currentUserId}`), { asignacionSucursales });
+</li>
 
-        Swal.fire({
-            icon: "success",
-            title: "Asignacion guardada",
-            text: "Se asignaron correctamente las sucursales",
-            timer: 1200,
-            showConfirmButton: false
-        });
+`;
 
-        bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
-    } catch (e) {
-        Swal.fire("Error", e.message, "error");
-    }
+}
+
+html+='</ul>';
+
+html+='</nav>';
+
+return html;
+
+}
+    window.buscar=(txt)=>{
+
+filtroBusqueda=txt.toUpperCase();
+
+render();
+
+}
+
+window.irPagina=(p)=>{
+
+paginaActual=p;
+
+render();
+
+}
+
+window.cambiarPagina=(n)=>{
+
+registrosPagina=parseInt(n);
+
+paginaActual=1;
+
+render();
+
+}
+    //=====================================================
+// INFORMACIÓN DE PERSONAL
+//=====================================================
+
+function renderPersonal(){
+
+catalogoActual="personal";
+
+let registros=Object.entries(datos.personal);
+
+if(filtroBusqueda!=""){
+
+registros=registros.filter(r=>{
+
+const x=r[1];
+
+return(
+
+(x.numeroEmpleado||"").toUpperCase().includes(filtroBusqueda)||
+
+(x.nombre||"").toUpperCase().includes(filtroBusqueda)||
+
+(x.puesto||"").toUpperCase().includes(filtroBusqueda)||
+
+(x.usuarioXS||"").toUpperCase().includes(filtroBusqueda)||
+
+(x.usuarioXA||"").toUpperCase().includes(filtroBusqueda)||
+
+(x.usuarioSalesForce||"").toUpperCase().includes(filtroBusqueda)||
+
+(x.usuarioPowerBI||"").toUpperCase().includes(filtroBusqueda)||
+
+(x.usuarioB2B||"").toUpperCase().includes(filtroBusqueda)||
+
+(x.correoInstitucional||"").toUpperCase().includes(filtroBusqueda)||
+
+(x.correoGmail||"").toUpperCase().includes(filtroBusqueda)
+
+);
+
+});
+
+}
+
+const total=registros.length;
+
+const inicio=(paginaActual-1)*registrosPagina;
+
+const fin=inicio+registrosPagina;
+
+registros=registros.slice(inicio,fin);
+
+let html=`
+
+<div class="table-container">
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+
+<h3>
+
+<i class="bi bi-people-fill"></i>
+
+Información de Personal
+
+</h3>
+
+</div>
+
+${buscador()}
+
+<div class="table-responsive">
+
+<table class="table table-bordered table-hover align-middle">
+
+<thead>
+
+<tr>
+
+<th>No.</th>
+
+<th>No. Empleado</th>
+
+<th>Nombre Completo</th>
+
+<th>Puesto</th>
+
+<th>Usuario XS</th>
+
+<th>Usuario XA</th>
+
+<th>Sales Force</th>
+
+<th>Power BI</th>
+
+<th>B2B</th>
+
+<th>Correo Institucional</th>
+
+<th>Correo Gmail</th>
+
+<th>Status</th>
+
+<th width="150">
+
+Acciones
+
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+`;
+    let consecutivo=inicio+1;
+
+registros.forEach(r=>{
+
+const id=r[0];
+
+const x=r[1];
+
+let badge='';
+
+if((x.status||"")=="ACTIVO"){
+
+badge='<span class="status-activo">ACTIVO</span>';
+
+}else{
+
+badge='<span class="status-baja">BAJA</span>';
+
+}
+
+html+=`
+
+<tr>
+
+<td>
+
+${consecutivo++}
+
+</td>
+
+<td>
+
+${x.numeroEmpleado||""}
+
+</td>
+
+<td>
+
+${x.nombre||""}
+
+</td>
+
+<td>
+
+${x.puesto||""}
+
+</td>
+
+<td>
+
+${x.usuarioXS||""}
+
+</td>
+
+<td>
+
+${x.usuarioXA||""}
+
+</td>
+
+<td>
+
+${x.usuarioSalesForce||""}
+
+</td>
+
+<td>
+
+${x.usuarioPowerBI||""}
+
+</td>
+
+<td>
+
+${x.usuarioB2B||""}
+
+</td>
+
+<td>
+
+${x.correoInstitucional||""}
+
+</td>
+
+<td>
+
+${x.correoGmail||""}
+
+</td>
+
+<td>
+
+${badge}
+
+</td>
+
+<td>
+
+<button
+
+class="btn btn-warning btn-sm"
+
+onclick="editarPersonal('${id}')">
+
+<i class="bi bi-pencil-fill"></i>
+
+</button>
+
+<button
+
+class="btn btn-danger btn-sm"
+
+onclick="eliminarPersonal('${id}')">
+
+<i class="bi bi-trash-fill"></i>
+
+</button>
+
+<button
+
+class="btn btn-success btn-sm"
+
+onclick="permisosPersonal('${id}')">
+
+<i class="bi bi-shield-lock-fill"></i>
+
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+    html+=`
+
+</tbody>
+
+</table>
+
+</div>
+
+${paginacion(total)}
+
+</div>
+
+`;
+
+document.getElementById("contenido").innerHTML=html;
+
+}
+    document
+.getElementById("menuPersonal")
+.onclick=()=>{
+
+paginaActual=1;
+
+renderPersonal();
+
 };
-</script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.onkeydown = e => {
-        if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
-    };
-</script>
-</body>
-</html>
+    switch(catalogoActual){
+
+case "dashboard":
+
+dashboard();
+
+break;
+
+case "personal":
+
+renderPersonal();
+
+break;
+
+}
+    //=====================================================
+// FORMULARIO INFORMACIÓN DE PERSONAL
+//=====================================================
+
+function formularioPersonal(data={}){
+
+return `
+
+<div class="container-fluid">
+
+<div class="row">
+
+<div class="col-md-3 mb-3">
+
+<label class="form-label fw-bold">
+
+Número de Empleado
+
+</label>
+
+<input
+
+type="text"
+
+id="numeroEmpleado"
+
+class="form-control"
+
+value="${data.numeroEmpleado||''}">
+
+</div>
+
+<div class="col-md-9 mb-3">
+
+<label class="form-label fw-bold">
+
+Nombre Completo
+
+</label>
+
+<input
+
+type="text"
+
+id="nombre"
+
+class="form-control"
+
+value="${data.nombre||''}">
+
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="col-md-6 mb-3">
+
+<label class="form-label fw-bold">
+
+Puesto
+
+</label>
+
+<input
+
+type="text"
+
+id="puesto"
+
+class="form-control"
+
+value="${data.puesto||''}">
+
+</div>
+
+<div class="col-md-6 mb-3">
+
+<label class="form-label fw-bold">
+
+Status
+
+</label>
+
+<select
+
+id="status"
+
+class="form-select">
+
+<option value="ACTIVO"
+
+${data.status=="ACTIVO"?"selected":""}>
+
+🟢 ACTIVO
+
+</option>
+
+<option value="BAJA"
+
+${data.status=="BAJA"?"selected":""}>
+
+🔴 BAJA
+
+</option>
+
+</select>
+
+</div>
+
+</div>
+
+<hr>
+
+<h5 class="text-primary">
+
+Usuarios
+
+</h5>
+
+<div class="row">
+
+<div class="col-md-4 mb-3">
+
+<label class="form-label">
+
+Usuario XS
+
+</label>
+
+<input
+
+type="text"
+
+id="usuarioXS"
+
+class="form-control"
+
+value="${data.usuarioXS||''}">
+
+</div>
+
+<div class="col-md-4 mb-3">
+
+<label class="form-label">
+
+Usuario XA
+
+</label>
+
+<input
+
+type="text"
+
+id="usuarioXA"
+
+class="form-control"
+
+value="${data.usuarioXA||''}">
+
+</div>
+
+<div class="col-md-4 mb-3">
+
+<label class="form-label">
+
+Usuario Sales Force
+
+</label>
+
+<input
+
+type="text"
+
+id="usuarioSalesForce"
+
+class="form-control"
+
+value="${data.usuarioSalesForce||''}">
+
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="col-md-6 mb-3">
+
+<label class="form-label">
+
+Usuario Power BI
+
+</label>
+
+<input
+
+type="text"
+
+id="usuarioPowerBI"
+
+class="form-control"
+
+value="${data.usuarioPowerBI||''}">
+
+</div>
+
+<div class="col-md-6 mb-3">
+
+<label class="form-label">
+
+Usuario B2B
+
+</label>
+
+<input
+
+type="text"
+
+id="usuarioB2B"
+
+class="form-control"
+
+value="${data.usuarioB2B||''}">
+
+</div>
+
+</div>
+
+<hr>
+
+<h5 class="text-success">
+
+Correos
+
+</h5>
+
+<div class="row">
+
+<div class="col-md-6 mb-3">
+
+<label class="form-label">
+
+Correo Institucional
+
+</label>
+
+<input
+
+type="email"
+
+id="correoInstitucional"
+
+class="form-control"
+
+value="${data.correoInstitucional||''}">
+
+</div>
+
+<div class="col-md-6 mb-3">
+
+<label class="form-label">
+
+Correo Gmail
+
+</label>
+
+<input
+
+type="email"
+
+id="correoGmail"
+
+class="form-control"
+
+value="${data.correoGmail||''}">
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+}
+    //=====================================================
+// NUEVO REGISTRO
+//=====================================================
+
+window.nuevoRegistro=()=>{
+
+if(catalogoActual!="personal") return;
+
+idEditar="";
+
+document.getElementById("tituloModal").innerHTML=
+
+'<i class="bi bi-person-plus-fill"></i> Nuevo Personal';
+
+document.getElementById("modalBody").innerHTML=
+
+formularioPersonal();
+
+new bootstrap.Modal(
+
+document.getElementById("modalRegistro")
+
+).show();
+
+}
+    //=====================================================
+// EDITAR
+//=====================================================
+
+window.editarPersonal=(id)=>{
+
+idEditar=id;
+
+const data=datos.personal[id];
+
+document.getElementById("tituloModal").innerHTML=
+
+'<i class="bi bi-pencil-fill"></i> Editar Personal';
+
+document.getElementById("modalBody").innerHTML=
+
+formularioPersonal(data);
+
+new bootstrap.Modal(
+
+document.getElementById("modalRegistro")
+
+).show();
+
+}
+window.permisosPersonal=(id)=>{
+
+Swal.fire({
+
+icon:'info',
+
+title:'Permisos',
+
+text:'Este módulo se construirá en la Parte 6.'
+
+});
+
+}    
+    .modal-body h5{
+
+margin-top:15px;
+
+margin-bottom:15px;
+
+font-weight:bold;
+
+}
+
+.modal-body hr{
+
+margin-top:20px;
+
+margin-bottom:20px;
+
+}
+
+.form-label{
+
+font-weight:600;
+
+font-size:.9rem;
+
+}
+    function validarPersonal(data){
+
+if(data.numeroEmpleado==""){
+
+Swal.fire(
+
+"Falta información",
+
+"Ingrese el número de empleado",
+
+"warning"
+
+);
+
+return false;
+
+}
+
+if(data.nombre==""){
+
+Swal.fire(
+
+"Falta información",
+
+"Ingrese el nombre",
+
+"warning"
+
+);
+
+return false;
+
+}
+
+if(data.puesto==""){
+
+Swal.fire(
+
+"Falta información",
+
+"Ingrese el puesto",
+
+"warning"
+
+);
+
+return false;
+
+}
+
+return true;
+
+}
+//==================================================
+// GUARDAR PERSONAL
+//==================================================
+
+document.getElementById("btnGuardar").onclick = async () => {
+
+if(catalogoActual!="personal") return;
+
+const data={
+
+numeroEmpleado:document.getElementById("numeroEmpleado").value.trim().toUpperCase(),
+
+nombre:document.getElementById("nombre").value.trim().toUpperCase(),
+
+puesto:document.getElementById("puesto").value.trim().toUpperCase(),
+
+usuarioXS:document.getElementById("usuarioXS").value.trim().toUpperCase(),
+
+usuarioXA:document.getElementById("usuarioXA").value.trim().toUpperCase(),
+
+usuarioSalesForce:document.getElementById("usuarioSalesForce").value.trim().toUpperCase(),
+
+usuarioPowerBI:document.getElementById("usuarioPowerBI").value.trim().toUpperCase(),
+
+usuarioB2B:document.getElementById("usuarioB2B").value.trim().toUpperCase(),
+
+correoInstitucional:document.getElementById("correoInstitucional").value.trim(),
+
+correoGmail:document.getElementById("correoGmail").value.trim(),
+
+status:document.getElementById("status").value
+
+};
+if(!validarPersonal(data)){
+
+return;
+
+}
+
+try{
+
+if(idEditar==""){
+
+await push(ref(db,"personal"),data);
+
+Swal.fire({
+
+icon:"success",
+
+title:"Registro agregado",
+
+timer:1200,
+
+showConfirmButton:false
+
+});
+
+}else{
+
+await update(
+
+ref(db,"personal/"+idEditar),
+
+data
+
+);
+
+Swal.fire({
+
+icon:"success",
+
+title:"Registro actualizado",
+
+timer:1200,
+
+showConfirmButton:false
+
+});
+
+}
+
+bootstrap.Modal
+
+.getInstance(document.getElementById("modalRegistro"))
+
+.hide();
+
+}catch(e){
+
+Swal.fire(
+
+"Error",
+
+e.message,
+
+"error"
+
+);
+
+}
+
+};    
+    //==================================================
+// ELIMINAR
+//==================================================
+
+window.eliminarPersonal=(id)=>{
+
+Swal.fire({
+
+title:"¿Eliminar registro?",
+
+text:"No podrá recuperarse.",
+
+icon:"warning",
+
+showCancelButton:true,
+
+confirmButtonColor:"#dc3545",
+
+confirmButtonText:"Eliminar",
+
+cancelButtonText:"Cancelar"
+
+}).then(async(res)=>{
+
+if(!res.isConfirmed) return;
+
+await remove(
+
+ref(db,"personal/"+id)
+
+);
+
+Swal.fire({
+
+icon:"success",
+
+title:"Eliminado",
+
+timer:1000,
+
+showConfirmButton:false
+
+});
+
+});
+
+}
+    const existe=Object.entries(datos.personal)
+
+.find(r=>
+
+r[1].numeroEmpleado==data.numeroEmpleado
+
+&&
+
+r[0]!=idEditar
+
+);
+
+if(existe){
+
+Swal.fire(
+
+"Empleado existente",
+
+"Ya existe ese número de empleado.",
+
+"warning"
+
+);
+
+return;
+
+}
+    let badge='';
+
+switch(data.status){
+
+case "ACTIVO":
+
+badge='<span class="badge bg-success">ACTIVO</span>';
+
+break;
+
+case "BAJA":
+
+badge='<span class="badge bg-danger">BAJA</span>';
+
+break;
+
+default:
+
+badge='<span class="badge bg-secondary">N/D</span>';
+
+}
+    document.addEventListener("keydown",(e)=>{
+
+if(e.key=="Enter"){
+
+const modal=document.getElementById("modalRegistro");
+
+if(modal.classList.contains("show")){
+
+document.getElementById("btnGuardar").click();
+
+}
+
+}
+
+});
+    document
+
+.getElementById("modalRegistro")
+
+.addEventListener("hidden.bs.modal",()=>{
+
+idEditar="";
+
+document.getElementById("modalBody").innerHTML="";
+
+});
+    
