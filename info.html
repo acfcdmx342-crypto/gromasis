@@ -173,7 +173,7 @@
     const db = getDatabase(initializeApp(config));
     
     // Estructura actualizada del almacenamiento interno
-    let store = { redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, sucursales: {}, usuarios: {} };
+    let store = { colorcenter:{}, redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, sucursales: {}, usuarios: {} };
     let currentPath = '';
     let loadsPending = Object.keys(store).length;
 const urlParams = new URLSearchParams(window.location.search);
@@ -202,41 +202,51 @@ Object.keys(store).forEach(path => {
         }
     });
 });
+window.render = (path) => {
+    currentPath = path;
+    document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
+    document.getElementById(`link-${path}`)?.classList.add('active');
+    
+    const items = store[path] || {};
+    const keys = Object.keys(items);
+    
+    let displayTitle = path.toUpperCase().replace('_', ' ');
 
-    window.render = (path) => {
-        currentPath = path;
-        document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
-        document.getElementById(`link-${path}`)?.classList.add('active');
-        
-        if (path === 'colorcenter') { 
-            renderFormato('COLORCENTER');
-            return;
-        }
-        
-        const items = store[path];
-        const keys = Object.keys(items);
-        
-        // Mapeo visual para mostrar nombres limpios en la interfaz
-        let displayTitle = path.toUpperCase().replace('_', ' ');
-        if(path === 'redes_inalambricas') displayTitle = "REDES INALÁMBRICAS";
-
-        let html = `<div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="fw-bold m-0">${displayTitle}</h4>
-                        <button class="btn btn-dark" onclick="showModal('${path}')"><i class="bi bi-plus-lg"></i> Nuevo</button>
-                    </div>`;
-        
-        if (keys.length === 0) {
-            html += `<div class="text-center py-5 text-muted">No hay registros</div>`;
-        } else {
-            html += `<div class="table-responsive"><table class="table table-hover border">
-                <thead><tr>
+    let html = `<div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold m-0">${displayTitle}</h4>
+                    <button class="btn btn-dark" onclick="showModal('${path}')"><i class="bi bi-plus-lg"></i> Nuevo</button>
+                </div>`;
+    
+    if (keys.length === 0) {
+        html += `<div class="text-center py-5 text-muted">No hay registros</div>`;
+    } else {
+        html += `<div class="table-responsive"><table class="table table-hover border">
+            <thead><tr>
+                ${path === 'colorcenter' ? '<th>Empresa</th><th>Zona</th><th>Sucursal</th><th>Mod. Dosificador</th><th>Img Dosificador</th><th>Mod. Revolvedora</th><th>Img Revolvedora</th>' : `
                     ${['usuarios','sucursales','zonas'].includes(path) ? '<th>Empresa</th>' : ''}
                     ${['usuarios','sucursales'].includes(path) ? '<th>Zona</th>' : ''}
                     ${['redes_inalambricas', 'personal'].includes(path) ? '<th>Artículos</th><th>Modelo</th><th>Descripción</th><th>Marca</th><th>Cant.</th>' : '<th class="text-start">Nombre</th>'}
-                    <th class="text-end">Acciones</th>
-                </tr></thead><tbody>`;
-            keys.forEach(id => {
-                const r = items[id];
+                `}
+                <th class="text-end">Acciones</th>
+            </tr></thead><tbody>`;
+            
+        keys.forEach(id => {
+            const r = items[id];
+            if (path === 'colorcenter') {
+                html += `<tr>
+                    <td><small>${r.empresa || '-'}</small></td>
+                    <td><small>${r.zona || '-'}</small></td>
+                    <td><small>${r.sucursal || '-'}</small></td>
+                    <td>${r.modeloDosificador || '-'}</td>
+                    <td>${r.imgDosificador ? `<img src="${r.imgDosificador}" style="height:40px; border-radius:4px;">` : '-'}</td>
+                    <td>${r.modeloRevolvedora || '-'}</td>
+                    <td>${r.imgRevolvedora ? `<img src="${r.imgRevolvedora}" style="height:40px; border-radius:4px;">` : '-'}</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>`;
+            } else {
                 html += `<tr>
                     ${['usuarios','sucursales','zonas'].includes(path) ? `<td><small>${r.empresa || '-'}</small></td>` : ''}
                     ${['usuarios','sucursales'].includes(path) ? `<td><small>${r.zona || '-'}</small></td>` : ''}
@@ -247,122 +257,16 @@ Object.keys(store).forEach(path => {
                     <td class="text-end">
                         <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
                         <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
-                       ${path === 'usuarios' ? `
-                            <button class="btn btn-sm btn-outline-success border-0" onclick="openEmpresaModal('${id}')"><i class="bi bi-building"></i></button>` : ''} 
+                       ${path === 'usuarios' ? `<button class="btn btn-sm btn-outline-success border-0" onclick="openEmpresaModal('${id}')"><i class="bi bi-building"></i></button>` : ''} 
                     </td>
                 </tr>`;
-            });
-            html += `</tbody></table></div>`;
-        }
-        document.getElementById("view").innerHTML = html;
-    };
-
-    function renderFormato(tipo) {
-        const storeKey = 'personal'; // Colorcenter apunta a la información de Personal
-        const title = 'Requisición de Colorcenter';
-        const colorVar = '--cctv-blue';
-        
-        const today = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const urlParams = new URLSearchParams(window.location.search);
-        const nURL = urlParams.get('n')?.toUpperCase() || "";
-        const pURL = urlParams.get('p')?.toUpperCase() || "";
-        
-        const usuariosArr = Object.values(store.usuarios);
-        const usuarioEncontrado = usuariosArr.find(u => 
-            (u.nombre && u.nombre.toUpperCase() === nURL) || 
-            (u.usuario && u.usuario.toUpperCase() === nURL)
-        );
-
-        const fNombre = usuarioEncontrado?.nombre || (nURL !== "NOMBRE" && nURL !== "" ? nURL : "SOPORTE");
-        const fPuesto = usuarioEncontrado?.puesto || (pURL !== "PUESTO" && pURL !== "" ? pURL : "TECNICO");
-
-        const emps = Object.values(store.empresas).map(e => e.nombre).sort();
-        const arts = Object.values(store[storeKey]).map(m => m.articulos).filter((v, i, a) => a.indexOf(v) === i).sort();
-
-        let html = `
-            <div id="capture-area" class="p-4" style="width: 100%; max-width: 900px; margin: auto; background: white; border: 1px solid #ccc;">
-                <div class="pdf-header-container">
-                    <div style="flex-grow: 1;">
-                        <h3 class="fw-bold m-0" style="color: var(${colorVar})">${title}</h3>
-                    </div>
-                    <div class="pdf-actions no-print">
-                        <button class="btn-print" onclick="window.print()" title="Imprimir Formato">
-                            <i class="bi bi-printer-fill fs-5"></i>
-                        </button>
-                        <button class="btn-back" onclick="render('personal')" title="Regresar">
-                            <i class="bi bi-arrow-left-circle-fill fs-5"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="cctv-header">Datos del Solicitante</div>
-                <div class="row g-0 mb-4 border">
-                    <div class="col-md-7 border-end">
-                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Nombre:</div><input type="text" class="cctv-input" value="${fNombre}" readonly></div>
-                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Puesto:</div><input type="text" class="cctv-input" value="${fPuesto}" readonly></div>
-                        <div class="d-flex"><div class="cctv-label" style="width: 120px;">Empresa:</div>
-                            <select class="cctv-input" id="form-empresa-select" onchange="window.updateFormZonas(this.value)">
-                                <option value="">SELECCIONE...</option>
-                                ${emps.map(e => `<option value="${e}">${e}</option>`).join('')}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Fecha:</div><div class="cctv-input bg-light">${today}</div></div>
-                        <div class="d-flex border-bottom"><div class="cctv-label" style="width: 120px;">Zona:</div><select class="cctv-input" id="form-zona-select" onchange="window.updateFormSucursales(this.value)"><option value="">ZONA</option></select></div>
-                        <div class="d-flex"><div class="cctv-label" style="width: 120px;">Sucursal:</div><select class="form-select cctv-input" id="form-sucursal-select"><option value="">SUCURSAL</option></select></div>
-                    </div>
-                </div>
-                <div class="cctv-header">Requerimiento de equipo</div>
-                <div class="row g-2 row-cols-1 row-cols-md-2 row-cols-lg-3" id="items-container">
-                    ${Array.from({length: 6}, (_, i) => generateItemHTML(i + 1, arts, storeKey)).join('')}
-                </div>
-                <div class="text-center mt-3 no-print">
-                    <button class="btn btn-primary btn-sm rounded-pill px-4" onclick="window.addNewItem('${storeKey}')"><i class="bi bi-plus-circle me-2"></i>Añadir más artículos</button>
-                </div>
-                <div class="mt-4 border p-2">
-                    <label class="small fw-bold">Observaciones adicionales o artículos no listados:</label>
-                    <textarea class="form-control mt-1" rows="2"></textarea>
-                </div>
-                <div class="cctv-green-header">Diagnóstico Realizado por Soporte en Zona</div>
-                <div class="border p-3">
-                    <div class="row mb-3">
-                        <div class="col-md-6 d-flex"><span class="small fw-bold me-2">Zona:</span><input type="text" class="border-bottom border-0 w-100" id="diag-zona-display" readonly></div>
-                        <div class="col-md-6 d-flex"><span class="small fw-bold me-2">Responsable:</span><input type="text" class="border-bottom border-0 w-100" value="${fNombre}" readonly></div>
-                    </div>
-                    <textarea class="form-control" rows="3" placeholder="Comentarios..."></textarea>
-                </div>
-                <div class="row mt-5">
-                    <div class="col-4"><div class="signature-line"><strong>SOLICITA</strong><br>${fNombre}</div></div>
-                    <div class="col-4"><div class="signature-line"><strong>REVISA</strong><br>Coordinador de Soporte</div></div>
-                    <div class="col-4"><div class="signature-line"><strong>AUTORIZA</strong><br>Gerente de Sistemas</div></div>
-                </div>
-            </div>`;
-        document.getElementById("view").innerHTML = html;
+            }
+        });
+        html += `</tbody></table></div>`;
     }
-
-    function generateItemHTML(i, articulos, storeKey) {
-        return `<div class="col item-row" id="row-${i}"><div class="item-box">
-            <div class="d-flex mb-2 align-items-center justify-content-between">
-                <div class="d-flex align-items-center">
-                    <span class="small fw-bold label-index me-2" style="font-size: 0.8rem">Cant. art. ${i}:</span>
-                    <input type="number" class="form-control form-control-sm" style="width: 60px" placeholder="0">
-                </div>
-                <button class="btn-remove-item no-print" onclick="window.removeItem('row-${i}')" title="Eliminar item">
-                    <i class="bi bi-trash fs-6"></i>
-                </button>
-            </div>
-            <div class="bg-dark text-white text-center small py-1 mb-2" style="font-size: 0.75rem; font-weight: bold;">Seleccionar artículo:</div>
-            <select class="form-select form-select-sm mb-1 select-art" onchange="window.fillProductData(this, '${i}', '${storeKey}')" style="font-size: 0.8rem">
-                <option value="">SELECCIONE...</option>
-                ${articulos.map(art => `<option value="${art}">${art}</option>`).join('')}
-            </select>
-            <input type="text" id="mod-${i}" class="form-control form-control-sm mb-1 input-mod" placeholder="MODELO" readonly style="font-size: 0.75rem; background-color: #f8fafc;">
-            <input type="text" id="bottom-des-${i}" class="form-control form-control-sm mb-1 input-des" placeholder="DESCRIPCIÓN" readonly style="font-size: 0.75rem; background-color: #f8fafc;">
-            <input type="text" id="mar-${i}" class="form-control form-control-sm input-mar" placeholder="MARCA" readonly style="font-size: 0.75rem; background-color: #f8fafc;">
-        </div></div>`;
-    }
-
+    document.getElementById("view").innerHTML = html;
+};
+    
     window.removeItem = (id) => {
         const el = document.getElementById(id);
         if (el) {
@@ -428,111 +332,224 @@ Object.keys(store).forEach(path => {
             if(diag) diag.value = z;
         }
     };
+// Reemplaza por completo tu función showModal por esta:
 window.showModal = (path, id = "") => {
-        const item = id ? store[path][id] : {};
-        document.getElementById("fID").value = id;
-        
-        let displayTitle = path.toUpperCase().replace('_', ' ');
-        document.getElementById("mTitle").innerText = (id ? 'Editar ' : 'Nuevo ') + displayTitle;
-        
-        ['secEmpresa', 'secZona', 'secUsuarios', 'secMatriz', 'secMasivo', 'secToggleMasivo'].forEach(s => document.getElementById(s).classList.add('d-none'));
-        document.getElementById("secIndividual").classList.remove('d-none');
-        document.getElementById("checkMasivo").checked = false;
+    const item = id ? store[path][id] : {};
+    document.getElementById("fID").value = id;
+    
+    let displayTitle = path.toUpperCase().replace('_', ' ');
+    document.getElementById("mTitle").innerText = (id ? 'Editar ' : 'Nuevo ') + displayTitle;
+    
+    // Ocultar todas las secciones comunes primero
+    ['secEmpresa', 'secZona', 'secUsuarios', 'secMatriz', 'secMasivo', 'secToggleMasivo'].forEach(s => document.getElementById(s).classList.add('d-none'));
+    document.getElementById("secIndividual").classList.remove('d-none');
+    document.getElementById("checkMasivo").checked = false;
 
-        if (['redes_inalambricas', 'personal'].includes(path)) {
-            document.getElementById("secIndividual").classList.add('d-none');
-            document.getElementById("secMatriz").classList.remove('d-none');
-            document.getElementById("mArt").value = item.articulos || "";
-            document.getElementById("mMod").value = item.modelo || "";
-            document.getElementById("mDes").value = item.descripcion || "";
-            document.getElementById("mMar").value = item.marca || "";
-            document.getElementById("mCant").value = item.cantidad || "";
-        }
-        if (['zonas', 'sucursales', 'usuarios'].includes(path)) {
-            document.getElementById("secEmpresa").classList.remove('d-none');
-            const emps = Object.values(store.empresas).map(e => e.nombre).sort();
-            const fEmp = document.getElementById("fEmp");
-            fEmp.innerHTML = '<option value="">SELECCIONE...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
-            
-            if(item.empresa) {
-               const zs = Object.values(store.zonas).filter(z => z.empresa === item.empresa).map(z => z.nombre).sort();
-               document.getElementById("secZona").classList.remove('d-none');
-               document.getElementById("fZona").innerHTML = zs.map(z => `<option value="${z}" ${item.zona === z ? 'selected' : ''}>${z}</option>`).join('');
-            }
-        }
-        if (path === 'usuarios') {
-            document.getElementById("secUsuarios").classList.remove('d-none');
-            document.getElementById("uDep").value = item.departamento || "";
-            document.getElementById("uPue").value = item.puesto || "";
-            document.getElementById("uUsu").value = item.usuario || "";
-            document.getElementById("uPass").value = item.pass || "";
-        }
+    // Eliminar sección previa de colorcenter si existiera para que no se duplique
+    document.getElementById("secColorCenter")?.remove();
+
+    if (path === 'colorcenter') {
+        document.getElementById("secIndividual").classList.add('d-none');
         
-        document.getElementById("fNom").value = item.nombre || "";
+        // Creamos dinámicamente los campos específicos requeridos
+        const divCC = document.createElement('div');
+        divCC.id = "secColorCenter";
+        divCC.className = "row g-3";
+        divCC.innerHTML = `
+            <div class="col-md-4">
+                <label class="form-label fw-bold small">Empresa</label>
+                <select id="ccEmp" class="form-select"><option value="">SELECCIONE...</option></select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold small">Zona</label>
+                <select id="ccZona" class="form-select"><option value="">ZONA</option></select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold small">Sucursal</label>
+                <select id="ccSuc" class="form-select"><option value="">SUCURSAL</option></select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold small">Modelo del Dosificador</label>
+                <input type="text" id="ccModDos" class="form-control" placeholder="MODELO DOSIFICADOR">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold small">Imagen Dosificador</label>
+                <input type="file" id="ccImgDos" class="form-control" accept="image/*">
+                <input type="hidden" id="ccImgDosBase64">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold small">Modelo de la Revolvedora</label>
+                <input type="text" id="ccModRev" class="form-control" placeholder="MODELO REVOLVEDORA">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold small">Imagen Revolvedora</label>
+                <input type="file" id="ccImgRev" class="form-control" accept="image/*">
+                <input type="hidden" id="ccImgRevBase64">
+            </div>
+        `;
         
-        // Mostrar switch de carga masiva únicamente si es un registro NUEVO en EMPRESAS
-        if (!id && path === 'empresas') {
-            document.getElementById("secToggleMasivo").classList.remove('d-none');
-        }
-        
-        document.getElementById("fEmp").onchange = (e) => {
-            if(['sucursales', 'usuarios'].includes(path)){
-                const zs = Object.values(store.zonas).filter(z => z.empresa === e.target.value).map(z => z.nombre).sort();
-                document.getElementById("secZona").classList.remove('d-none');
-                document.getElementById("fZona").innerHTML = zs.map(z => `<option value="${z}">${z}</option>`).join('');
-            }
+        // Insertamos la sección antes del botón Guardar
+        document.getElementById("secIndividual").parentNode.insertBefore(divCC, document.getElementById("secIndividual"));
+
+        // Llenar select de Empresas
+        const emps = Object.values(store.empresas).map(e => e.nombre).sort();
+        const ccEmp = document.getElementById("ccEmp");
+        ccEmp.innerHTML = '<option value="">SELECCIONE...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
+
+        // Lógica de encadenamiento dinámico para Zonas
+        const actualizarZonasCC = (empresaSeleccionada, zonaPrevia = "") => {
+            const zs = Object.values(store.zonas).filter(z => z.empresa === empresaSeleccionada).map(z => z.nombre).sort();
+            document.getElementById("ccZona").innerHTML = '<option value="">ZONA</option>' + zs.map(z => `<option value="${z}" ${zonaPrevia === z ? 'selected' : ''}>${z}</option>`).join('');
+            document.getElementById("ccSuc").innerHTML = '<option value="">SUCURSAL</option>';
         };
 
-        new bootstrap.Modal(document.getElementById("modalApp")).show();
-    };
-  document.getElementById("btnSave").onclick = async () => {
-        const id = document.getElementById("fID").value;
-        const isM = document.getElementById("checkMasivo").checked;
-        let data = {};
+        // Lógica de encadenamiento dinámico para Sucursales
+        const actualizarSucursalesCC = (zonaSeleccionada, sucursalPrevia = "") => {
+            const empresaSeleccionada = document.getElementById("ccEmp").value;
+            const ss = Object.values(store.sucursales).filter(s => s.empresa === empresaSeleccionada && s.zona === zonaSeleccionada).map(s => s.nombre).sort();
+            document.getElementById("ccSuc").innerHTML = '<option value="">SUCURSAL</option>' + ss.map(s => `<option value="${s}" ${sucursalPrevia === s ? 'selected' : ''}>${s}</option>`).join('');
+        };
 
-        if (['redes_inalambricas', 'personal'].includes(currentPath)) {
-            data = { 
-                articulos: document.getElementById("mArt").value.toUpperCase(), 
-                modelo: document.getElementById("mMod").value.toUpperCase(), 
-                descripcion: document.getElementById("mDes").value.toUpperCase(), 
-                marca: document.getElementById("mMar").value.toUpperCase(),
-                cantidad: document.getElementById("mCant").value
+        ccEmp.onchange = (e) => actualizarZonasCC(e.target.value);
+        document.getElementById("ccZona").onchange = (e) => actualizarSucursalesCC(e.target.value);
+
+        // Convertidores de archivo a Base64 string para guardarlos directo en Realtime Database
+        const fReader = (inputEl, hiddenEl) => {
+            inputEl.onchange = (e) => {
+                const file = e.target.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = (el) => hiddenEl.value = el.target.result;
+                    reader.readAsDataURL(file);
+                }
             };
-        } else {
-            data.nombre = document.getElementById("fNom").value.toUpperCase();
-        }
+        };
+        fReader(document.getElementById("ccImgDos"), document.getElementById("ccImgDosBase64"));
+        fReader(document.getElementById("ccImgRev"), document.getElementById("ccImgRevBase64"));
 
-        if (['zonas', 'sucursales', 'usuarios'].includes(currentPath)) data.empresa = document.getElementById("fEmp").value;
-        if (['sucursales', 'usuarios'].includes(currentPath)) data.zona = document.getElementById("fZona").value;
-        
-        if (currentPath === 'usuarios') {
-            data.departamento = document.getElementById("uDep").value.toUpperCase();
-            data.puesto = document.getElementById("uPue").value.toUpperCase();
-            data.usuario = document.getElementById("uUsu").value;
-            data.pass = document.getElementById("uPass").value;
-        }
-
-        try {
-            if (isM && currentPath === 'empresas') {
-                const lineas = document.getElementById("fMasivo").value.split('\n').filter(l => l.trim());
-                if(lineas.length === 0) {
-                    Swal.fire("Atención", "Por favor ingresa al menos el nombre de una empresa.", "warning");
-                    return;
+        // Si es edición, pre-cargamos y forzamos las cascadas
+        if(id) {
+            document.getElementById("ccModDos").value = item.modeloDosificador || "";
+            document.getElementById("ccModRev").value = item.modeloRevolvedora || "";
+            document.getElementById("ccImgDosBase64").value = item.imgDosificador || "";
+            document.getElementById("ccImgRevBase64").value = item.imgRevolvedora || "";
+            
+            if(item.empresa) {
+                actualizarZonasCC(item.empresa, item.zona);
+                if(item.zona) {
+                    actualizarSucursalesCC(item.zona, item.sucursal);
                 }
-                for (let l of lineas) {
-                    await push(ref(db, currentPath), { nombre: l.trim().toUpperCase() });
-                }
-            } else {
-                if(!isM && !['redes_inalambricas', 'personal'].includes(currentPath) && !data.nombre) {
-                    Swal.fire("Atención", "El campo Nombre no puede estar vacío.", "warning");
-                    return;
-                }
-                id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
             }
-            bootstrap.Modal.getInstance(document.getElementById("modalApp")).hide();
-            Swal.fire({ icon: "success", title: "Guardado", timer: 800, showConfirmButton: false });
-        } catch (e) { Swal.fire("Error", e.message, "error"); }
+        }
+    }
+
+    // Mantener la lógica intacta de los otros catálogos
+    if (['redes_inalambricas', 'personal'].includes(path)) {
+        document.getElementById("secIndividual").classList.add('d-none');
+        document.getElementById("secMatriz").classList.remove('d-none');
+        document.getElementById("mArt").value = item.articulos || "";
+        document.getElementById("mMod").value = item.modelo || "";
+        document.getElementById("mDes").value = item.descripcion || "";
+        document.getElementById("mMar").value = item.marca || "";
+        document.getElementById("mCant").value = item.cantidad || "";
+    }
+    if (['zonas', 'sucursales', 'usuarios'].includes(path)) {
+        document.getElementById("secEmpresa").classList.remove('d-none');
+        const emps = Object.values(store.empresas).map(e => e.nombre).sort();
+        const fEmp = document.getElementById("fEmp");
+        fEmp.innerHTML = '<option value="">SELECCIONE...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
+        
+        if(item.empresa) {
+           const zs = Object.values(store.zonas).filter(z => z.empresa === item.empresa).map(z => z.nombre).sort();
+           document.getElementById("secZona").classList.remove('d-none');
+           document.getElementById("fZona").innerHTML = zs.map(z => `<option value="${z}" ${item.zona === z ? 'selected' : ''}>${z}</option>`).join('');
+        }
+    }
+    if (path === 'usuarios') {
+        document.getElementById("secUsuarios").classList.remove('d-none');
+        document.getElementById("uDep").value = item.departamento || "";
+        document.getElementById("uPue").value = item.puesto || "";
+        document.getElementById("uUsu").value = item.usuario || "";
+        document.getElementById("uPass").value = item.pass || "";
+    }
+    
+    document.getElementById("fNom").value = item.nombre || "";
+    if (!id && path === 'empresas') document.getElementById("secToggleMasivo").classList.remove('d-none');
+
+    document.getElementById("fEmp").onchange = (e) => {
+        if(['sucursales', 'usuarios'].includes(path)){
+            const zs = Object.values(store.zonas).filter(z => z.empresa === e.target.value).map(z => z.nombre).sort();
+            document.getElementById("secZona").classList.remove('d-none');
+            document.getElementById("fZona").innerHTML = zs.map(z => `<option value="${z}">${z}</option>`).join('');
+        }
     };
+
+    new bootstrap.Modal(document.getElementById("modalApp")).show();
+};
+ // Busca el evento click de btnSave y reemplázalo por este:
+document.getElementById("btnSave").onclick = async () => {
+    const id = document.getElementById("fID").value;
+    const isM = document.getElementById("checkMasivo").checked;
+    let data = {};
+
+    if (currentPath === 'colorcenter') {
+        data = {
+            empresa: document.getElementById("ccEmp").value,
+            zona: document.getElementById("ccZona").value,
+            sucursal: document.getElementById("ccSuc").value,
+            modeloDosificador: document.getElementById("ccModDos").value.toUpperCase(),
+            imgDosificador: document.getElementById("ccImgDosBase64").value,
+            modeloRevolvedora: document.getElementById("ccModRev").value.toUpperCase(),
+            imgRevolvedora: document.getElementById("ccImgRevBase64").value
+        };
+        
+        if(!data.empresa || !data.zona || !data.sucursal){
+            Swal.fire("Atención", "Por favor completa la Empresa, Zona y Sucursal.", "warning");
+            return;
+        }
+    } else if (['redes_inalambricas', 'personal'].includes(currentPath)) {
+        data = { 
+            articulos: document.getElementById("mArt").value.toUpperCase(), 
+            modelo: document.getElementById("mMod").value.toUpperCase(), 
+            descripcion: document.getElementById("mDes").value.toUpperCase(), 
+            marca: document.getElementById("mMar").value.toUpperCase(),
+            cantidad: document.getElementById("mCant").value
+        };
+    } else {
+        data.nombre = document.getElementById("fNom").value.toUpperCase();
+    }
+
+    if (['zonas', 'sucursales', 'usuarios'].includes(currentPath)) data.empresa = document.getElementById("fEmp").value;
+    if (['sucursales', 'usuarios'].includes(currentPath)) data.zona = document.getElementById("fZona").value;
+    
+    if (currentPath === 'usuarios') {
+        data.departamento = document.getElementById("uDep").value.toUpperCase();
+        data.puesto = document.getElementById("uPue").value.toUpperCase();
+        data.usuario = document.getElementById("uUsu").value;
+        data.pass = document.getElementById("uPass").value;
+    }
+
+    try {
+        if (isM && currentPath === 'empresas') {
+            const lineas = document.getElementById("fMasivo").value.split('\n').filter(l => l.trim());
+            if(lineas.length === 0) {
+                Swal.fire("Atención", "Por favor ingresa al menos el nombre de una empresa.", "warning");
+                return;
+            }
+            for (let l of lineas) {
+                await push(ref(db, currentPath), { nombre: l.trim().toUpperCase() });
+            }
+        } else {
+            if(!isM && !['redes_inalambricas', 'personal', 'colorcenter'].includes(currentPath) && !data.nombre) {
+                Swal.fire("Atención", "El campo Nombre no puede estar vacío.", "warning");
+                return;
+            }
+            id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
+        }
+        bootstrap.Modal.getInstance(document.getElementById("modalApp")).hide();
+        Swal.fire({ icon: "success", title: "Guardado", timer: 800, showConfirmButton: false });
+    } catch (e) { Swal.fire("Error", e.message, "error"); }
+};
     window.del = async (p, id) => {
         const res = await Swal.fire({ title: '¿Eliminar?', icon: 'warning', showCancelButton: true });
         if (res.isConfirmed) await remove(ref(db, `${p}/${id}`));
