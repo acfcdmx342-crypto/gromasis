@@ -530,9 +530,17 @@ window.showModal = (path, id = "") => {
     };
 
     document.getElementById("checkMasivo").onchange = (e) => {
-        document.getElementById(['redes_inalambricas', 'personal'].includes(currentPath) ? "secMatriz" : "secIndividual").classList.toggle('d-none', e.target.checked);
-        if (currentPath === 'usuarios') document.getElementById("secUsuarios").classList.toggle('d-none', e.target.checked);
+        // Si el switch está activo, oculta el campo individual y muestra el bloque masivo
+        document.getElementById("secIndividual").classList.toggle('d-none', e.target.checked);
         document.getElementById("secMasivo").classList.toggle('d-none', !e.target.checked);
+        
+        // Protegemos los flujos de los otros catálogos por si acaso
+        if (['redes_inalambricas', 'personal'].includes(currentPath)) {
+            document.getElementById("secMatriz").classList.toggle('d-none', e.target.checked);
+        }
+        if (currentPath === 'usuarios') {
+            document.getElementById("secUsuarios").classList.toggle('d-none', e.target.checked);
+        }
     };
 
     let currentUserId = null;
