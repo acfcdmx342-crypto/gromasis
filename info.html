@@ -183,18 +183,25 @@ if (currentPath === '') {
         render('colorcenter');
     }
 }
-    Object.keys(store).forEach(path => {
-        onValue(ref(db, path), (s) => {
-            store[path] = s.val() || {};
-            if (loadsPending > 0) loadsPending--;
-            if (loadsPending === 0) {
-                
-               else if (currentPath === path) {
-                    render(path);
-                }
+    // CÓDIGO CORREGIDO:
+Object.keys(store).forEach(path => {
+    onValue(ref(db, path), (s) => {
+        store[path] = s.val() || {};
+        
+        // Si es la primera carga del sistema, decrementamos los pendientes
+        if (loadsPending > 0) {
+            loadsPending--;
+        }
+        
+        // Si ya se cargó todo por primera vez, o si Firebase recibe una actualización en tiempo real...
+        if (loadsPending === 0) {
+            // Si el catálogo que cambió es el que el usuario está viendo actualmente, re-renderiza la tabla
+            if (currentPath === path) {
+                render(path);
             }
-        });
+        }
     });
+});
 
     window.render = (path) => {
         currentPath = path;
