@@ -474,7 +474,18 @@ window.showModal = (path, id = "") => {
     }
     
     document.getElementById("fNom").value = item.nombre || "";
-    if (!id && path === 'empresas') document.getElementById("secToggleMasivo").classList.remove('d-none');
+   // CÓDIGO NUEVO:
+// Mostrar el interruptor de carga masiva para CUALQUIER registro NUEVO, 
+// excepto en los catálogos de artículos complejos/imágenes.
+if (!id && !['redes_inalambricas', 'personal', 'colorcenter'].includes(path)) {
+    document.getElementById("secToggleMasivo").classList.remove('d-none');
+    
+    // Cambiar dinámicamente el texto de ayuda según el catálogo actual
+    const txtMasivo = document.querySelector("#secMasivo label");
+    if (txtMasivo) {
+        txtMasivo.innerText = `Nombres para el catálogo ${displayTitle} (Uno por línea)`;
+    }
+}
 
     document.getElementById("fEmp").onchange = (e) => {
         if(['sucursales', 'usuarios'].includes(path)){
@@ -528,29 +539,49 @@ document.getElementById("btnSave").onclick = async () => {
         data.usuario = document.getElementById("uUsu").value;
         data.pass = document.getElementById("uPass").value;
     }
-
-    try {
-        if (isM && currentPath === 'empresas') {
-            const lineas = document.getElementById("fMasivo").value.split('\n').filter(l => l.trim());
-            if(lineas.length === 0) {
-                Swal.fire("Atención", "Por favor ingresa al menos el nombre de una empresa.", "warning");
-                return;
-            }
-            for (let l of lineas) {
-                await push(ref(db, currentPath), { nombre: l.trim().toUpperCase() });
-            }
-        } else {
-            if(!isM && !['redes_inalambricas', 'personal', 'colorcenter'].includes(currentPath) && !data.nombre) {
-                Swal.fire("Atención", "El campo Nombre no puede estar vacío.", "warning");
-                return;
-            }
-            id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
+try {
+    if (isM) {
+        // Separamos las líneas ingresadas en el cuadro de texto masivo
+        const lineas = document.getElementById("fMasivo").value.split('\n').filter(l => l.trim());
+        if (lineas.length === 0) {
+            Swal.fire("Atención", "Por favor ingresa al menos un registro en la lista.", "warning");
+            return;
         }
-        bootstrap.Modal.getInstance(document.getElementById("modalApp")).hide();
-        Swal.fire({ icon: "success", title: "Guardado", timer: 800, showConfirmButton: false });
-    } catch (e) { Swal.fire("Error", e.message, "error"); }
-};
-    window.del = async (p, id) => {
+
+        // Procesamos fila por fila e inyectamos sus dependencias si corresponden
+        for (let l of lineas) {
+            let registroMasivo = {
+                nombre: l.trim().toUpperCase()
+            };
+
+            // Si el catálogo actual requiere heredar Empresa o Zona seleccionadas, se las añadimos
+            if (['zonas', 'sucursales', 'usuarios'].includes(currentPath)) {
+                registroMasivo.empresa = document.getElementById("fEmp").value;
+            }
+            if (['sucursales', 'usuarios'].includes(currentPath)) {
+                registroMasivo.zona = document.getElementById("fZona").value;
+            }
+
+            // Guardamos individualmente en Firebase
+            await push(ref(db, currentPath), registroMasivo);
+        }
+    } else {
+        // FLUJO INDIVIDUAL NORMAL (Mantiene tu lógica actual intacta)
+        if (!isM && !['redes_inalambricas', 'personal', 'colorcenter'].includes(currentPath) && !data.nombre) {
+            Swal.fire("Atención", "El campo Nombre no puede estar vacío.", "warning");
+            return;
+        }
+        id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
+    }
+
+    // Cerramos modal y notificamos éxito
+    bootstrap.Modal.getInstance(document.getElementById("modalApp")).hide();
+    Swal.fire({ icon: "success", title: "Guardado Masivo Completado", timer: 1000, showConfirmButton: false });
+
+} catch (e) { 
+    Swal.fire("Error", e.message, "error"); 
+}
+   window.del = async (p, id) => {
         const res = await Swal.fire({ title: '¿Eliminar?', icon: 'warning', showCancelButton: true });
         if (res.isConfirmed) await remove(ref(db, `${p}/${id}`));
     };
