@@ -79,18 +79,16 @@
 <body>
 
 <button class="btn btn-dark btn-toggle" onclick="toggleSidebar()"><i class="bi bi-list fs-4"></i></button>
-
 <div class="sidebar" id="sidebar">
     <div class="text-center py-4 border-bottom border-secondary mb-2"><h6 class="mb-0 fw-bold text-white">CATÁLOGOS</h6></div>
-    <a onclick="render('redes_inalambricas')" id="link-redes_inalambricas"><i class="bi bi-wifi me-2"></i> Redes Inalámbricas</a>
-    <a onclick="render('personal')" id="link-personal"><i class="bi bi-people me-2"></i> Personal</a>
-    <a onclick="render('zonas')" id="link-zonas"><i class="bi bi-geo-alt me-2"></i> Zonas</a>
     <a onclick="render('empresas')" id="link-empresas"><i class="bi bi-building me-2"></i> Empresas</a>
+    <a onclick="render('zonas')" id="link-zonas"><i class="bi bi-geo-alt me-2"></i> Zonas</a>
     <a onclick="render('sucursales')" id="link-sucursales"><i class="bi bi-shop me-2"></i> Sucursales</a>
     <a onclick="render('usuarios')" id="link-usuarios"><i class="bi bi-person-lines-fill me-2"></i> Usuarios</a>
-   <a onclick="render('colorcenter')" id="link-colorcenter"><i class="bi bi-file-earmark-text me-2"></i> Colorcenter</a>
+    <a onclick="render('personal')" id="link-personal"><i class="bi bi-people me-2"></i> Personal</a>
+    <a onclick="render('redes_inalambricas')" id="link-redes_inalambricas"><i class="bi bi-wifi me-2"></i> Redes Inalámbricas</a>
+    <a onclick="render('colorcenter')" id="link-colorcenter"><i class="bi bi-file-earmark-text me-2"></i> Colorcenter</a>
 </div>
-
 <div class="main-content" id="main-content">
     <div id="view" class="table-container">
         <div class="text-center py-5 text-muted">
