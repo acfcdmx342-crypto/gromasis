@@ -79,6 +79,8 @@
         .group-title { font-weight: bold; font-size: 0.85rem; color: #334155; margin-bottom: 10px; text-transform: uppercase; }
         .sub-list { padding-left: 20px; border-left: 2px dashed #cbd5e1; margin-top: 5px; margin-bottom: 10px; }
 
+        .header-section { font-weight: bold; font-size: 0.8rem; background: #e2e8f0; padding: 6px 12px; border-radius: 4px; color: #334155; margin-bottom: 5px; }
+
         @media print {
             .no-print { display: none !important; }
             .sidebar { display: none !important; }
@@ -126,6 +128,62 @@
             <div class="modal-body p-4">
                 <input type="hidden" id="fID">
                 
+                <!-- Sección Específica Redes Inalámbricas -->
+                <div id="secRedesInalambricas" class="d-none row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">Empresa *</label>
+                        <select id="riEmpresa" class="form-select"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">Zona *</label>
+                        <select id="riZona" class="form-select"><option value="">SELECCIONE ZONA...</option></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">Sucursal *</label>
+                        <select id="riSucursal" class="form-select"><option value="">SELECCIONE SUCURSAL...</option></select>
+                    </div>
+
+                    <div class="col-12"><div class="header-section">VALORES DE FÁBRICA</div></div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">Módem *</label>
+                        <input type="text" id="riModem" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">Modelo *</label>
+                        <input type="text" id="riModelo" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">SSID *</label>
+                        <input type="text" id="riSsidFabrica" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">WPA KEY *</label>
+                        <input type="text" id="riWpaFabrica" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Destinado *</label>
+                        <input type="text" id="riDestinado" class="form-control">
+                    </div>
+
+                    <div class="col-12"><div class="header-section">MODIFICADOS</div></div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">SSID *</label>
+                        <input type="text" id="riSsidModificado" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">WPA KEY *</label>
+                        <input type="text" id="riWpaModificado" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Acceso Módem *</label>
+                        <input type="text" id="riAccesoModem" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Fecha Última Actualización *</label>
+                        <input type="date" id="riFechaActualizacion" class="form-control">
+                    </div>
+                </div>
+                
                 <!-- Campos compartidos / Estructura para Usuarios y Personal -->
                 <div id="secUsuariosPersonal" class="d-none row g-3 mb-3">
                     <div class="col-md-4">
@@ -144,7 +202,6 @@
                         </select>
                     </div>
                     
-                    <!-- Contenedor del Formulario Individual Estándar (Unificado) -->
                     <div id="secFormIndividualUP" class="row g-3 m-0 p-0">
                         <div class="col-md-4"><label class="form-label fw-bold small">N° de Empleado</label><input type="text" id="upNumEmp" class="form-control"></div>
                         <div class="col-md-8"><label class="form-label fw-bold small">Nombre Completo</label><input type="text" id="upNombre" class="form-control"></div>
@@ -152,40 +209,33 @@
                         <div class="col-md-4"><label class="form-label fw-bold small">Número Largo</label><input type="text" id="upNumLargo" class="form-control"></div>
                         <div class="col-md-4"><label class="form-label fw-bold small">Marcación Corta</label><input type="text" id="upMarcCorta" class="form-control"></div>
                         
-                        <!-- Panel de Accesos Grupo Roma -->
                         <div class="col-12 mt-3" id="wrapperAccesosRoma">
                             <div class="group-box">
                                 <div class="group-title">Accesos Grupo Roma</div>
-                                
-                                <!-- Desarrollos Propios -->
                                 <div class="form-check mb-2">
                                     <input class="form-check-input ctx-trigger" type="checkbox" id="chkGroupDesarrollos" data-target="boxDesarrollos">
                                     <label class="form-check-label fw-semibold" for="chkGroupDesarrollos">Desarrollos Propios</label>
                                 </div>
                                 <div id="boxDesarrollos" class="sub-list d-none"></div>
 
-                                <!-- Servidores -->
                                 <div class="form-check mb-2">
                                     <input class="form-check-input ctx-trigger" type="checkbox" id="chkGroupServidores" data-target="boxServidores">
                                     <label class="form-check-label fw-semibold" for="chkGroupServidores">Servidores</label>
                                 </div>
                                 <div id="boxServidores" class="sub-list d-none"></div>
 
-                                <!-- Comex -->
                                 <div class="form-check mb-2">
                                     <input class="form-check-input ctx-trigger" type="checkbox" id="chkGroupComex" data-target="boxComex">
                                     <label class="form-check-label fw-semibold" for="chkGroupComex">Comex</label>
                                 </div>
                                 <div id="boxComex" class="sub-list d-none"></div>
 
-                                <!-- Correos -->
                                 <div class="form-check mb-2">
                                     <input class="form-check-input ctx-trigger" type="checkbox" id="chkGroupCorreos" data-target="boxCorreos">
                                     <label class="form-check-label fw-semibold" for="chkGroupCorreos">Correos</label>
                                 </div>
                                 <div id="boxCorreos" class="sub-list d-none"></div>
 
-                                <!-- Firewall -->
                                 <div class="form-check mb-2">
                                     <input class="form-check-input ctx-trigger" type="checkbox" id="chkGroupFirewall" data-target="boxFirewall">
                                     <label class="form-check-label fw-semibold" for="chkGroupFirewall">Firewall</label>
@@ -205,13 +255,6 @@
                     <div id="secZona" class="col-md-6 mb-3 d-none">
                         <label class="form-label fw-bold small">Zona</label>
                         <select id="fZona" class="form-select"></select>
-                    </div>
-                    <div id="secMatriz" class="d-none row g-3">
-                        <div class="col-md-6"><label class="form-label fw-bold small">Artículos</label><input type="text" id="mArt" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold small">Modelo</label><input type="text" id="mMod" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold small">Descripción</label><input type="text" id="mDes" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold small">Marca</label><input type="text" id="mMar" class="form-control"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold small">Cantidad</label><input type="number" id="mCant" class="form-control"></div>
                     </div>
                     <div id="secIndividual" class="col-12">
                         <label class="form-label fw-bold small mb-1" id="lblNom">Nombre / Descripción</label>
@@ -389,17 +432,26 @@
                     ${wrapTh('Mod. Revolvedora', colIdx++)}
                     ${wrapTh('Img Revolvedora', colIdx++)}
                 `;
+            } else if (path === 'redes_inalambricas') {
+                html += `
+                    ${wrapTh('Empresa', colIdx++)}
+                    ${wrapTh('Zona', colIdx++)}
+                    ${wrapTh('Sucursal', colIdx++)}
+                    ${wrapTh('Módem', colIdx++)}
+                    ${wrapTh('Modelo', colIdx++)}
+                    ${wrapTh('SSID Fáb.', colIdx++)}
+                    ${wrapTh('WPA Fáb.', colIdx++)}
+                    ${wrapTh('Destinado', colIdx++)}
+                    ${wrapTh('SSID Mod.', colIdx++)}
+                    ${wrapTh('WPA Mod.', colIdx++)}
+                    ${wrapTh('Acceso Módem', colIdx++)}
+                    ${wrapTh('F. Act.', colIdx++)}
+                `;
             } else {
                 html += `
                     ${['sucursales','zonas'].includes(path) ? wrapTh('Empresa', colIdx++) : ''}
                     ${['sucursales'].includes(path) ? wrapTh('Zona', colIdx++) : ''}
-                    ${path === 'redes_inalambricas' ? `
-                        ${wrapTh('Artículos', colIdx++)}
-                        ${wrapTh('Modelo', colIdx++)}
-                        ${wrapTh('Descripción', colIdx++)}
-                        ${wrapTh('Marca', colIdx++)}
-                        ${wrapTh('Cant.', colIdx++)}
-                    ` : wrapTh('Nombre', colIdx++)}
+                    ${wrapTh('Nombre', colIdx++)}
                     ${path === 'sucursales' ? wrapTh('N° Cámaras', colIdx++) : ''}
                 `;
             }
@@ -442,14 +494,30 @@
                             <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
                         </td>
                     </tr>`;
+                } else if (path === 'redes_inalambricas') {
+                    html += `<tr>
+                        <td><small>${r.empresa || '-'}</small></td>
+                        <td><small>${r.zona || '-'}</small></td>
+                        <td><small>${r.sucursal || '-'}</small></td>
+                        <td>${r.modem || '-'}</td>
+                        <td>${r.modelo || '-'}</td>
+                        <td>${r.ssidFabrica || '-'}</td>
+                        <td>${r.wpaFabrica || '-'}</td>
+                        <td><small>${r.destinado || '-'}</small></td>
+                        <td>${r.ssidModificado || '-'}</td>
+                        <td>${r.wpaModificado || '-'}</td>
+                        <td>${r.accesoModem || '-'}</td>
+                        <td><small>${r.fechaActualizacion || '-'}</small></td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>`;
                 } else {
                     html += `<tr>
                         ${['sucursales','zonas'].includes(path) ? `<td><small>${r.empresa || '-'}</small></td>` : ''}
                         ${['sucursales'].includes(path) ? `<td><small>${r.zona || '-'}</small></td>` : ''}
-                        ${path === 'redes_inalambricas' ? 
-                            `<td class="text-start fw-bold">${r.articulos || '-'}</td><td>${r.modelo || '-'}</td><td><small>${r.descripcion || '-'}</small></td><td>${r.marca || '-'}</td><td>${r.cantidad || '-'}</td>` : 
-                            `<td class="text-start">${r.nombre || ''}</td>`
-                        }
+                        <td class="text-start">${r.nombre || ''}</td>
                         ${path === 'sucursales' ? `<td><span class="badge bg-secondary">${r.camaras || '0'}</span></td>` : ''}
                         <td class="text-end">
                             <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
@@ -678,30 +746,75 @@
         let displayTitle = path.toUpperCase().replace('_', ' ');
         document.getElementById("mTitle").innerText = (id ? 'Editar ' : 'Nuevo ') + displayTitle;
         
-        ['secEmpresa', 'secZona', 'secMatriz', 'secMasivo', 'secToggleMasivo', 'secSucursalesCamaras', 'secUsuariosPersonal', 'secOtrosCatalogos'].forEach(s => document.getElementById(s)?.classList.add('d-none'));
+        ['secEmpresa', 'secZona', 'secMasivo', 'secToggleMasivo', 'secSucursalesCamaras', 'secUsuariosPersonal', 'secOtrosCatalogos', 'secRedesInalambricas'].forEach(s => document.getElementById(s)?.classList.add('d-none'));
         document.getElementById("secIndividual").classList.remove('d-none');
         document.getElementById("checkMasivo").checked = false;
         document.getElementById("secColorCenter")?.remove();
         document.getElementById("fCamaras").value = "";
         document.getElementById("fMasivo").value = "";
 
-        document.querySelectorAll('.ctx-trigger').forEach(c => { c.checked = false; });
-        ['boxDesarrollos', 'boxServidores', 'boxComex', 'boxCorreos', 'boxFirewall'].forEach(b => document.getElementById(b).classList.add('d-none'));
+        if (path === 'redes_inalambricas') {
+            document.getElementById("secRedesInalambricas").classList.remove('d-none');
+            document.getElementById("secOtrosCatalogos").classList.add('d-none');
+            document.getElementById("secIndividual").classList.add('d-none');
+            document.getElementById("secToggleMasivo").classList.remove('d-none');
 
-        buildSubListHtml("boxDesarrollos", listsRoma.desarrollos, "des");
-        buildSubListHtml("boxComex", listsRoma.comex, "cmx");
-        buildSubListHtml("boxCorreos", listsRoma.correos, "crr");
-        buildSubListHtml("boxFirewall", listsRoma.firewall, "frw");
+            const emps = Object.values(store.empresas).map(e => e.nombre).sort();
+            document.getElementById("riEmpresa").innerHTML = '<option value="">SELECCIONE EMPRESA...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
+            
+            const renderZonasRI = (empSel, zonaPrev = "") => {
+                const zs = Object.values(store.zonas).filter(z => z.empresa === empSel).map(z => z.nombre).sort();
+                document.getElementById("riZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}" ${zonaPrev === z ? 'selected' : ''}>${z}</option>`).join('');
+                document.getElementById("riSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>';
+            };
 
-        const arrServidores = Object.values(store.servidores || {}).map(s => s.nombre).sort();
-        buildSubListHtml("boxServidores", arrServidores, "srv");
+            const renderSucursalesRI = (zonaSel, sucPrev = "") => {
+                const empSel = document.getElementById("riEmpresa").value;
+                const ss = Object.values(store.sucursales).filter(s => s.empresa === empSel && s.zona === zonaSel).map(s => s.nombre).sort();
+                document.getElementById("riSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>' + ss.map(s => `<option value="${s}" ${sucPrev === s ? 'selected' : ''}>${s}</option>`).join('');
+            };
 
-        if (['usuarios', 'personal'].includes(path)) {
+            document.getElementById("riEmpresa").onchange = (e) => renderZonasRI(e.target.value);
+            document.getElementById("riZona").onchange = (e) => renderSucursalesRI(e.target.value);
+
+            if(item.empresa) {
+                renderZonasRI(item.empresa, item.zona);
+                if(item.zona) renderSucursalesRI(item.zona, item.sucursal);
+            } else {
+                document.getElementById("riZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>';
+                document.getElementById("riSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>';
+            }
+
+            document.getElementById("riModem").value = item.modem || "";
+            document.getElementById("riModelo").value = item.modelo || "";
+            document.getElementById("riSsidFabrica").value = item.ssidFabrica || "";
+            document.getElementById("riWpaFabrica").value = item.wpaFabrica || "";
+            document.getElementById("riDestinado").value = item.destinado || "";
+            document.getElementById("riSsidModificado").value = item.ssidModificado || "";
+            document.getElementById("riWpaModificado").value = item.wpaModificado || "";
+            document.getElementById("riAccesoModem").value = item.accesoModem || "";
+            document.getElementById("riFechaActualizacion").value = item.fechaActualizacion || "";
+
+            document.getElementById("lblMasivo").innerHTML = `Ingresa los registros usando comas para separar cada campo (Una línea por Red):<br>
+            <span class="text-secondary" style="font-size:0.75rem;">Formato: Módem, Modelo, SSID_Fábrica, WPA_Fábrica, Destinado, SSID_Modificado, WPA_Modificado, Acceso_Módem, Fecha(AAAA-MM-DD)</span>`;
+
+        } else if (['usuarios', 'personal'].includes(path)) {
             document.getElementById("secUsuariosPersonal").classList.remove('d-none');
             document.getElementById("secOtrosCatalogos").classList.add('d-none');
             document.getElementById("secIndividual").classList.add('d-none');
             document.getElementById("secFormIndividualUP").classList.remove('d-none');
             document.getElementById("secToggleMasivo").classList.remove('d-none');
+
+            document.querySelectorAll('.ctx-trigger').forEach(c => { c.checked = false; });
+            ['boxDesarrollos', 'boxServidores', 'boxComex', 'boxCorreos', 'boxFirewall'].forEach(b => document.getElementById(b).classList.add('d-none'));
+
+            buildSubListHtml("boxDesarrollos", listsRoma.desarrollos, "des");
+            buildSubListHtml("boxComex", listsRoma.comex, "cmx");
+            buildSubListHtml("boxCorreos", listsRoma.correos, "crr");
+            buildSubListHtml("boxFirewall", listsRoma.firewall, "frw");
+
+            const arrServidores = Object.values(store.servidores || {}).map(s => s.nombre).sort();
+            buildSubListHtml("boxServidores", arrServidores, "srv");
 
             const emps = Object.values(store.empresas).map(e => e.nombre).sort();
             document.getElementById("upEmpresa").innerHTML = '<option value="">SELECCIONE EMPRESA...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
@@ -798,15 +911,6 @@
                 }
             }
 
-            if (path === 'redes_inalambricas') {
-                document.getElementById("secIndividual").classList.add('d-none');
-                document.getElementById("secMatriz").classList.remove('d-none');
-                document.getElementById("mArt").value = item.articulos || "";
-                document.getElementById("mMod").value = item.modelo || "";
-                document.getElementById("mDes").value = item.descripcion || "";
-                document.getElementById("mMar").value = item.marca || "";
-                document.getElementById("mCant").value = item.cantidad || "";
-            }
             if (['zonas', 'sucursales'].includes(path)) {
                 document.getElementById("secEmpresa").classList.remove('d-none');
                 const emps = Object.values(store.empresas).map(e => e.nombre).sort();
@@ -825,7 +929,7 @@
             
             document.getElementById("fNom").value = item.nombre || "";
 
-            if (!id && !['redes_inalambricas', 'colorcenter'].includes(path)) {
+            if (!id && path !== 'colorcenter') {
                 document.getElementById("secToggleMasivo").classList.remove('d-none');
                 document.getElementById("lblMasivo").innerText = `Nombres para el catálogo ${displayTitle} (Uno por línea):`;
             }
@@ -847,7 +951,80 @@
         const isM = document.getElementById("checkMasivo").checked;
         let data = {};
 
-        if (['usuarios', 'personal'].includes(currentPath)) {
+        if (currentPath === 'redes_inalambricas') {
+            const empRI = document.getElementById("riEmpresa").value;
+            const zonRI = document.getElementById("riZona").value;
+            const sucRI = document.getElementById("riSucursal").value;
+
+            if (isM) {
+                if(!empRI || !zonRI || !sucRI) {
+                    Swal.fire("Atención", "Para la carga masiva debe seleccionar previamente Empresa, Zona y Sucursal en los desplegables.", "warning");
+                    return;
+                }
+                const lineas = document.getElementById("fMasivo").value.split('\n').filter(l => l.trim());
+                if (lineas.length === 0) { Swal.fire("Atención", "Ingrese datos en la caja de texto masivo.", "warning"); return; }
+                
+                for(let l of lineas) {
+                    const c = l.split(',').map(field => field.trim());
+                    // Formato: Módem, Modelo, SSID_Fábrica, WPA_Fábrica, Destinado, SSID_Modificado, WPA_Modificado, Acceso_Módem, Fecha
+                    if(c.length >= 9) {
+                        let regRI = {
+                            empresa: empRI, zona: zonRI, sucursal: sucRI,
+                            modem: c[0].toUpperCase(), modelo: c[1].toUpperCase(), ssidFabrica: c[2].toUpperCase(),
+                            wpaFabrica: c[3].toUpperCase(), destinado: c[4].toUpperCase(), ssidModificado: c[5].toUpperCase(),
+                            wpaModificado: c[6].toUpperCase(), accesoModem: c[7].toUpperCase(), fechaActualizacion: c[8]
+                        };
+                        await push(ref(db, currentPath), regRI);
+                    }
+                }
+            } else {
+                // Validación Estricta de Campos Obligatorios Individuales
+                let camposFaltantes = [];
+                
+                if (!empRI) camposFaltantes.push("Empresa");
+                if (!zonRI) camposFaltantes.push("Zona");
+                if (!sucRI) camposFaltantes.push("Sucursal");
+                
+                const modem = document.getElementById("riModem").value.trim().toUpperCase();
+                const modelo = document.getElementById("riModelo").value.trim().toUpperCase();
+                const ssidFabrica = document.getElementById("riSsidFabrica").value.trim().toUpperCase();
+                const wpaFabrica = document.getElementById("riWpaFabrica").value.trim().toUpperCase();
+                const destinado = document.getElementById("riDestinado").value.trim().toUpperCase();
+                const ssidModificado = document.getElementById("riSsidModificado").value.trim().toUpperCase();
+                const wpaModificado = document.getElementById("riWpaModificado").value.trim().toUpperCase();
+                const accesoModem = document.getElementById("riAccesoModem").value.trim().toUpperCase();
+                const fechaActualizacion = document.getElementById("riFechaActualizacion").value;
+
+                if (!modem) camposFaltantes.push("Módem");
+                if (!modelo) camposFaltantes.push("Modelo");
+                if (!ssidFabrica) camposFaltantes.push("SSID Fábrica");
+                if (!wpaFabrica) camposFaltantes.push("WPA Key Fábrica");
+                if (!destinado) camposFaltantes.push("Destinado");
+                if (!ssidModificado) camposFaltantes.push("SSID Modificado");
+                if (!wpaModificado) camposFaltantes.push("WPA Key Modificada");
+                if (!accesoModem) camposFaltantes.push("Acceso Módem");
+                if (!fechaActualizacion) camposFaltantes.push("Fecha Última Actualización");
+
+                if (camposFaltantes.length > 0) {
+                    Swal.fire({
+                        title: "No se puede guardar el registro",
+                        html: `<div class="text-start"><strong>Hacen falta los siguientes campos obligatorios:</strong><br><br>
+                               ${camposFaltantes.map(f => `<span class="text-danger">• ${f}</span>`).join('<br>')}</div>`,
+                        icon: "error"
+                    });
+                    return; 
+                }
+
+                data = {
+                    empresa: empRI, zona: zonRI, sucursal: sucRI, modem, modelo,
+                    ssidFabrica, wpaFabrica, destinado, ssidModificado, wpaModificado,
+                    accesoModem, fechaActualizacion
+                };
+
+                id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
+            }
+
+        } else if (['usuarios', 'personal'].includes(currentPath)) {
             const empresaSeleccionada = document.getElementById("upEmpresa").value;
             const zonaSeleccionada = document.getElementById("upZona").value;
             const statusSeleccionado = document.getElementById("upStatus").value;
@@ -856,34 +1033,20 @@
 
             if (isM) {
                 const lineas = document.getElementById("fMasivo").value.split('\n').filter(l => l.trim());
-                if (lineas.length === 0) {
-                    Swal.fire("Atención", "Por favor ingresa los datos en la caja de Carga Masiva.", "warning");
-                    return;
-                }
+                if (lineas.length === 0) { Swal.fire("Atención", "Por favor ingresa los datos.", "warning"); return; }
 
                 for (let l of lineas) {
                     const campos = l.split(',').map(c => c.trim());
-                    
                     let registroMasivo = {
-                        empresa: empresaSeleccionada,
-                        zona: zonaSeleccionada,
-                        statusActual: statusSeleccionado,
-                        numeroEmpleado: (campos[0] || '').toUpperCase(),
-                        nombreCompleto: (campos[1] || '').toUpperCase(),
-                        puesto: (campos[2] || '').toUpperCase(),
-                        numeroLargo: campos[3] || '',
-                        marcacionCorta: campos[4] || ''
+                        empresa: empresaSeleccionada, zona: zonaSeleccionada, statusActual: statusSeleccionado,
+                        numeroEmpleado: (campos[0] || '').toUpperCase(), nombreCompleto: (campos[1] || '').toUpperCase(),
+                        puesto: (campos[2] || '').toUpperCase(), numeroLargo: campos[3] || '', marcacionCorta: campos[4] || ''
                     };
-
-                    if (registroMasivo.nombreCompleto) {
-                        await push(ref(db, currentPath), registroMasivo);
-                    }
+                    if (registroMasivo.nombreCompleto) await push(ref(db, currentPath), registroMasivo);
                 }
             } else {
                 data = {
-                    empresa: empresaSeleccionada,
-                    zona: zonaSeleccionada,
-                    statusActual: statusSeleccionado,
+                    empresa: empresaSeleccionada, zona: zonaSeleccionada, statusActual: statusSeleccionado,
                     numeroEmpleado: document.getElementById("upNumEmp").value.toUpperCase(),
                     nombreCompleto: document.getElementById("upNombre").value.toUpperCase(),
                     puesto: document.getElementById("upPuesto").value.toUpperCase(),
@@ -897,30 +1060,16 @@
                         firewall: document.getElementById("chkGroupFirewall").checked ? collectBoxData("boxFirewall", "frw") : null
                     }
                 };
-
                 if (!data.nombreCompleto) { Swal.fire("Atención", "El campo Nombre Completo es obligatorio.", "warning"); return; }
-                
                 id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
             }
 
         } else {
             if (currentPath === 'colorcenter') {
                 data = {
-                    empresa: document.getElementById("ccEmp").value,
-                    zona: document.getElementById("ccZona").value,
-                    sucursal: document.getElementById("ccSuc").value,
-                    modeloDosificador: document.getElementById("ccModDos").value.toUpperCase(),
-                    imgDosificador: document.getElementById("ccImgDosBase64").value,
-                    modeloRevolvedora: document.getElementById("ccModRev").value.toUpperCase(),
-                    imgRevolvedora: document.getElementById("ccImgRevBase64").value
-                };
-            } else if (currentPath === 'redes_inalambricas') {
-                data = { 
-                    articulos: document.getElementById("mArt").value.toUpperCase(), 
-                    modelo: document.getElementById("mMod").value.toUpperCase(), 
-                    descripcion: document.getElementById("mDes").value.toUpperCase(), 
-                    marca: document.getElementById("mMar").value.toUpperCase(),
-                    cantidad: document.getElementById("mCant").value
+                    empresa: document.getElementById("ccEmp").value, zona: document.getElementById("ccZona").value, sucursal: document.getElementById("ccSuc").value,
+                    modeloDosificador: document.getElementById("ccModDos").value.toUpperCase(), imgDosificador: document.getElementById("ccImgDosBase64").value,
+                    modeloRevolvedora: document.getElementById("ccModRev").value.toUpperCase(), imgRevolvedora: document.getElementById("ccImgRevBase64").value
                 };
             } else {
                 data.nombre = document.getElementById("fNom").value.toUpperCase();
@@ -942,7 +1091,7 @@
                     await push(ref(db, currentPath), regM);
                 }
             } else {
-                if (!['redes_inalambricas', 'colorcenter'].includes(currentPath) && !data.nombre) { Swal.fire("Atención", "El campo Nombre no puede estar vacío.", "warning"); return; }
+                if (currentPath !== 'colorcenter' && !data.nombre) { Swal.fire("Atención", "El campo Nombre no puede estar vacío.", "warning"); return; }
                 id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
             }
         }
@@ -965,11 +1114,13 @@
         const checked = e.target.checked;
         document.getElementById("secMasivo").classList.toggle('d-none', !checked);
         
-        if (['usuarios', 'personal'].includes(currentPath)) {
+        if (currentPath === 'redes_inalambricas') {
+            ['riModem','riModelo','riSsidFabrica','riWpaFabrica','riDestinado','riSsidModificado','riWpaModificado','riAccesoModem','riFechaActualizacion']
+            .forEach(id => document.getElementById(id).closest('.col-md-4, .col-md-6, .col-12').classList.toggle('d-none', checked));
+        } else if (['usuarios', 'personal'].includes(currentPath)) {
             document.getElementById("secFormIndividualUP").classList.toggle('d-none', checked);
         } else {
             document.getElementById("secIndividual").classList.toggle('d-none', checked);
-            if (currentPath === 'redes_inalambricas') document.getElementById("secMatriz").classList.toggle('d-none', checked);
         }
     };
 
