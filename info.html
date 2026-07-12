@@ -45,7 +45,7 @@
         th .filter-trigger:hover, th .filter-trigger.active-filter { color: #0284c7; }
         
         td { vertical-align: middle; text-align: center; font-size: 0.85rem; }
-        input[type="text"], input[type="email"], select, textarea { text-transform: uppercase; }
+        input[type="text"]:not(#riAccesoModem), input[type="email"], select, textarea { text-transform: uppercase; }
         
         .excel-filter-menu {
             position: absolute; background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
@@ -1029,8 +1029,8 @@ window.togglePasswordVisibility = (inputId, btnEl) => {
                         let regRI = {
                             empresa: empRI, zona: zonRI, sucursal: sucRI,
                             modem: c[0].toUpperCase(), modelo: c[1].toUpperCase(), ssidFabrica: c[2].toUpperCase(),
-                            wpaFabrica: c[3].toUpperCase(), destinado: c[4].toUpperCase(), ssidModificado: c[5].toUpperCase(),
-                            wpaModificado: c[6].toUpperCase(), accesoModem: c[7].toUpperCase(), fechaActualizacion: c[8]
+                            wpaFabrica: c[3], destinado: c[4].toUpperCase(), ssidModificado: c[5].toUpperCase(),
+                            wpaModificado: c[6], accesoModem: c[7], fechaActualizacion: c[8]
                         };
                         await push(ref(db, currentPath), regRI);
                     }
@@ -1049,7 +1049,7 @@ window.togglePasswordVisibility = (inputId, btnEl) => {
                 const destinado = document.getElementById("riDestinado").value;
                 const ssidModificado = document.getElementById("riSsidModificado").value.trim().toUpperCase();
                 const wpaModificado = document.getElementById("riWpaModificado").value.trim(); // Respeta mayúsculas/minúsculas
-                const accesoModem = document.getElementById("riAccesoModem").value.trim().toUpperCase();
+                const accesoModem = document.getElementById("riAccesoModem").value.trim(); // Respeta mayúsculas/minúsculas y caracteres especiales
                 const fechaActualizacion = document.getElementById("riFechaActualizacion").value;
 
                 if (!empRI) camposFaltantes.push("Empresa");
