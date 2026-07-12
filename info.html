@@ -75,6 +75,10 @@
         .select-status-activo { background-color: #d1e7dd !important; color: #0f5132 !important; }
         .select-status-baja { background-color: #f8d7da !important; color: #842029 !important; }
 
+        .group-box { border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; background: #f8fafc; }
+        .group-title { font-weight: bold; font-size: 0.85rem; color: #334155; margin-bottom: 10px; text-transform: uppercase; }
+        .sub-list { padding-left: 20px; border-left: 2px dashed #cbd5e1; margin-top: 5px; margin-bottom: 10px; }
+
         @media print {
             .no-print { display: none !important; }
             .sidebar { display: none !important; }
@@ -91,6 +95,7 @@
 <div class="sidebar" id="sidebar">
     <div class="text-center py-4 border-bottom border-secondary mb-2"><h6 class="mb-0 fw-bold text-white">CATÁLOGOS</h6></div>
     <a onclick="render('empresas')" id="link-empresas"><i class="bi bi-building me-2"></i> Empresas</a>
+    <a onclick="render('servidores')" id="link-servidores"><i class="bi bi-hdd-network me-2"></i> Servidores</a>
     <a onclick="render('zonas')" id="link-zonas"><i class="bi bi-geo-alt me-2"></i> Zonas</a>
     <a onclick="render('sucursales')" id="link-sucursales"><i class="bi bi-shop me-2"></i> Sucursales</a>
     <a onclick="render('usuarios')" id="link-usuarios"><i class="bi bi-person-lines-fill me-2"></i> Usuarios</a>
@@ -112,7 +117,7 @@
 
 <!-- MODAL PRINCIPAL -->
 <div class="modal fade" id="modalApp" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0">
             <div class="modal-header bg-dark text-white py-3">
                 <h5 class="modal-title fw-bold" id="mTitle">Registro</h5>
@@ -144,13 +149,50 @@
                         <div class="col-md-4"><label class="form-label fw-bold small">N° de Empleado</label><input type="text" id="upNumEmp" class="form-control"></div>
                         <div class="col-md-8"><label class="form-label fw-bold small">Nombre Completo</label><input type="text" id="upNombre" class="form-control"></div>
                         <div class="col-md-4"><label class="form-label fw-bold small">Puesto</label><input type="text" id="upPuesto" class="form-control"></div>
-                        <div class="col-md-4"><label class="form-label fw-bold small">Usuario XS</label><input type="text" id="upXS" class="form-control"></div>
-                        <div class="col-md-4"><label class="form-label fw-bold small">Usuario XA</label><input type="text" id="upXA" class="form-control"></div>
-                        <div class="col-md-4"><label class="form-label fw-bold small">Usuario Sales Force</label><input type="text" id="upSF" class="form-control"></div>
-                        <div class="col-md-4"><label class="form-label fw-bold small">Usuario PowerBi</label><input type="text" id="upPBI" class="form-control"></div>
-                        <div class="col-md-4"><label class="form-label fw-bold small">Usuario B2B</label><input type="text" id="upB2B" class="form-control"></div>
-                        <div class="col-md-4"><label class="form-label fw-bold small">Correo Institucional</label><input type="email" id="upCorInst" class="form-control"></div>
-                        <div class="col-md-4"><label class="form-label fw-bold small">Correo Gmail</label><input type="email" id="upCorGml" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label fw-bold small">Número Largo</label><input type="text" id="upNumLargo" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label fw-bold small">Marcación Corta</label><input type="text" id="upMarcCorta" class="form-control"></div>
+                        
+                        <!-- Panel de Accesos Grupo Roma Exclusivo de Catálogos Relacionados -->
+                        <div class="col-12 mt-3" id="wrapperAccesosRoma">
+                            <div class="group-box">
+                                <div class="group-title">Accesos Grupo Roma</div>
+                                
+                                <!-- Desarrollos Propios -->
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input ctx-trigger" type="checkbox" id="chkGroupDesarrollos" data-target="boxDesarrollos">
+                                    <label class="form-check-label fw-semibold" for="chkGroupDesarrollos">Desarrollos Propios</label>
+                                </div>
+                                <div id="boxDesarrollos" class="sub-list d-none"></div>
+
+                                <!-- Servidores -->
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input ctx-trigger" type="checkbox" id="chkGroupServidores" data-target="boxServidores">
+                                    <label class="form-check-label fw-semibold" for="chkGroupServidores">Servidores</label>
+                                </div>
+                                <div id="boxServidores" class="sub-list d-none"></div>
+
+                                <!-- Comex -->
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input ctx-trigger" type="checkbox" id="chkGroupComex" data-target="boxComex">
+                                    <label class="form-check-label fw-semibold" for="chkGroupComex">Comex</label>
+                                </div>
+                                <div id="boxComex" class="sub-list d-none"></div>
+
+                                <!-- Correos -->
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input ctx-trigger" type="checkbox" id="chkGroupCorreos" data-target="boxCorreos">
+                                    <label class="form-check-label fw-semibold" for="chkGroupCorreos">Correos</label>
+                                </div>
+                                <div id="boxCorreos" class="sub-list d-none"></div>
+
+                                <!-- Firewall -->
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input ctx-trigger" type="checkbox" id="chkGroupFirewall" data-target="boxFirewall">
+                                    <label class="form-check-label fw-semibold" for="chkGroupFirewall">Firewall</label>
+                                </div>
+                                <div id="boxFirewall" class="sub-list d-none"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -221,12 +263,19 @@
     const config = { databaseURL: "https://gromasis-9c094-default-rtdb.firebaseio.com/" };
     const db = getDatabase(initializeApp(config));
     
-    let store = { colorcenter:{}, redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, sucursales: {}, usuarios: {} };
+    let store = { colorcenter:{}, redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, servidores: {}, sucursales: {}, usuarios: {} };
     let currentPath = '';
     let loadsPending = Object.keys(store).length;
     const urlParams = new URLSearchParams(window.location.search);
 
     let activeFiltersState = {};
+
+    const listsRoma = {
+        desarrollos: ["SUMMA++", "SUMMA ADV", "TASK", "SALES ENGINE", "MCI", "PEDIDOS FERREPRECIOS", "ST-GR", "CONTROL VEHICULAR", "SOPORTES", "SAS WEB"],
+        comex: ["AXXESS", "VOCACION DE TIENDA", "XADMIN", "XSTORE", "BIG FIX", "SCALEFUSION"],
+        correos: ["INSTITUCIONAL", "GMAIL", "WEBEX", "TIENDA"],
+        firewall: ["CONTABILIDAD", "NOMINAS", "HUATUSCO", "TESORERIA"]
+    };
 
     if (currentPath === '') {
         if (urlParams.get('tipo') === 'colorcenter') {
@@ -262,6 +311,42 @@
         }
     };
 
+    // Escuchadores dinámicos para los paneles colapsables del modal de accesos
+    document.querySelectorAll('.ctx-trigger').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+            const targetBox = document.getElementById(e.target.dataset.target);
+            if(e.target.checked) {
+                targetBox.classList.remove('d-none');
+            } else {
+                targetBox.classList.add('d-none');
+                targetBox.querySelectorAll('input[type="text"]').forEach(input => input.value = "");
+                targetBox.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+            }
+        });
+    });
+
+    // Inyección de Inputs dinámicos dentro de cada bloque de accesos
+    const buildSubListHtml = (containerId, itemsArray, storagePrefix) => {
+        const container = document.getElementById(containerId);
+        if(!container) return;
+        container.innerHTML = itemsArray.map((item, index) => {
+            const cleanName = item.replace(/[^a-zA-Z0-9]/g, '');
+            return `
+                <div class="row align-items-center mb-1 g-2">
+                    <div class="col-sm-5">
+                        <div class="form-check m-0">
+                            <input class="form-check-input sub-item-chk" type="checkbox" id="chk_${storagePrefix}_${cleanName}" data-name="${item}">
+                            <label class="form-check-label small text-truncate d-block" for="chk_${storagePrefix}_${cleanName}">${item}</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-7">
+                        <input type="text" class="form-control form-control-sm sub-item-user" placeholder="USUARIO REGISTRADO" id="user_${storagePrefix}_${cleanName}">
+                    </div>
+                </div>
+            `;
+        }).join('');
+    };
+
     window.render = (path) => {
         if(currentPath !== path) activeFiltersState = {};
         currentPath = path;
@@ -292,13 +377,8 @@
                     ${wrapTh('N° Emp', colIdx++)}
                     ${wrapTh('Nombre Completo', colIdx++)}
                     ${wrapTh('Puesto', colIdx++)}
-                    ${wrapTh('XS', colIdx++)}
-                    ${wrapTh('XA', colIdx++)}
-                    ${wrapTh('SalesForce', colIdx++)}
-                    ${wrapTh('PowerBI', colIdx++)}
-                    ${wrapTh('B2B', colIdx++)}
-                    ${wrapTh('Corr. Inst.', colIdx++)}
-                    ${wrapTh('Corr. Gmail', colIdx++)}
+                    ${wrapTh('Número Largo', colIdx++)}
+                    ${wrapTh('Marcación Corta', colIdx++)}
                     ${wrapTh('Status', colIdx++)}
                 `;
             } else if (path === 'colorcenter') {
@@ -341,13 +421,8 @@
                         <td>${r.numeroEmpleado || '-'}</td>
                         <td class="text-start fw-bold">${r.nombreCompleto || '-'}</td>
                         <td><small>${r.puesto || '-'}</small></td>
-                        <td>${r.usuarioXS || '-'}</td>
-                        <td>${r.usuarioXA || '-'}</td>
-                        <td>${r.usuarioSalesForce || '-'}</td>
-                        <td>${r.usuarioPowerBi || '-'}</td>
-                        <td>${r.usuarioB2B || '-'}</td>
-                        <td><small>${r.correoInstitucional || '-'}</small></td>
-                        <td><small>${r.correoGmail || '-'}</small></td>
+                        <td>${r.numeroLargo || '-'}</td>
+                        <td>${r.marcacionCorta || '-'}</td>
                         <td><span class="badge ${badgeClass}">${r.statusActual || 'ACTIVO'}</span></td>
                         <td class="text-end">
                             <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
@@ -569,6 +644,34 @@
             closeExcelMenu();
         }
     });
+
+    const setBoxData = (boxId, storagePrefix, savedData) => {
+        const box = document.getElementById(boxId);
+        if(!box || !savedData) return;
+        Object.keys(savedData).forEach(itemName => {
+            const cleanName = itemName.replace(/[^a-zA-Z0-9]/g, '');
+            const chk = box.querySelector(`#chk_${storagePrefix}_${cleanName}`);
+            const input = box.querySelector(`#user_${storagePrefix}_${cleanName}`);
+            if(chk && input) {
+                chk.checked = true;
+                input.value = savedData[itemName];
+            }
+        });
+    };
+
+    const collectBoxData = (boxId, storagePrefix) => {
+        const box = document.getElementById(boxId);
+        if(!box) return null;
+        let res = {};
+        box.querySelectorAll('.row').forEach(row => {
+            const chk = row.querySelector('.sub-item-chk');
+            const input = row.querySelector('.sub-item-user');
+            if(chk && chk.checked) {
+                res[chk.dataset.name] = input.value.trim().toUpperCase();
+            }
+        });
+        return Object.keys(res).length > 0 ? res : null;
+    };
     
     window.showModal = (path, id = "") => {
         const item = id ? store[path][id] : {};
@@ -584,12 +687,29 @@
         document.getElementById("fCamaras").value = "";
         document.getElementById("fMasivo").value = "";
 
+        // Resetear checkboxes primarios y ocultar sus subgrupos
+        document.querySelectorAll('.ctx-trigger').forEach(c => { c.checked = false; });
+        ['boxDesarrollos', 'boxServidores', 'boxComex', 'boxCorreos', 'boxFirewall'].forEach(b => document.getElementById(b).classList.add('d-none'));
+
+        // Cargar listas fijas de sub-opciones
+        buildSubListHtml("boxDesarrollos", listsRoma.desarrollos, "des");
+        buildSubListHtml("boxComex", listsRoma.comex, "cmx");
+        buildSubListHtml("boxCorreos", listsRoma.correos, "crr");
+        buildSubListHtml("boxFirewall", listsRoma.firewall, "frw");
+
+        // Alimentar Servidores dinámicos mapeados del nuevo sub-catálogo autónomo
+        const arrServidores = Object.values(store.servidores || {}).map(s => s.nombre).sort();
+        buildSubListHtml("boxServidores", arrServidores, "srv");
+
         if (['usuarios', 'personal'].includes(path)) {
             document.getElementById("secUsuariosPersonal").classList.remove('d-none');
             document.getElementById("secOtrosCatalogos").classList.add('d-none');
             document.getElementById("secIndividual").classList.add('d-none');
             document.getElementById("secFormIndividualUP").classList.remove('d-none');
             document.getElementById("secToggleMasivo").classList.remove('d-none');
+
+            // Ocultar la caja de privilegios en Personal, solo es visible en Usuarios
+            document.getElementById("wrapperAccesosRoma").classList.toggle('d-none', path === 'personal');
 
             const emps = Object.values(store.empresas).map(e => e.nombre).sort();
             document.getElementById("upEmpresa").innerHTML = '<option value="">SELECCIONE EMPRESA...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
@@ -610,18 +730,23 @@
             document.getElementById("upNumEmp").value = item.numeroEmpleado || "";
             document.getElementById("upNombre").value = item.nombreCompleto || "";
             document.getElementById("upPuesto").value = item.puesto || "";
-            document.getElementById("upXS").value = item.usuarioXS || "";
-            document.getElementById("upXA").value = item.usuarioXA || "";
-            document.getElementById("upSF").value = item.usuarioSalesForce || "";
-            document.getElementById("upPBI").value = item.usuarioPowerBi || "";
-            document.getElementById("upB2B").value = item.usuarioB2B || "";
-            document.getElementById("upCorInst").value = item.correoInstitucional || "";
-            document.getElementById("upCorGml").value = item.correoGmail || "";
+            document.getElementById("upNumLargo").value = item.numeroLargo || "";
+            document.getElementById("upMarcCorta").value = item.marcacionCorta || "";
             document.getElementById("upStatus").value = item.statusActual || "ACTIVO";
             updateStatusStyle(document.getElementById("upStatus"));
 
+            // Si estamos editando y contiene accesos estructurados, activarlos e inyectar valores
+            if(id && path === 'usuarios' && item.accesosGrupoRoma) {
+                const acc = item.accesosGrupoRoma;
+                if(acc.desarrollosPropios) { document.getElementById("chkGroupDesarrollos").checked = true; document.getElementById("boxDesarrollos").classList.remove('d-none'); setBoxData("boxDesarrollos", "des", acc.desarrollosPropios); }
+                if(acc.servidores) { document.getElementById("chkGroupServidores").checked = true; document.getElementById("boxServidores").classList.remove('d-none'); setBoxData("boxServidores", "srv", acc.servidores); }
+                if(acc.comex) { document.getElementById("chkGroupComex").checked = true; document.getElementById("boxComex").classList.remove('d-none'); setBoxData("boxComex", "cmx", acc.comex); }
+                if(acc.correos) { document.getElementById("chkGroupCorreos").checked = true; document.getElementById("boxCorreos").classList.remove('d-none'); setBoxData("boxCorreos", "crr", acc.correos); }
+                if(acc.firewall) { document.getElementById("chkGroupFirewall").checked = true; document.getElementById("boxFirewall").classList.remove('d-none'); setBoxData("boxFirewall", "frw", acc.firewall); }
+            }
+
             document.getElementById("lblMasivo").innerHTML = `Ingresa los registros usando comas para separar cada campo (Una línea por empleado):<br>
-            <span class="text-secondary" style="font-size:0.75rem;">Formato: N°_Empleado , Nombre_Completo , Puesto , Usuario_XS , Usuario_XA , SalesForce , PowerBi , B2B , Correo_Inst , Correo_Gmail</span>`;
+            <span class="text-secondary" style="font-size:0.75rem;">Formato: N°_Empleado , Nombre_Completo , Puesto , Número_Largo , Marcación_Corta</span>`;
 
         } else {
             document.getElementById("secOtrosCatalogos").classList.remove('d-none');
@@ -746,10 +871,8 @@
                 }
 
                 for (let l of lineas) {
-                    // Dividimos la línea por sus comas y eliminamos espacios fantasmas
                     const campos = l.split(',').map(c => c.trim());
                     
-                    // Mapeamos dinámicamente cada columna o asignamos vacío si no viene en la línea
                     let registroMasivo = {
                         empresa: empresaSeleccionada,
                         zona: zonaSeleccionada,
@@ -757,16 +880,10 @@
                         numeroEmpleado: (campos[0] || '').toUpperCase(),
                         nombreCompleto: (campos[1] || '').toUpperCase(),
                         puesto: (campos[2] || '').toUpperCase(),
-                        usuarioXS: campos[3] || '',
-                        usuarioXA: campos[4] || '',
-                        usuarioSalesForce: campos[5] || '',
-                        usuarioPowerBi: campos[6] || '',
-                        usuarioB2B: campos[7] || '',
-                        correoInstitucional: (campos[8] || '').toUpperCase(),
-                        correoGmail: (campos[9] || '').toUpperCase()
+                        numeroLargo: campos[3] || '',
+                        marcacionCorta: campos[4] || ''
                     };
 
-                    // Solo guardamos si al menos el nombre completo fue ingresado en la línea
                     if (registroMasivo.nombreCompleto) {
                         await push(ref(db, currentPath), registroMasivo);
                     }
@@ -779,16 +896,23 @@
                     numeroEmpleado: document.getElementById("upNumEmp").value.toUpperCase(),
                     nombreCompleto: document.getElementById("upNombre").value.toUpperCase(),
                     puesto: document.getElementById("upPuesto").value.toUpperCase(),
-                    usuarioXS: document.getElementById("upXS").value,
-                    usuarioXA: document.getElementById("upXA").value,
-                    usuarioSalesForce: document.getElementById("upSF").value,
-                    usuarioPowerBi: document.getElementById("upPBI").value,
-                    usuarioB2B: document.getElementById("upB2B").value,
-                    correoInstitucional: document.getElementById("upCorInst").value.toUpperCase(),
-                    correoGmail: document.getElementById("upCorGml").value.toUpperCase()
+                    numeroLargo: document.getElementById("upNumLargo").value,
+                    marcacionCorta: document.getElementById("upMarcCorta").value
                 };
+
                 if (!data.nombreCompleto) { Swal.fire("Atención", "El campo Nombre Completo es obligatorio.", "warning"); return; }
                 
+                // Si es catálogo de usuarios, recolectamos estructuralmente los sub-objetos dinámicos
+                if(currentPath === 'usuarios') {
+                    data.accesosGrupoRoma = {
+                        desarrollosPropios: document.getElementById("chkGroupDesarrollos").checked ? collectBoxData("boxDesarrollos", "des") : null,
+                        servidores: document.getElementById("chkGroupServidores").checked ? collectBoxData("boxServidores", "srv") : null,
+                        comex: document.getElementById("chkGroupComex").checked ? collectBoxData("boxComex", "cmx") : null,
+                        correos: document.getElementById("chkGroupCorreos").checked ? collectBoxData("boxCorreos", "crr") : null,
+                        firewall: document.getElementById("chkGroupFirewall").checked ? collectBoxData("boxFirewall", "frw") : null
+                    };
+                }
+
                 id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
             }
 
