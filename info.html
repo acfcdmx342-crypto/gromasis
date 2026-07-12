@@ -241,6 +241,23 @@
                                     <label class="form-check-label fw-semibold" for="chkGroupFirewall">Firewall</label>
                                 </div>
                                 <div id="boxFirewall" class="sub-list d-none"></div>
+<!-- Contenedor Principal de Cámaras -->
+<div class="opcion-acceso">
+    <label>
+        <input type="checkbox" id="check-camaras" onchange="toggleCamaras()"> 
+        **Cámaras**
+    </label>
+
+    <!-- Opciones desplegables (ocultas por defecto) -->
+    <div id="desplegable-camaras" style="display: none; margin-left: 20px; margin-top: 5px;">
+        <label style="display: block; margin-bottom: 5px;">
+            <input type="checkbox" name="acceso_camaras" value="hik_connect"> Hik-Connect
+        </label>
+        <label style="display: block;">
+            <input type="checkbox" name="acceso_camaras" value="meriva"> Meriva
+        </label>
+    </div>
+</div>
                             </div>
                         </div>
                     </div>
@@ -1291,6 +1308,19 @@
             bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
         } catch (e) { Swal.fire("Error", e.message, "error"); }
     };
+    function toggleCamaras() {
+    const checkCamaras = document.getElementById('check-camaras');
+    const desplegable = document.getElementById('desplegable-camaras');
+    
+    if (checkCamaras.checked) {
+        desplegable.style.display = 'block';
+    } else {
+        desplegable.style.display = 'none';
+        // Opcional: Desmarcar las sub-opciones si se desactiva el check principal
+        const subChecks = desplegable.querySelectorAll('input[type="checkbox"]');
+        subChecks.forEach(cb => cb.checked = false);
+    }
+}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
