@@ -39,7 +39,6 @@
         }
         .table-container { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 300px; }
         
-        /* Estilos de los Encabezados con Filtro Excel */
         th { font-size: 0.75rem; color: #64748b; text-transform: uppercase; background: #f8fafc !important; position: relative; padding-right: 28px !important; vertical-align: middle; }
         th .th-content { display: flex; align-items: center; justify-content: center; gap: 4px; position: relative; width: 100%; }
         th .filter-trigger { cursor: pointer; color: #94a3b8; transition: 0.2s; font-size: 0.85rem; padding: 2px; }
@@ -48,7 +47,6 @@
         td { vertical-align: middle; text-align: center; font-size: 0.85rem; }
         input[type="text"], input[type="email"], select, textarea { text-transform: uppercase; }
         
-        /* Estilos del Menú Flotante de Filtro (Estilo Excel) */
         .excel-filter-menu {
             position: absolute; background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
             border-radius: 6px; width: 250px; z-index: 1050; padding: 8px 0; display: none; text-transform: none; font-family: sans-serif;
@@ -74,9 +72,8 @@
         .tree-level { border-left: 1px solid #e2e8f0; margin-left: 10px; padding-left: 16px; }
         .tree-row { padding: 4px 0; }
 
-        /* Estilos dinámicos para el status */
-        .select-status-activo { background-color: #d1e7dd !important; color: #0f5132 !important; fw-bold; }
-        .select-status-baja { background-color: #f8d7da !important; color: #842029 !important; fw-bold; }
+        .select-status-activo { background-color: #d1e7dd !important; color: #0f5132 !important; }
+        .select-status-baja { background-color: #f8d7da !important; color: #842029 !important; }
 
         @media print {
             .no-print { display: none !important; }
@@ -111,7 +108,6 @@
     </div>
 </div>
 
-<!-- Contenedor único para el Menú Flotante de Filtro -->
 <div id="excelFilterMenu" class="excel-filter-menu"></div>
 
 <!-- MODAL PRINCIPAL -->
@@ -127,13 +123,20 @@
                 
                 <!-- Campos compartidos / Estructura para Usuarios y Personal -->
                 <div id="secUsuariosPersonal" class="d-none row g-3 mb-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label fw-bold small">Empresa</label>
                         <select id="upEmpresa" class="form-select"></select>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label fw-bold small">Zona</label>
                         <select id="upZona" class="form-select"><option value="">SELECCIONE ZONA...</option></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">Status Actual</label>
+                        <select id="upStatus" class="form-select select-status-activo" onchange="updateStatusStyle(this)">
+                            <option value="ACTIVO" class="select-status-activo">ACTIVO</option>
+                            <option value="BAJA" class="select-status-baja">BAJA</option>
+                        </select>
                     </div>
                     
                     <!-- Contenedor del Formulario Individual Estándar -->
@@ -148,13 +151,6 @@
                         <div class="col-md-4"><label class="form-label fw-bold small">Usuario B2B</label><input type="text" id="upB2B" class="form-control"></div>
                         <div class="col-md-4"><label class="form-label fw-bold small">Correo Institucional</label><input type="email" id="upCorInst" class="form-control"></div>
                         <div class="col-md-4"><label class="form-label fw-bold small">Correo Gmail</label><input type="email" id="upCorGml" class="form-control"></div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold small">Status Actual</label>
-                            <select id="upStatus" class="form-select select-status-activo" onchange="updateStatusStyle(this)">
-                                <option value="ACTIVO" class="select-status-activo">ACTIVO</option>
-                                <option value="BAJA" class="select-status-baja">BAJA</option>
-                            </select>
-                        </div>
                     </div>
                 </div>
 
@@ -187,8 +183,8 @@
 
                 <!-- Sección de Carga Masiva unificada -->
                 <div id="secMasivo" class="col-12 d-none">
-                    <label class="form-label fw-bold small mb-1" id="lblMasivo">Nombres (Uno por línea)</label>
-                    <textarea id="fMasivo" class="form-control" rows="6"></textarea>
+                    <label class="form-label fw-bold text-primary small mb-1" id="lblMasivo">Datos masivos</label>
+                    <textarea id="fMasivo" class="form-control font-monospace" rows="6" style="font-size: 0.8rem;"></textarea>
                 </div>
             </div>
             
@@ -395,7 +391,6 @@
         applyAllActiveFilters();
     };
 
-    // LOGICA EXCEL FILTERS
     window.openExcelFilterMenu = (event, colIndex) => {
         event.stopPropagation();
         const menu = document.getElementById("excelFilterMenu");
@@ -575,7 +570,6 @@
         }
     });
     
-    // CONTROL MODAL SHOW
     window.showModal = (path, id = "") => {
         const item = id ? store[path][id] : {};
         document.getElementById("fID").value = id;
@@ -583,14 +577,13 @@
         let displayTitle = path.toUpperCase().replace('_', ' ');
         document.getElementById("mTitle").innerText = (id ? 'Editar ' : 'Nuevo ') + displayTitle;
         
-        // Reset general de visibilidades
         ['secEmpresa', 'secZona', 'secMatriz', 'secMasivo', 'secToggleMasivo', 'secSucursalesCamaras', 'secUsuariosPersonal', 'secOtrosCatalogos'].forEach(s => document.getElementById(s)?.classList.add('d-none'));
         document.getElementById("secIndividual").classList.remove('d-none');
         document.getElementById("checkMasivo").checked = false;
         document.getElementById("secColorCenter")?.remove();
         document.getElementById("fCamaras").value = "";
+        document.getElementById("fMasivo").value = "";
 
-        // Lógica Exclusiva para USUARIOS y PERSONAL
         if (['usuarios', 'personal'].includes(path)) {
             document.getElementById("secUsuariosPersonal").classList.remove('d-none');
             document.getElementById("secOtrosCatalogos").classList.add('d-none');
@@ -598,7 +591,6 @@
             document.getElementById("secFormIndividualUP").classList.remove('d-none');
             document.getElementById("secToggleMasivo").classList.remove('d-none');
 
-            // Cargar Empresas en el select dedicado
             const emps = Object.values(store.empresas).map(e => e.nombre).sort();
             document.getElementById("upEmpresa").innerHTML = '<option value="">SELECCIONE EMPRESA...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
             
@@ -615,7 +607,6 @@
                 document.getElementById("upZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>';
             }
 
-            // Inyectar datos en inputs individuales
             document.getElementById("upNumEmp").value = item.numeroEmpleado || "";
             document.getElementById("upNombre").value = item.nombreCompleto || "";
             document.getElementById("upPuesto").value = item.puesto || "";
@@ -629,10 +620,10 @@
             document.getElementById("upStatus").value = item.statusActual || "ACTIVO";
             updateStatusStyle(document.getElementById("upStatus"));
 
-            document.getElementById("lblMasivo").innerText = `Escribe los NOMBRES COMPLETOS para Carga Masiva (Uno por línea). Los demás campos seleccionados arriba se replicarán:`;
+            document.getElementById("lblMasivo").innerHTML = `Ingresa los registros usando comas para separar cada campo (Una línea por empleado):<br>
+            <span class="text-secondary" style="font-size:0.75rem;">Formato: N°_Empleado , Nombre_Completo , Puesto , Usuario_XS , Usuario_XA , SalesForce , PowerBi , B2B , Correo_Inst , Correo_Gmail</span>`;
 
         } else {
-            // Lógica para los demás catálogos viejos sin tocar
             document.getElementById("secOtrosCatalogos").classList.remove('d-none');
             if (path === 'colorcenter') {
                 document.getElementById("secIndividual").classList.add('d-none');
@@ -735,50 +726,73 @@
         new bootstrap.Modal(document.getElementById("modalApp")).show();
     };
 
-    // BOTON ACCION GUARDAR
     document.getElementById("btnSave").onclick = async () => {
         const id = document.getElementById("fID").value;
         const isM = document.getElementById("checkMasivo").checked;
         let data = {};
 
-        // Guardado estructurado para Usuarios y Personal
         if (['usuarios', 'personal'].includes(currentPath)) {
-            data = {
-                empresa: document.getElementById("upEmpresa").value,
-                zona: document.getElementById("upZona").value,
-                numeroEmpleado: document.getElementById("upNumEmp").value.toUpperCase(),
-                puesto: document.getElementById("upPuesto").value.toUpperCase(),
-                usuarioXS: document.getElementById("upXS").value,
-                usuarioXA: document.getElementById("upXA").value,
-                usuarioSalesForce: document.getElementById("upSF").value,
-                usuarioPowerBi: document.getElementById("upPBI").value,
-                usuarioB2B: document.getElementById("upB2B").value,
-                correoInstitucional: document.getElementById("upCorInst").value.toUpperCase(),
-                correoGmail: document.getElementById("upCorGml").value.toUpperCase(),
-                statusActual: document.getElementById("upStatus").value
-            };
+            const empresaSeleccionada = document.getElementById("upEmpresa").value;
+            const zonaSeleccionada = document.getElementById("upZona").value;
+            const statusSeleccionado = document.getElementById("upStatus").value;
 
-            if(!data.empresa) { Swal.fire("Atención", "Por favor seleccione una Empresa.", "warning"); return; }
+            if(!empresaSeleccionada) { Swal.fire("Atención", "Por favor seleccione una Empresa.", "warning"); return; }
 
             if (isM) {
                 const lineas = document.getElementById("fMasivo").value.split('\n').filter(l => l.trim());
                 if (lineas.length === 0) {
-                    Swal.fire("Atención", "Por favor ingresa al menos un nombre completo en la lista de Carga Masiva.", "warning");
+                    Swal.fire("Atención", "Por favor ingresa los datos en la caja de Carga Masiva.", "warning");
                     return;
                 }
+
                 for (let l of lineas) {
-                    let replicaData = { ...data, nombreCompleto: l.trim().toUpperCase() };
-                    await push(ref(db, currentPath), replicaData);
+                    // Dividimos la línea por sus comas y eliminamos espacios fantasmas
+                    const campos = l.split(',').map(c => c.trim());
+                    
+                    // Mapeamos dinámicamente cada columna o asignamos vacío si no viene en la línea
+                    let registroMasivo = {
+                        empresa: empresaSeleccionada,
+                        zona: zonaSeleccionada,
+                        statusActual: statusSeleccionado,
+                        numeroEmpleado: (campos[0] || '').toUpperCase(),
+                        nombreCompleto: (campos[1] || '').toUpperCase(),
+                        puesto: (campos[2] || '').toUpperCase(),
+                        usuarioXS: campos[3] || '',
+                        usuarioXA: campos[4] || '',
+                        usuarioSalesForce: campos[5] || '',
+                        usuarioPowerBi: campos[6] || '',
+                        usuarioB2B: campos[7] || '',
+                        correoInstitucional: (campos[8] || '').toUpperCase(),
+                        correoGmail: (campos[9] || '').toUpperCase()
+                    };
+
+                    // Solo guardamos si al menos el nombre completo fue ingresado en la línea
+                    if (registroMasivo.nombreCompleto) {
+                        await push(ref(db, currentPath), registroMasivo);
+                    }
                 }
             } else {
-                data.nombreCompleto = document.getElementById("upNombre").value.toUpperCase();
+                data = {
+                    empresa: empresaSeleccionada,
+                    zona: zonaSeleccionada,
+                    statusActual: statusSeleccionado,
+                    numeroEmpleado: document.getElementById("upNumEmp").value.toUpperCase(),
+                    nombreCompleto: document.getElementById("upNombre").value.toUpperCase(),
+                    puesto: document.getElementById("upPuesto").value.toUpperCase(),
+                    usuarioXS: document.getElementById("upXS").value,
+                    usuarioXA: document.getElementById("upXA").value,
+                    usuarioSalesForce: document.getElementById("upSF").value,
+                    usuarioPowerBi: document.getElementById("upPBI").value,
+                    usuarioB2B: document.getElementById("upB2B").value,
+                    correoInstitucional: document.getElementById("upCorInst").value.toUpperCase(),
+                    correoGmail: document.getElementById("upCorGml").value.toUpperCase()
+                };
                 if (!data.nombreCompleto) { Swal.fire("Atención", "El campo Nombre Completo es obligatorio.", "warning"); return; }
                 
                 id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
             }
 
         } else {
-            // Guardado para el resto de catálogos heredados
             if (currentPath === 'colorcenter') {
                 data = {
                     empresa: document.getElementById("ccEmp").value,
@@ -836,7 +850,6 @@
         document.getElementById('main-content').classList.toggle('shifted');
     };
 
-    // CONTROL SWITCH CARGA MASIVA VISIBILIDAD
     document.getElementById("checkMasivo").onchange = (e) => {
         const checked = e.target.checked;
         document.getElementById("secMasivo").classList.toggle('d-none', !checked);
@@ -849,7 +862,6 @@
         }
     };
 
-    // LÓGICA DE ASIGNACIÓN DE ARBOL SUCURSALES (EXCLUSIVO COMPLEMENTO USUARIOS)
     let currentUserId = null;
     const cleanAsignacionId = (txt) => String(txt || '').replace(/[^a-zA-Z0-9_-]/g, '_');
     const getAsignacionUsuario = () => {
