@@ -83,6 +83,7 @@
 
         @media print {
             .no-print { display: none !important; }
+            .wpa-key-input { text-transform: none !important; }
             .sidebar { display: none !important; }
             .main-content { margin-left: 0 !important; padding: 0 !important; }
             .excel-filter-menu { display: none !important; }
@@ -129,57 +130,73 @@
                 <input type="hidden" id="fID">
                 
                 <!-- Sección Específica Redes Inalámbricas -->
+              <!-- Sección Específica Redes Inalámbricas -->
                 <div id="secRedesInalambricas" class="d-none row g-3">
                     <div class="col-md-4">
-                        <label class="form-label fw-bold small">Empresa *</label>
+                        <label class="form-label fw-bold small">Empresa</label>
                         <select id="riEmpresa" class="form-select"></select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-bold small">Zona *</label>
+                        <label class="form-label fw-bold small">Zona</label>
                         <select id="riZona" class="form-select"><option value="">SELECCIONE ZONA...</option></select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-bold small">Sucursal *</label>
+                        <label class="form-label fw-bold small">Sucursal</label>
                         <select id="riSucursal" class="form-select"><option value="">SELECCIONE SUCURSAL...</option></select>
                     </div>
 
                     <div class="col-12"><div class="header-section">VALORES DE FÁBRICA</div></div>
                     <div class="col-md-4">
-                        <label class="form-label fw-bold small">Módem *</label>
+                        <label class="form-label fw-bold small">Módem</label>
                         <input type="text" id="riModem" class="form-control">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-bold small">Modelo *</label>
+                        <label class="form-label fw-bold small">Modelo</label>
                         <input type="text" id="riModelo" class="form-control">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-bold small">SSID *</label>
+                        <label class="form-label fw-bold small">SSID</label>
                         <input type="text" id="riSsidFabrica" class="form-control">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold small">WPA KEY *</label>
-                        <input type="text" id="riWpaFabrica" class="form-control">
+                        <label class="form-label fw-bold small">WPA KEY</label>
+                        <div class="input-group">
+                            <input type="password" id="riWpaFabrica" class="form-control wpa-key-input">
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('riWpaFabrica', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold small">Destinado *</label>
-                        <input type="text" id="riDestinado" class="form-control">
+                        <label class="form-label fw-bold small">Destinado</label>
+                        <select id="riDestinado" class="form-select">
+                            <option value="">SELECCIONE DESTINO...</option>
+                            <option value="CCTV">CCTV</option>
+                            <option value="PUNTO DE VENTA">PUNTO DE VENTA</option>
+                            <option value="CCTV / PUNTO DE VENTA">CCTV / PUNTO DE VENTA</option>
+                        </select>
                     </div>
 
                     <div class="col-12"><div class="header-section">MODIFICADOS</div></div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold small">SSID *</label>
+                        <label class="form-label fw-bold small">SSID</label>
                         <input type="text" id="riSsidModificado" class="form-control">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold small">WPA KEY *</label>
-                        <input type="text" id="riWpaModificado" class="form-control">
+                        <label class="form-label fw-bold small">WPA KEY</label>
+                        <div class="input-group">
+                            <input type="password" id="riWpaModificado" class="form-control wpa-key-input">
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('riWpaModificado', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold small">Acceso Módem *</label>
+                        <label class="form-label fw-bold small">Acceso Módem</label>
                         <input type="text" id="riAccesoModem" class="form-control">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold small">Fecha Última Actualización *</label>
+                        <label class="form-label fw-bold small">Fecha Última Actualización</label>
                         <input type="date" id="riFechaActualizacion" class="form-control">
                     </div>
                 </div>
@@ -395,7 +412,17 @@
             }
         });
     });
-
+window.togglePasswordVisibility = (inputId, btnEl) => {
+        const input = document.getElementById(inputId);
+        const icon = btnEl.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    };
     const buildSubListHtml = (containerId, itemsArray, storagePrefix) => {
         const container = document.getElementById(containerId);
         if(!container) return;
@@ -1008,24 +1035,26 @@
                         await push(ref(db, currentPath), regRI);
                     }
                 }
-            } else {
+           } else {
                 // Validación Estricta de Campos Obligatorios Individuales
                 let camposFaltantes = [];
                 
-                if (!empRI) camposFaltantes.push("Empresa");
-                if (!zonRI) camposFaltantes.push("Zona");
-                if (!sucRI) camposFaltantes.push("Sucursal");
-                
+                const empRI = document.getElementById("riEmpresa").value;
+                const zonRI = document.getElementById("riZona").value;
+                const sucRI = document.getElementById("riSucursal").value;
                 const modem = document.getElementById("riModem").value.trim().toUpperCase();
                 const modelo = document.getElementById("riModelo").value.trim().toUpperCase();
                 const ssidFabrica = document.getElementById("riSsidFabrica").value.trim().toUpperCase();
-                const wpaFabrica = document.getElementById("riWpaFabrica").value.trim().toUpperCase();
-                const destinado = document.getElementById("riDestinado").value.trim().toUpperCase();
+                const wpaFabrica = document.getElementById("riWpaFabrica").value.trim(); // Respeta mayúsculas/minúsculas
+                const destinado = document.getElementById("riDestinado").value;
                 const ssidModificado = document.getElementById("riSsidModificado").value.trim().toUpperCase();
-                const wpaModificado = document.getElementById("riWpaModificado").value.trim().toUpperCase();
+                const wpaModificado = document.getElementById("riWpaModificado").value.trim(); // Respeta mayúsculas/minúsculas
                 const accesoModem = document.getElementById("riAccesoModem").value.trim().toUpperCase();
                 const fechaActualizacion = document.getElementById("riFechaActualizacion").value;
 
+                if (!empRI) camposFaltantes.push("Empresa");
+                if (!zonRI) camposFaltantes.push("Zona");
+                if (!sucRI) camposFaltantes.push("Sucursal");
                 if (!modem) camposFaltantes.push("Módem");
                 if (!modelo) camposFaltantes.push("Modelo");
                 if (!ssidFabrica) camposFaltantes.push("SSID Fábrica");
@@ -1038,8 +1067,8 @@
 
                 if (camposFaltantes.length > 0) {
                     Swal.fire({
-                        title: "No se puede guardar el registro",
-                        html: `<div class="text-start"><strong>Hacen falta los siguientes campos obligatorios:</strong><br><br>
+                        title: "Falta Información",
+                        html: `<div class="text-start"><strong>No se puede guardar el registro. Hacen falta los siguientes campos obligatorios:</strong><br><br>
                                ${camposFaltantes.map(f => `<span class="text-danger">• ${f}</span>`).join('<br>')}</div>`,
                         icon: "error"
                     });
