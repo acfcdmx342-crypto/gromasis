@@ -144,7 +144,7 @@
                         </select>
                     </div>
                     
-                    <!-- Contenedor del Formulario Individual Estándar -->
+                    <!-- Contenedor del Formulario Individual Estándar (Unificado) -->
                     <div id="secFormIndividualUP" class="row g-3 m-0 p-0">
                         <div class="col-md-4"><label class="form-label fw-bold small">N° de Empleado</label><input type="text" id="upNumEmp" class="form-control"></div>
                         <div class="col-md-8"><label class="form-label fw-bold small">Nombre Completo</label><input type="text" id="upNombre" class="form-control"></div>
@@ -152,7 +152,7 @@
                         <div class="col-md-4"><label class="form-label fw-bold small">Número Largo</label><input type="text" id="upNumLargo" class="form-control"></div>
                         <div class="col-md-4"><label class="form-label fw-bold small">Marcación Corta</label><input type="text" id="upMarcCorta" class="form-control"></div>
                         
-                        <!-- Panel de Accesos Grupo Roma Exclusivo de Catálogos Relacionados -->
+                        <!-- Panel de Accesos Grupo Roma -->
                         <div class="col-12 mt-3" id="wrapperAccesosRoma">
                             <div class="group-box">
                                 <div class="group-title">Accesos Grupo Roma</div>
@@ -311,7 +311,6 @@
         }
     };
 
-    // Escuchadores dinámicos para los paneles colapsables del modal de accesos
     document.querySelectorAll('.ctx-trigger').forEach(chk => {
         chk.addEventListener('change', (e) => {
             const targetBox = document.getElementById(e.target.dataset.target);
@@ -325,7 +324,6 @@
         });
     });
 
-    // Inyección de Inputs dinámicos dentro de cada bloque de accesos
     const buildSubListHtml = (containerId, itemsArray, storagePrefix) => {
         const container = document.getElementById(containerId);
         if(!container) return;
@@ -427,7 +425,7 @@
                         <td class="text-end">
                             <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
-                            ${path === 'usuarios' ? `<button class="btn btn-sm btn-outline-success border-0" onclick="openEmpresaModal('${id}')"><i class="bi bi-building"></i></button>` : ''} 
+                            <button class="btn btn-sm btn-outline-success border-0" onclick="openEmpresaModal('${id}')"><i class="bi bi-building"></i></button>
                         </td>
                     </tr>`;
                 } else if (path === 'colorcenter') {
@@ -687,17 +685,14 @@
         document.getElementById("fCamaras").value = "";
         document.getElementById("fMasivo").value = "";
 
-        // Resetear checkboxes primarios y ocultar sus subgrupos
         document.querySelectorAll('.ctx-trigger').forEach(c => { c.checked = false; });
         ['boxDesarrollos', 'boxServidores', 'boxComex', 'boxCorreos', 'boxFirewall'].forEach(b => document.getElementById(b).classList.add('d-none'));
 
-        // Cargar listas fijas de sub-opciones
         buildSubListHtml("boxDesarrollos", listsRoma.desarrollos, "des");
         buildSubListHtml("boxComex", listsRoma.comex, "cmx");
         buildSubListHtml("boxCorreos", listsRoma.correos, "crr");
         buildSubListHtml("boxFirewall", listsRoma.firewall, "frw");
 
-        // Alimentar Servidores dinámicos mapeados del nuevo sub-catálogo autónomo
         const arrServidores = Object.values(store.servidores || {}).map(s => s.nombre).sort();
         buildSubListHtml("boxServidores", arrServidores, "srv");
 
@@ -707,9 +702,6 @@
             document.getElementById("secIndividual").classList.add('d-none');
             document.getElementById("secFormIndividualUP").classList.remove('d-none');
             document.getElementById("secToggleMasivo").classList.remove('d-none');
-
-            // Ocultar la caja de privilegios en Personal, solo es visible en Usuarios
-            document.getElementById("wrapperAccesosRoma").classList.toggle('d-none', path === 'personal');
 
             const emps = Object.values(store.empresas).map(e => e.nombre).sort();
             document.getElementById("upEmpresa").innerHTML = '<option value="">SELECCIONE EMPRESA...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
@@ -735,8 +727,7 @@
             document.getElementById("upStatus").value = item.statusActual || "ACTIVO";
             updateStatusStyle(document.getElementById("upStatus"));
 
-            // Si estamos editando y contiene accesos estructurados, activarlos e inyectar valores
-            if(id && path === 'usuarios' && item.accesosGrupoRoma) {
+            if(id && item.accesosGrupoRoma) {
                 const acc = item.accesosGrupoRoma;
                 if(acc.desarrollosPropios) { document.getElementById("chkGroupDesarrollos").checked = true; document.getElementById("boxDesarrollos").classList.remove('d-none'); setBoxData("boxDesarrollos", "des", acc.desarrollosPropios); }
                 if(acc.servidores) { document.getElementById("chkGroupServidores").checked = true; document.getElementById("boxServidores").classList.remove('d-none'); setBoxData("boxServidores", "srv", acc.servidores); }
@@ -897,22 +888,18 @@
                     nombreCompleto: document.getElementById("upNombre").value.toUpperCase(),
                     puesto: document.getElementById("upPuesto").value.toUpperCase(),
                     numeroLargo: document.getElementById("upNumLargo").value,
-                    marcacionCorta: document.getElementById("upMarcCorta").value
-                };
-
-                if (!data.nombreCompleto) { Swal.fire("Atención", "El campo Nombre Completo es obligatorio.", "warning"); return; }
-                
-                // Si es catálogo de usuarios, recolectamos estructuralmente los sub-objetos dinámicos
-                if(currentPath === 'usuarios') {
-                    data.accesosGrupoRoma = {
+                    marcacionCorta: document.getElementById("upMarcCorta").value,
+                    accesosGrupoRoma: {
                         desarrollosPropios: document.getElementById("chkGroupDesarrollos").checked ? collectBoxData("boxDesarrollos", "des") : null,
                         servidores: document.getElementById("chkGroupServidores").checked ? collectBoxData("boxServidores", "srv") : null,
                         comex: document.getElementById("chkGroupComex").checked ? collectBoxData("boxComex", "cmx") : null,
                         correos: document.getElementById("chkGroupCorreos").checked ? collectBoxData("boxCorreos", "crr") : null,
                         firewall: document.getElementById("chkGroupFirewall").checked ? collectBoxData("boxFirewall", "frw") : null
-                    };
-                }
+                    }
+                };
 
+                if (!data.nombreCompleto) { Swal.fire("Atención", "El campo Nombre Completo es obligatorio.", "warning"); return; }
+                
                 id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
             }
 
@@ -989,7 +976,7 @@
     let currentUserId = null;
     const cleanAsignacionId = (txt) => String(txt || '').replace(/[^a-zA-Z0-9_-]/g, '_');
     const getAsignacionUsuario = () => {
-        const asignacion = store.usuarios[currentUserId]?.asignacionSucursales;
+        const asignacion = store[currentPath][currentUserId]?.asignacionSucursales;
         return Array.isArray(asignacion) ? asignacion : [];
     };
     const getEmpresaAsignada = (empresa) => getAsignacionUsuario().find(a => a.empresa === empresa);
@@ -1148,7 +1135,7 @@
             asignacionSucursales.push({ empresa, zonas: zones });
         });
         try {
-            await update(ref(db, `usuarios/${currentUserId}`), { asignacionSucursales });
+            await update(ref(db, `${currentPath}/${currentUserId}`), { asignacionSucursales });
             Swal.fire({ icon: "success", title: "Asignación guardada", timer: 1200, showConfirmButton: false });
             bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
         } catch (e) { Swal.fire("Error", e.message, "error"); }
