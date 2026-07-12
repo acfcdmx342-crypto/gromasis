@@ -38,54 +38,49 @@
             .main-content.shifted { margin-left: 0; filter: blur(2px); pointer-events: none; }
         }
         .table-container { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 300px; }
-        th { font-size: 0.7rem; color: #64748b; text-transform: uppercase; text-align: center; background: #f8fafc !important; }
+        
+        /* Estilos de los Encabezados con Filtro Excel */
+        th { font-size: 0.75rem; color: #64748b; text-transform: uppercase; background: #f8fafc !important; position: relative; padding-right: 28px !important; vertical-align: middle; }
+        th .th-content { display: flex; align-items: center; justify-content: center; gap: 4px; position: relative; width: 100%; }
+        th .filter-trigger { cursor: pointer; color: #94a3b8; transition: 0.2s; font-size: 0.85rem; padding: 2px; }
+        th .filter-trigger:hover, th .filter-trigger.active-filter { color: #0284c7; }
+        
         td { vertical-align: middle; text-align: center; font-size: 0.85rem; }
         input[type="text"], input[type="email"], select, textarea { text-transform: uppercase; }
-        .cctv-header { background: var(--cctv-blue); color: white; font-weight: bold; padding: 5px 15px; margin-bottom: 10px; border-radius: 4px; }
-        .tech-header { background: var(--tech-purple); color: white; font-weight: bold; padding: 5px 15px; margin-bottom: 10px; border-radius: 4px; }
-        .cctv-green-header { background: var(--cctv-green); color: white; font-weight: bold; padding: 5px 15px; margin-top: 15px; }
-        .cctv-label { background: #e9ecef; font-weight: bold; font-size: 0.75rem; border: 1px solid #dee2e6; padding: 4px 8px; }
-        .cctv-input { border: 1px solid #dee2e6; padding: 4px 8px; font-size: 0.8rem; width: 100%; }
-        .item-box { border: 1px solid #dee2e6; padding: 10px; background: #fff; height: 100%; position: relative; border-radius: 4px; }
-        .signature-line { border-top: 1px solid #000; margin-top: 40px; font-size: 0.7rem; text-align: center; }
+        
+        /* Estilos del Menú Flotante de Filtro (Estilo Excel) */
+        .excel-filter-menu {
+            position: absolute; background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+            border-radius: 6px; width: 250px; z-index: 1050; padding: 8px 0; display: none; text-transform: none; font-family: sans-serif;
+        }
+        .excel-filter-item { padding: 6px 16px; display: flex; align-items: center; gap: 10px; color: #334155; cursor: pointer; font-size: 0.85rem; }
+        .excel-filter-item:hover { background: #f1f5f9; }
+        .excel-filter-divider { border-top: 1px solid #e2e8f0; margin: 6px 0; }
+        .excel-filter-search-box { padding: 4px 12px; }
+        .excel-filter-search-box input { font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; border: 1px solid #cbd5e1; width: 100%; }
+        .excel-filter-list { max-height: 160px; overflow-y: auto; padding: 4px 12px; margin-top: 6px; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
+        .excel-filter-list .form-check { padding-top: 3px; padding-bottom: 3px; margin: 0; display: flex; align-items: center; gap: 6px; }
+        .excel-filter-list .form-check-input { margin: 0; cursor: pointer; min-width: 14px; min-height: 14px; }
+        .excel-filter-list .form-check-label { font-size: 0.8rem; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; width: 100%; color: #475569; }
+        .excel-filter-footer { padding: 8px 12px 4px 12px; display: flex; justify-content: flex-end; gap: 8px; }
+        .excel-filter-footer button { padding: 4px 12px; font-size: 0.75rem; font-weight: bold; border-radius: 4px; }
+
         .btn-toggle { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 1001; width: 50px; height: 50px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         @media (max-width: 768px) { .btn-toggle { display: block; } }
         
-        .pdf-header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .pdf-actions { display: flex; gap: 8px; }
-        .btn-print { background-color: #212529; color: white; border: none; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: 0.2s; cursor: pointer;}
-        .btn-back { background-color: #dc3545; color: white; border: none; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: 0.2s; cursor: pointer;}
-        .btn-print:hover, .btn-back:hover { opacity: 0.8; transform: scale(1.05); }
-
-        .btn-remove-item { border: none; background: transparent; color: #dc3545; padding: 0; line-height: 1; transition: 0.2s; }
-        .btn-remove-item:hover { transform: scale(1.2); }
         #empresa-tree { padding-left: 28px; }
         #empresa-tree .form-check { padding-left: 1.75rem; }
         #empresa-tree .form-check-input { margin-left: -1.45rem; }
         .tree-level { border-left: 1px solid #e2e8f0; margin-left: 10px; padding-left: 16px; }
         .tree-row { padding: 4px 0; }
-        .tree-select-all { color: #0d6efd; font-weight: 600; }
-        .tree-muted { color: #94a3b8; font-size: 0.78rem; padding: 4px 0 8px 28px; }
-
-        /* Estilos para los inputs de filtro */
-        .filter-input {
-            font-size: 0.75rem;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid #cbd5e1;
-            width: 100%;
-        }
-        .filter-row {
-            background: #f8fafc;
-        }
 
         @media print {
             .no-print { display: none !important; }
             .sidebar { display: none !important; }
             .main-content { margin-left: 0 !important; padding: 0 !important; }
-            .table-container { box-shadow: none !important; border: none !important; }
-            #capture-area { border: none !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; }
-            .filter-row { display: none !important; }
+            .excel-filter-menu { display: none !important; }
+            th { padding-right: 8px !important; }
+            th .filter-trigger { display: none !important; }
         }
     </style>
 </head>
@@ -111,6 +106,10 @@
         </div>
     </div>
 </div>
+
+<!-- Contenedor único para el Menú Flotante de Filtro -->
+<div id="excelFilterMenu" class="excel-filter-menu"></div>
+
 <div class="modal fade" id="modalApp" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0">
@@ -193,6 +192,9 @@
     let loadsPending = Object.keys(store).length;
     const urlParams = new URLSearchParams(window.location.search);
 
+    // Guardar filtros activos globales para persistencia entre renders
+    let activeFiltersState = {};
+
     if (currentPath === '') {
         if (urlParams.get('tipo') === 'colorcenter') {
             document.body.classList.add('hide-menu');
@@ -210,7 +212,18 @@
         });
     });
 
+    // Encabezado Helper para inyectar botones de filtro Excel
+    const wrapTh = (title, index) => {
+        return `<th>
+            <div class="th-content">
+                <span>${title}</span>
+                <i class="bi bi-caret-down-fill filter-trigger" data-col-index="${index}" onclick="openExcelFilterMenu(event, ${index})"></i>
+            </div>
+        </th>`;
+    };
+
     window.render = (path) => {
+        if(currentPath !== path) activeFiltersState = {}; // Reiniciar filtros al cambiar de sección
         currentPath = path;
         document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
         document.getElementById(`link-${path}`)?.classList.add('active');
@@ -227,43 +240,31 @@
         if (keys.length === 0) {
             html += `<div class="text-center py-5 text-muted">No hay registros</div>`;
         } else {
-            html += `<div class="table-responsive"><table class="table table-hover border" id="mainCatalogTable">
+            let colIdx = 0;
+            html += `<div class="table-responsive"><table class="table table-hover border align-middle" id="mainCatalogTable">
                 <thead>
                     <tr>
-                        ${path === 'colorcenter' ? '<th>Empresa</th><th>Zona</th><th>Sucursal</th><th>Mod. Dosificador</th><th>Img Dosificador</th><th>Mod. Revolvedora</th><th>Img Revolvedora</th>' : `
-                            ${['usuarios','sucursales','zonas'].includes(path) ? '<th>Empresa</th>' : ''}
-                            ${['usuarios','sucursales'].includes(path) ? '<th>Zona</th>' : ''}
-                            ${['redes_inalambricas', 'personal'].includes(path) ? '<th>Artículos</th><th>Modelo</th><th>Descripción</th><th>Marca</th><th>Cant.</th>' : '<th class="text-start">Nombre</th>'}
-                            ${path === 'sucursales' ? '<th>N° Cámaras</th>' : ''}
-                        `}
-                        <th class="text-end no-filter-col">Acciones</th>
-                    </tr>
-                    <tr class="filter-row">
                         ${path === 'colorcenter' ? `
-                            <td><input type="text" class="form-control filter-input" placeholder="Filtrar..." onkeyup="filterTable(0)"></td>
-                            <td><input type="text" class="form-control filter-input" placeholder="Filtrar..." onkeyup="filterTable(1)"></td>
-                            <td><input type="text" class="form-control filter-input" placeholder="Filtrar..." onkeyup="filterTable(2)"></td>
-                            <td><input type="text" class="form-control filter-input" placeholder="Filtrar..." onkeyup="filterTable(3)"></td>
-                            <td></td>
-                            <td><input type="text" class="form-control filter-input" placeholder="Filtrar..." onkeyup="filterTable(5)"></td>
-                            <td></td>
+                            ${wrapTh('Empresa', colIdx++)}
+                            ${wrapTh('Zona', colIdx++)}
+                            ${wrapTh('Sucursal', colIdx++)}
+                            ${wrapTh('Mod. Dosificador', colIdx++)}
+                            ${wrapTh('Img Dosificador', colIdx++)}
+                            ${wrapTh('Mod. Revolvedora', colIdx++)}
+                            ${wrapTh('Img Revolvedora', colIdx++)}
                         ` : `
-                            ${['usuarios','sucursales','zonas'].includes(path) ? '<td><input type="text" class="form-control filter-input" placeholder="Filtrar..." onkeyup="filterTable(0)"></td>' : ''}
-                            ${['usuarios','sucursales'].includes(path) ? `<td><input type="text" class="form-control filter-input" placeholder="Filtrar..." onkeyup="filterTable(${path==='usuarios'||path==='sucursales'? 1 : 0})"></td>` : ''}
-                            
+                            ${['usuarios','sucursales','zonas'].includes(path) ? wrapTh('Empresa', colIdx++) : ''}
+                            ${['usuarios','sucursales'].includes(path) ? wrapTh('Zona', colIdx++) : ''}
                             ${['redes_inalambricas', 'personal'].includes(path) ? `
-                                <td><input type="text" class="form-control filter-input" placeholder="Filtrar..." onkeyup="filterTable(0)"></td>
-                                <td><input type="text" class="form-control filter-input" placeholder="Filtrar..." onkeyup="filterTable(1)"></td>
-                                <td><input type="text" class="form-control filter-input" placeholder="Filtrar..." onkeyup="filterTable(2)"></td>
-                                <td><input type="text" class="form-control filter-input" placeholder="Filtrar..." onkeyup="filterTable(3)"></td>
-                                <td><input type="text" class="form-control filter-input" placeholder="Filtrar..." onkeyup="filterTable(4)"></td>
-                            ` : `
-                                <td><input type="text" class="form-control filter-input" placeholder="Filtrar..." onkeyup="filterTable(${['usuarios','sucursales'].includes(path) ? 2 : (path==='zonas' ? 1 : 0)})"></td>
-                            `}
-                            
-                            ${path === 'sucursales' ? '<td><input type="text" class="form-control filter-input" placeholder="Filtrar..." onkeyup="filterTable(3)"></td>' : ''}
+                                ${wrapTh('Artículos', colIdx++)}
+                                ${wrapTh('Modelo', colIdx++)}
+                                ${wrapTh('Descripción', colIdx++)}
+                                ${wrapTh('Marca', colIdx++)}
+                                ${wrapTh('Cant.', colIdx++)}
+                            ` : wrapTh('Nombre', colIdx++)}
+                            ${path === 'sucursales' ? wrapTh('N° Cámaras', colIdx++) : ''}
                         `}
-                        <td></td>
+                        <th class="text-end" style="width: 120px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>`;
@@ -290,7 +291,7 @@
                         ${['usuarios','sucursales'].includes(path) ? `<td><small>${r.zona || '-'}</small></td>` : ''}
                         ${['redes_inalambricas', 'personal'].includes(path) ? 
                             `<td class="text-start fw-bold">${r.articulos || '-'}</td><td>${r.modelo || '-'}</td><td><small>${r.descripcion || '-'}</small></td><td>${r.marca || '-'}</td><td>${r.cantidad || '-'}</td>` : 
-                            `<td class="text-start">${r.nombre}</td>`
+                            `<td class="text-start">${r.nombre || ''}</td>`
                         }
                         ${path === 'sucursales' ? `<td><span class="badge bg-secondary">${r.camaras || '0'}</span></td>` : ''}
                         <td class="text-end">
@@ -304,22 +305,149 @@
             html += `</tbody></table></div>`;
         }
         document.getElementById("view").innerHTML = html;
+        
+        // Re-aplicar filtros si existían previamente activos
+        applyAllActiveFilters();
     };
 
-    // Función global para filtrar dinámicamente cada columna
-    window.filterTable = () => {
+    // LOGICA EXCEL FILTERS INTERNOS
+    window.openExcelFilterMenu = (event, colIndex) => {
+        event.stopPropagation();
+        const menu = document.getElementById("excelFilterMenu");
+        const trigger = event.target;
+        const rect = trigger.getBoundingClientRect();
+        
+        // Extraer valores únicos de la columna actual
+        const table = document.getElementById("mainCatalogTable");
+        const rows = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+        let uniqueValues = new Set();
+        
+        for (let i = 0; i < rows.length; i++) {
+            const cell = rows[i].getElementsByTagName("td")[colIndex];
+            if(cell) {
+                let txt = cell.textContent || cell.innerText;
+                uniqueValues.add(txt.trim());
+            }
+        }
+        
+        const sortedValues = Array.from(uniqueValues).sort((a,b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
+        const savedChecked = activeFiltersState[colIndex];
+
+        let menuHtml = `
+            <div class="excel-filter-item" onclick="sortColumn(${colIndex}, 'ASC')"><i class="bi bi-sort-alpha-down"></i> Ordenar de A a Z</div>
+            <div class="excel-filter-item" onclick="sortColumn(${colIndex}, 'DESC')"><i class="bi bi-sort-alpha-up"></i> Ordenar de Z a A</div>
+            <div class="excel-filter-divider"></div>
+            <div class="excel-filter-item" onclick="clearColumnFilter(${colIndex})"><i class="bi bi-funnel"></i> Borrar filtro de esta columna</div>
+            <div class="excel-filter-divider"></div>
+            <div class="excel-filter-search-box">
+                <input type="text" placeholder="Buscar..." onkeyup="filterExcelList(this)">
+            </div>
+            <div class="excel-filter-list">
+                <div class="form-check">
+                    <input class="form-check-input select-all-excel" type="checkbox" id="excelAll_${colIndex}" checked onchange="toggleSelectAllExcel(this)">
+                    <label class="form-check-label" for="excelAll_${colIndex}">(Seleccionar todo)</label>
+                </div>
+                ${sortedValues.map((val, idx) => {
+                    const isChecked = savedChecked ? savedChecked.includes(val) : true;
+                    return `
+                    <div class="form-check val-item">
+                        <input class="form-check-input excel-check" type="checkbox" value="${val}" id="chk_${colIndex}_${idx}" ${isChecked ? 'checked' : ''} onchange="syncSelectAllExcel(${colIndex})">
+                        <label class="form-check-label" for="chk_${colIndex}_${idx}">${val}</label>
+                    </div>`;
+                }).join('')}
+            </div>
+            <div class="excel-filter-footer">
+                <button class="btn btn-sm btn-outline-secondary" onclick="closeExcelMenu()">Cancelar</button>
+                <button class="btn btn-sm btn-primary" onclick="submitExcelFilter(${colIndex})">Aceptar</button>
+            </div>
+        `;
+        
+        menu.innerHTML = menuHtml;
+        menu.style.top = `${rect.bottom + window.scrollY}px`;
+        menu.style.left = `${Math.min(rect.left + window.scrollX, window.innerWidth - 270)}px`;
+        menu.style.display = "block";
+        
+        syncSelectAllExcel(colIndex);
+    };
+
+    window.filterExcelList = (input) => {
+        const text = input.value.toUpperCase();
+        const container = input.closest(".excel-filter-menu");
+        const items = container.querySelectorAll(".val-item");
+        items.forEach(item => {
+            const label = item.querySelector(".form-check-label").textContent.toUpperCase();
+            item.style.setProperty("display", label.includes(text) ? "flex" : "none", "important");
+        });
+    };
+
+    window.toggleSelectAllExcel = (master) => {
+        const container = master.closest(".excel-filter-list");
+        const checks = container.querySelectorAll(".val-item input[type='checkbox']");
+        checks.forEach(chk => {
+            if(chk.closest(".val-item").style.display !== "none") {
+                chk.checked = master.checked;
+            }
+        });
+    };
+
+    window.syncSelectAllExcel = (colIndex) => {
+        const menu = document.getElementById("excelFilterMenu");
+        const master = menu.querySelector(".select-all-excel");
+        const checks = Array.from(menu.querySelectorAll(".val-item input[type='checkbox']"));
+        const checkedCount = checks.filter(c => c.checked).length;
+        
+        if (checkedCount === checks.length) {
+            master.checked = true;
+            master.indeterminate = false;
+        } else if (checkedCount === 0) {
+            master.checked = false;
+            master.indeterminate = false;
+        } else {
+            master.checked = false;
+            master.indeterminate = true;
+        }
+    };
+
+    window.closeExcelMenu = () => {
+        document.getElementById("excelFilterMenu").style.display = "none";
+    };
+
+    window.submitExcelFilter = (colIndex) => {
+        const menu = document.getElementById("excelFilterMenu");
+        const checkedBoxes = menu.querySelectorAll(".val-item input[type='checkbox']:checked");
+        const totalBoxes = menu.querySelectorAll(".val-item input[type='checkbox']");
+        
+        if (checkedBoxes.length === totalBoxes.length) {
+            delete activeFiltersState[colIndex];
+        } else {
+            activeFiltersState[colIndex] = Array.from(checkedBoxes).map(c => c.value);
+        }
+        
+        applyAllActiveFilters();
+        closeExcelMenu();
+    };
+
+    window.clearColumnFilter = (colIndex) => {
+        delete activeFiltersState[colIndex];
+        applyAllActiveFilters();
+        closeExcelMenu();
+    };
+
+    const applyAllActiveFilters = () => {
         const table = document.getElementById("mainCatalogTable");
         if (!table) return;
         const rows = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
-        const filterInputs = table.querySelectorAll(".filter-input");
+        const filterKeys = Object.keys(activeFiltersState);
         
-        // Mapear los índices de columna reales que tienen filtros activos
-        const activeFilters = [];
-        filterInputs.forEach(input => {
-            if (input.value.trim() !== "") {
-                // Obtener el índice de la celda (td) contenedora del input
-                const cellIndex = input.closest("td").cellIndex;
-                activeFilters.push({ index: cellIndex, val: input.value.toUpperCase() });
+        // Actualizar visualmente los íconos de las columnas filtradas
+        table.querySelectorAll(".filter-trigger").forEach(trig => {
+            const idx = trig.dataset.colIndex;
+            if (activeFiltersState[idx]) {
+                trig.classList.add("active-filter");
+                trig.className = "bi bi-funnel-fill filter-trigger active-filter";
+            } else {
+                trig.classList.remove("active-filter");
+                trig.className = "bi bi-caret-down-fill filter-trigger";
             }
         });
 
@@ -327,19 +455,45 @@
             let rowVisible = true;
             const cells = rows[i].getElementsByTagName("td");
             
-            // Validar contra todos los filtros activos
-            for (let filter of activeFilters) {
-                if (cells[filter.index]) {
-                    const content = cells[filter.index].textContent || cells[filter.index].innerText;
-                    if (content.toUpperCase().indexOf(filter.val) === -1) {
+            for (let colIdx of filterKeys) {
+                if (cells[colIdx]) {
+                    const txt = (cells[colIdx].textContent || cells[colIdx].innerText).trim();
+                    const allowedValues = activeFiltersState[colIdx];
+                    if (!allowedValues.includes(txt)) {
                         rowVisible = false;
-                        break; 
+                        break;
                     }
                 }
             }
             rows[i].style.display = rowVisible ? "" : "none";
         }
     };
+
+    window.sortColumn = (colIndex, direction) => {
+        const table = document.getElementById("mainCatalogTable");
+        const tbody = table.getElementsByTagName("tbody")[0];
+        const rows = Array.from(tbody.getElementsByTagName("tr"));
+        
+        rows.sort((rowA, rowB) => {
+            const cellA = rowA.getElementsByTagName("td")[colIndex].textContent.trim();
+            const cellB = rowB.getElementsByTagName("td")[colIndex].textContent.trim();
+            
+            return direction === 'ASC' 
+                ? cellA.localeCompare(cellB, undefined, {numeric: true, sensitivity: 'base'})
+                : cellB.localeCompare(cellA, undefined, {numeric: true, sensitivity: 'base'});
+        });
+        
+        rows.forEach(row => tbody.appendChild(row));
+        closeExcelMenu();
+    };
+
+    // Cerrar menú al dar clic afuera
+    document.addEventListener("click", (e) => {
+        const menu = document.getElementById("excelFilterMenu");
+        if(menu && !menu.contains(e.target)) {
+            closeExcelMenu();
+        }
+    });
     
     window.showModal = (path, id = "") => {
         const item = id ? store[path][id] : {};
