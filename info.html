@@ -81,11 +81,6 @@
 
         .header-section { font-weight: bold; font-size: 0.8rem; background: #e2e8f0; padding: 6px 12px; border-radius: 4px; color: #334155; margin-bottom: 5px; }
 
-        /* Estilos del Dashboard */
-        .dash-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: none; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
-        .dash-card:hover { transform: translateY(-4px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
-        .dash-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 15px; }
-
         @media print {
             .no-print { display: none !important; }
             .wpa-key-input { text-transform: none !important; }
@@ -102,7 +97,6 @@
 <button class="btn btn-dark btn-toggle" onclick="toggleSidebar()"><i class="bi bi-list fs-4"></i></button>
 <div class="sidebar" id="sidebar">
     <div class="text-center py-4 border-bottom border-secondary mb-2"><h6 class="mb-0 fw-bold text-white">CATÁLOGOS</h6></div>
-    <a onclick="renderDashboard()" id="link-dashboard" class="active"><i class="bi bi-house-door me-2"></i> Inicio</a>
     <a onclick="render('empresas')" id="link-empresas"><i class="bi bi-building me-2"></i> Empresas</a>
     <a onclick="render('servidores')" id="link-servidores"><i class="bi bi-hdd-network me-2"></i> Servidores</a>
     <a onclick="render('zonas')" id="link-zonas"><i class="bi bi-geo-alt me-2"></i> Zonas</a>
@@ -114,7 +108,11 @@
 </div>
 <div class="main-content" id="main-content">
     <div id="view" class="table-container">
-        <!-- Dashboard renderizado inicialmente por JavaScript -->
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-cloud-check display-1"></i>
+            <h4 class="mt-3">Bienvenido al Sistema</h4>
+            <p>Selecciona un módulo en el menú lateral.</p>
+        </div>
     </div>
 </div>
 
@@ -261,18 +259,22 @@
                                 <div id="boxFirewall" class="sub-list d-none"></div>
 
                                 <!-- Contenedor Principal de Cámaras -->
-                                <div class="opcion-acceso">
-                                    <label>
-                                        <input type="checkbox" id="check-camaras" onchange="toggleCamaras()"> 
-                                        <strong>Cámaras</strong>
-                                    </label>
+                                <div class="opcion-acceso mb-2">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="check-camaras" onchange="toggleCamaras()"> 
+                                        <label class="form-check-label fw-semibold" for="check-camaras">Cámaras</label>
+                                    </div>
+
+                                    <!-- Opciones desplegables (ocultas por defecto) -->
                                     <div id="desplegable-camaras" style="display: none; margin-left: 20px; margin-top: 5px;">
-                                        <label style="display: block; margin-bottom: 5px;">
-                                            <input type="checkbox" name="acceso_camaras" value="hik_connect"> Hik-Connect
-                                        </label>
-                                        <label style="display: block;">
-                                            <input type="checkbox" name="acceso_camaras" value="meriva"> Meriva
-                                        </label>
+                                        <div class="form-check mb-1">
+                                            <input type="checkbox" class="form-check-input sub-camera-chk" name="acceso_camaras" value="HIK_CONNECT" id="cam_hik_connect">
+                                            <label class="form-check-label small" for="cam_hik_connect">Hik-Connect</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input sub-camera-chk" name="acceso_camaras" value="MERIVA" id="cam_meriva">
+                                            <label class="form-check-label small" for="cam_meriva">Meriva</label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -354,109 +356,22 @@
         firewall: ["CONTABILIDAD", "NOMINAS", "HUATUSCO", "TESORERIA"]
     };
 
-    if (urlParams.get('tipo') === 'colorcenter') {
-        document.body.classList.add('hide-menu');
+    if (currentPath === '') {
+        if (urlParams.get('tipo') === 'colorcenter') {
+            document.body.classList.add('hide-menu');
+            render('colorcenter');
+        }
     }
 
     Object.keys(store).forEach(path => {
         onValue(ref(db, path), (s) => {
             store[path] = s.val() || {};
             if (loadsPending > 0) loadsPending--;
-            if (loadsPending === 0) {
-                if (urlParams.get('tipo') === 'colorcenter') {
-                    render('colorcenter');
-                } else if (currentPath === '') {
-                    renderDashboard();
-                } else {
-                    render(currentPath);
-                }
+            if (loadsPending === 0 && currentPath === path) {
+                render(path);
             }
         });
     });
-
-    window.renderDashboard = () => {
-        currentPath = '';
-        document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
-        document.getElementById('link-dashboard')?.classList.add('active');
-
-        // Contar el número de cámaras totales en las sucursales
-        let totalCamaras = 0;
-        Object.values(store.sucursales).forEach(s => {
-            totalCamaras += parseInt(s.camaras || 0, 10);
-        });
-
-        const html = `
-            <div class="p-3">
-                <div class="text-center mb-5 mt-3">
-                    <i class="bi bi-cloud-check text-primary display-3"></i>
-                    <h3 class="mt-3 fw-bold text-dark">Bienvenido al Sistema de Gestión</h3>
-                    <p class="text-secondary">Monitoreo de infraestructura, accesos y telecomunicaciones corporativas</p>
-                </div>
-                
-                <h5 class="fw-bold text-dark mb-4 text-uppercase tracking-wider" style="font-size:0.85rem;">Resumen de Módulos</h5>
-                
-                <div class="row g-4">
-                    <div class="col-xl-3 col-md-6" onclick="render('empresas')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-building"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Empresas</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.empresas).length}</h3>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6" onclick="render('servidores')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-secondary bg-opacity-10 text-dark"><i class="bi bi-hdd-network"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Servidores</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.servidores).length}</h3>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6" onclick="render('zonas')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-geo-alt"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Zonas</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.zonas).length}</h3>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6" onclick="render('sucursales')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-info bg-opacity-10 text-info"><i class="bi bi-shop"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Sucursales / Cámaras</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.sucursales).length} <span class="fs-6 fw-normal text-muted">(${totalCamaras} <i class="bi bi-camera-video-fill text-danger small"></i>)</span></h3>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6" onclick="render('usuarios')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-success bg-opacity-10 text-success"><i class="bi bi-person-lines-fill"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Usuarios</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.usuarios).length}</h3>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6" onclick="render('personal')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-people"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Personal</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.personal).length}</h3>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6" onclick="render('redes_inalambricas')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-opacity-10 text-white" style="background-color: var(--cctv-blue); color: var(--cctv-blue) !important;"><i class="bi bi-wifi"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Redes Inalámbricas</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.redes_inalambricas).length}</h3>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6" onclick="render('colorcenter')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-opacity-10 text-white" style="background-color: var(--tech-purple); color: var(--tech-purple) !important;"><i class="bi bi-file-earmark-text"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Colorcenter</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.colorcenter).length}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.getElementById("view").innerHTML = html;
-    };
 
     const wrapTh = (title, index) => {
         return `<th>
@@ -950,8 +865,12 @@
             document.getElementById("secIndividual").classList.add('d-none');
             document.getElementById("secFormIndividualUP").classList.remove('d-none');
             document.getElementById("secToggleMasivo").classList.remove('d-none');
+            
+            // Inicializar / Limpiar el bloque de cámaras al abrir el modal
             document.getElementById('check-camaras').checked = false;
             document.getElementById('desplegable-camaras').style.display = 'none';
+            document.getElementById('cam_hik_connect').checked = false;
+            document.getElementById('cam_meriva').checked = false;
 
             document.querySelectorAll('.ctx-trigger').forEach(c => { c.checked = false; });
             ['boxDesarrollos', 'boxServidores', 'boxComex', 'boxCorreos', 'boxFirewall'].forEach(b => document.getElementById(b).classList.add('d-none'));
@@ -988,6 +907,7 @@
             document.getElementById("upStatus").value = item.statusActual || "ACTIVO";
             updateStatusStyle(document.getElementById("upStatus"));
 
+            // Cargar datos guardados previamente para Edición
             if(id && item.accesosGrupoRoma) {
                 const acc = item.accesosGrupoRoma;
                 if(acc.desarrollosPropios) { document.getElementById("chkGroupDesarrollos").checked = true; document.getElementById("boxDesarrollos").classList.remove('d-none'); setBoxData("boxDesarrollos", "des", acc.desarrollosPropios); }
@@ -995,6 +915,14 @@
                 if(acc.comex) { document.getElementById("chkGroupComex").checked = true; document.getElementById("boxComex").classList.remove('d-none'); setBoxData("boxComex", "cmx", acc.comex); }
                 if(acc.correos) { document.getElementById("chkGroupCorreos").checked = true; document.getElementById("boxCorreos").classList.remove('d-none'); setBoxData("boxCorreos", "crr", acc.correos); }
                 if(acc.firewall) { document.getElementById("chkGroupFirewall").checked = true; document.getElementById("boxFirewall").classList.remove('d-none'); setBoxData("boxFirewall", "frw", acc.firewall); }
+                
+                // Mapear el estado del contenedor de cámaras si contiene datos
+                if(acc.camaras) {
+                    document.getElementById("check-camaras").checked = true;
+                    document.getElementById("desplegable-camaras").style.display = "block";
+                    if(acc.camaras.hik_connect) document.getElementById("cam_hik_connect").checked = true;
+                    if(acc.camaras.meriva) document.getElementById("cam_meriva").checked = true;
+                }
             }
 
             document.getElementById("lblMasivo").innerHTML = `Ingresa los registros usando comas para separar cada campo (Una línea por empleado):<br>
@@ -1175,7 +1103,7 @@
         } else if (['usuarios', 'personal'].includes(currentPath)) {
             const empresaSeleccionada = document.getElementById("upEmpresa").value;
             const zonaSeleccionada = document.getElementById("upZona").value;
-            const statusActualizado = document.getElementById("upStatus").value;
+            const statusSeleccionado = document.getElementById("upStatus").value;
 
             if(!empresaSeleccionada) { Swal.fire("Atención", "Por favor seleccione una Empresa.", "warning"); return; }
 
@@ -1186,15 +1114,24 @@
                 for (let l of lineas) {
                     const campos = l.split(',').map(c => c.trim());
                     let registroMasivo = {
-                        empresa: empresaSeleccionada, zona: zonaSeleccionada, statusActual: statusActualizado,
+                        empresa: empresaSeleccionada, zona: zonaSeleccionada, statusActual: statusSeleccionado,
                         numeroEmpleado: (campos[0] || '').toUpperCase(), nombreCompleto: (campos[1] || '').toUpperCase(),
                         puesto: (campos[2] || '').toUpperCase(), numeroLargo: campos[3] || '', marcacionCorta: campos[4] || ''
                     };
                     if (registroMasivo.nombreCompleto) await push(ref(db, currentPath), registroMasivo);
                 }
             } else {
+                // Estructura de guardado para la nueva opción Cámaras (Hik-Connect / Meriva)
+                let camarasData = null;
+                if (document.getElementById("check-camaras").checked) {
+                    camarasData = {
+                        hik_connect: document.getElementById("cam_hik_connect").checked,
+                        meriva: document.getElementById("cam_meriva").checked
+                    };
+                }
+
                 data = {
-                    empresa: empresaSeleccionada, zona: zonaSeleccionada, statusActual: statusActualizado,
+                    empresa: empresaSeleccionada, zona: zonaSeleccionada, statusActual: statusSeleccionado,
                     numeroEmpleado: document.getElementById("upNumEmp").value.toUpperCase(),
                     nombreCompleto: document.getElementById("upNombre").value.toUpperCase(),
                     puesto: document.getElementById("upPuesto").value.toUpperCase(),
@@ -1205,7 +1142,8 @@
                         servidores: document.getElementById("chkGroupServidores").checked ? collectBoxData("boxServidores", "srv") : null,
                         comex: document.getElementById("chkGroupComex").checked ? collectBoxData("boxComex", "cmx") : null,
                         correos: document.getElementById("chkGroupCorreos").checked ? collectBoxData("boxCorreos", "crr") : null,
-                        firewall: document.getElementById("chkGroupFirewall").checked ? collectBoxData("boxFirewall", "frw") : null
+                        firewall: document.getElementById("chkGroupFirewall").checked ? collectBoxData("boxFirewall", "frw") : null,
+                        camaras: camarasData
                     }
                 };
                 if (!data.nombreCompleto) { Swal.fire("Atención", "El campo Nombre Completo es obligatorio.", "warning"); return; }
@@ -1439,10 +1377,6 @@
             bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
         } catch (e) { Swal.fire("Error", e.message, "error"); }
     };
-
-    // Hacer funciones globales disponibles fuera del módulo ESM
-    window.renderDashboard = renderDashboard;
-    window.render = render;
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
