@@ -339,7 +339,6 @@
     </div>
   </div>
 </div>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -431,7 +430,7 @@
         document.getElementById("view").innerHTML = html;
     };
 
-    // Funciones lógicas para los filtros dinámicos encadenados del Dashboard (Inicio)
+    // CORRECCIÓN: Filtrar zonas por la propiedad 'empresa' correcta
     window.dashActualizarZonas = (empSel) => {
         const selectZona = document.getElementById("dashFiltroZona");
         const contenedor = document.getElementById("dashContenedorSucursales");
@@ -444,7 +443,13 @@
             return;
         }
 
-        const zs = Object.values(store.zonas).filter(z => z.nombre === empSel).map(z => z.nombre).filter(Boolean).sort();
+        // Se corrige la comparación evaluando z.empresa en lugar de z.nombre
+        const zs = Object.values(store.zonas)
+            .filter(z => z.empresa === empSel)
+            .map(z => z.nombre)
+            .filter(Boolean)
+            .sort();
+
         selectZona.innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}">${z}</option>`).join('');
         selectZona.disabled = false;
     };
@@ -1242,7 +1247,7 @@
                     puesto: document.getElementById("upPuesto").value.toUpperCase(),
                     numeroLargo: document.getElementById("upNumLargo").value,
                     marcacionCorta: document.getElementById("upMarcCorta").value,
-                    accesosGrupoRoma: {
+                    accesosGrupo Roma: {
                         desarrollosPropios: document.getElementById("chkGroupDesarrollos").checked ? collectBoxData("boxDesarrollos", "des") : null,
                         servidores: document.getElementById("chkGroupServidores").checked ? collectBoxData("boxServidores", "srv") : null,
                         comex: document.getElementById("chkGroupComex").checked ? collectBoxData("boxComex", "cmx") : null,
@@ -1482,10 +1487,10 @@
         } catch (e) { Swal.fire("Error", e.message, "error"); }
     };
 
-    // Hacer funciones globales disponibles fuera del módulo ESM
     window.renderDashboard = renderDashboard;
     window.render = render;
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener('contextmenu', e => e.preventDefault());
