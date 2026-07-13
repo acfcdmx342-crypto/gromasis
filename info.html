@@ -426,67 +426,6 @@
                 <div id="dashContenedorSucursales" class="row g-3 mb-5 d-none">
                     <!-- Se inyecta por JS al seleccionar los filtros -->
                 </div>
-                
-                <h5 class="fw-bold text-dark mb-4 text-uppercase tracking-wider" style="font-size:0.85rem;">Resumen de Módulos</h5>
-                
-                <div class="row g-4">
-                    <div class="col-xl-3 col-md-6" onclick="render('empresas')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-building"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Empresas</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.empresas).length}</h3>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6" onclick="render('servidores')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-secondary bg-opacity-10 text-dark"><i class="bi bi-hdd-network"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Servidores</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.servidores).length}</h3>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6" onclick="render('zonas')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-geo-alt"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Zonas</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.zonas).length}</h3>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6" onclick="render('sucursales')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-info bg-opacity-10 text-info"><i class="bi bi-shop"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Sucursales / Cámaras</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.sucursales).length} <span class="fs-6 fw-normal text-muted">(${totalCamaras} <i class="bi bi-camera-video-fill text-danger small"></i>)</span></h3>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6" onclick="render('usuarios')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-success bg-opacity-10 text-success"><i class="bi bi-person-lines-fill"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Usuarios</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.usuarios).length}</h3>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6" onclick="render('personal')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-people"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Personal</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.personal).length}</h3>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6" onclick="render('redes_inalambricas')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-opacity-10 text-white" style="background-color: var(--cctv-blue); color: var(--cctv-blue) !important;"><i class="bi bi-wifi"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Redes Inalámbricas</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.redes_inalambricas).length}</h3>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6" onclick="render('colorcenter')">
-                        <div class="dash-card">
-                            <div class="dash-icon bg-opacity-10 text-white" style="background-color: var(--tech-purple); color: var(--tech-purple) !important;"><i class="bi bi-file-earmark-text"></i></div>
-                            <h6 class="text-secondary small mb-1 fw-semibold text-uppercase">Colorcenter</h6>
-                            <h3 class="fw-bold m-0 text-dark">${Object.keys(store.colorcenter).length}</h3>
-                        </div>
-                    </div>
-                </div>
             </div>
         `;
         document.getElementById("view").innerHTML = html;
