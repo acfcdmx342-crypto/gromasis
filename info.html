@@ -86,6 +86,13 @@
         .dash-card:hover { transform: translateY(-4px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
         .dash-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 15px; }
 
+        /* Estilos específicos para las Tarjetas de Sucursales en Inicio */
+        .suc-branch-card { background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transition: transform 0.3s, box-shadow 0.3s; padding: 16px; display: flex; align-items: center; gap: 15px; }
+        .suc-branch-card:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); }
+        .suc-branch-avatar { width: 64px; height: 64px; background: #f8fafc; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 1px solid #e2e8f0; }
+        .suc-branch-info h5 { margin: 0 0 4px 0; font-weight: 700; color: #1e293b; font-size: 1.05rem; text-transform: uppercase; }
+        .suc-branch-info p { margin: 0; font-size: 0.82rem; color: #64748b; line-height: 1.4; }
+
         @media print {
             .no-print { display: none !important; }
             .wpa-key-input { text-transform: none !important; }
@@ -379,18 +386,45 @@
         document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
         document.getElementById('link-dashboard')?.classList.add('active');
 
-        // Contar el número de cámaras totales en las sucursales
         let totalCamaras = 0;
         Object.values(store.sucursales).forEach(s => {
             totalCamaras += parseInt(s.camaras || 0, 10);
         });
 
+        // Extraer listado único ordenado de empresas del catálogo
+        const empsDisponibles = Object.values(store.empresas).map(e => e.nombre).filter(Boolean).sort();
+
         const html = `
             <div class="p-3">
-                <div class="text-center mb-5 mt-3">
+                <div class="text-center mb-4 mt-3">
                     <i class="bi bi-cloud-check text-primary display-3"></i>
                     <h3 class="mt-3 fw-bold text-dark">Bienvenido al Sistema de Gestión</h3>
                     <p class="text-secondary">Monitoreo de infraestructura, accesos y telecomunicaciones corporativas</p>
+                </div>
+
+                <!-- CONTENEDOR DE NUEVOS FILTROS EN INICIO -->
+                <div class="bg-white rounded-3 p-4 mb-5 border shadow-sm">
+                    <h6 class="fw-bold text-dark mb-3 text-uppercase tracking-wider" style="font-size:0.8rem;"><i class="bi bi-funnel-fill text-primary me-1"></i> Consultar Sucursales</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-secondary small">Empresa</label>
+                            <select id="dashFiltroEmpresa" class="form-select shadow-sm" onchange="dashActualizarZonas(this.value)">
+                                <option value="">SELECCIONE EMPRESA...</option>
+                                ${empsDisponibles.map(e => `<option value="${e}">${e}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-secondary small">Zona</label>
+                            <select id="dashFiltroZona" class="form-select shadow-sm" onchange="dashActualizarSucursales()" disabled>
+                                <option value="">SELECCIONE ZONA...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTENEDOR DE TARJETAS DINÁMICAS DE SUCURSALES -->
+                <div id="dashContenedorSucursales" class="row g-3 mb-5 d-none">
+                    <!-- Se inyecta por JS al seleccionar los filtros -->
                 </div>
                 
                 <h5 class="fw-bold text-dark mb-4 text-uppercase tracking-wider" style="font-size:0.85rem;">Resumen de Módulos</h5>
@@ -456,6 +490,75 @@
             </div>
         `;
         document.getElementById("view").innerHTML = html;
+    };
+
+    // Funciones lógicas para los filtros dinámicos encadenados del Dashboard (Inicio)
+    window.dashActualizarZonas = (empSel) => {
+        const selectZona = document.getElementById("dashFiltroZona");
+        const contenedor = document.getElementById("dashContenedorSucursales");
+        contenedor.classList.add("d-none");
+        contenedor.innerHTML = "";
+
+        if(!empSel) {
+            selectZona.innerHTML = '<option value="">SELECCIONE ZONA...</option>';
+            selectZona.disabled = true;
+            return;
+        }
+
+        const zs = Object.values(store.zonas).filter(z => z.empresa === empSel).map(z => z.nombre).filter(Boolean).sort();
+        selectZona.innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}">${z}</option>`).join('');
+        selectZona.disabled = false;
+    };
+
+    window.dashActualizarSucursales = () => {
+        const empSel = document.getElementById("dashFiltroEmpresa").value;
+        const zonaSel = document.getElementById("dashFiltroZona").value;
+        const contenedor = document.getElementById("dashContenedorSucursales");
+
+        if(!empSel || !zonaSel) {
+            contenedor.classList.add("d-none");
+            contenedor.innerHTML = "";
+            return;
+        }
+
+        // Filtrar sucursales correspondientes
+        const sucursalesFiltradas = Object.values(store.sucursales).filter(s => s.empresa === empSel && s.zona === zonaSel).sort((a,b) => (a.nombre || "").localeCompare(b.nombre || ""));
+
+        if(sucursalesFiltradas.length === 0) {
+            contenedor.innerHTML = `<div class="col-12 text-center text-muted py-3">No hay sucursales registradas para esta empresa y zona.</div>`;
+            contenedor.classList.remove("d-none");
+            return;
+        }
+
+        let cardsHtml = sucursalesFiltradas.map(suc => {
+            const nomSuc = suc.nombre || "";
+            
+            // Cruzar datos en caliente de los demás nodos del store
+            const camsCount = parseInt(suc.camaras || 0, 10);
+            const persCount = Object.values(store.personal).filter(p => p.empresa === empSel && p.zona === zonaSel && p.statusActual === "ACTIVO").length;
+            const wifiCount = Object.values(store.redes_inalambricas).filter(r => r.empresa === empSel && r.zona === zonaSel && r.sucursal === nomSuc).length;
+            const ccCount = Object.values(store.colorcenter).filter(c => c.empresa === empSel && c.zona === zonaSel && c.sucursal === nomSuc).length;
+
+            return `
+                <div class="col-xl-4 col-md-6">
+                    <div class="suc-branch-card">
+                        <div class="suc-branch-avatar text-primary">
+                            <i class="bi bi-shop"></i>
+                        </div>
+                        <div class="suc-branch-info">
+                            <h5>${nomSuc}</h5>
+                            <p><strong>Cámaras Activas:</strong> ${camsCount}</p>
+                            <p><strong>Personas Activas:</strong> ${persCount}</p>
+                            <p><strong>Wifi:</strong> ${wifiCount}</p>
+                            <p><strong>Equipos color center:</strong> ${ccCount}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        contenedor.innerHTML = cardsHtml;
+        contenedor.classList.remove("d-none");
     };
 
     const wrapTh = (title, index) => {
