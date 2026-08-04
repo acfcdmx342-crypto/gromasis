@@ -56,36 +56,12 @@
 </head>
 <body>
 
-<!-- Pantalla de Login -->
-<div id="authContainer" class="container my-5" style="max-width: 400px;">
-  <div class="card p-4 shadow-sm border-secondary">
-    <h4 class="text-center mb-3">Iniciar Sesión</h4>
-    <form id="formAuth">
-      <div class="mb-3">
-        <label for="authEmail" class="form-label small">Correo Electrónico</label>
-        <input type="email" class="form-control form-control-sm" id="authEmail" required placeholder="usuario@correo.com">
-      </div>
-      <div class="mb-3">
-        <label for="authPass" class="form-label small">Contraseña</label>
-        <input type="password" class="form-control form-control-sm" id="authPass" required placeholder="••••••••">
-      </div>
-      <div id="authError" class="alert alert-danger p-2 small d-none"></div>
-      <button type="submit" class="btn btn-primary btn-sm w-100" id="btnAuth">Entrar</button>
-    </form>
-  </div>
-</div>
-
-<!-- Panel Principal (Oculto hasta autenticar) -->
-<div id="appContainer" class="container-fluid p-0 my-2 d-none">
+<div class="container-fluid p-0 my-2">
   <div class="d-flex justify-content-between align-items-center mb-2 mx-auto px-1" style="max-width: 720px;">
-    <div>
-      <h5 class="m-0 fs-6 fw-bold">Mis Actividades</h5>
-      <span id="userDisplay" class="text-muted small"></span>
-    </div>
+    <h4 class="m-0 fs-5 fw-bold">Mis Actividades</h4>
     <div class="d-flex gap-1">
       <button class="btn btn-outline-warning btn-sm px-2" id="btnThemeToggle">☀️ Día</button>
       <button class="btn btn-primary btn-sm px-2" data-bs-toggle="modal" data-bs-target="#modalNuevaTarea">+ Nueva</button>
-      <button class="btn btn-outline-danger btn-sm px-2" id="btnLogout">Salir</button>
     </div>
   </div>
 
@@ -163,9 +139,9 @@
 <!-- Módulos de Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, updateDoc, doc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+  // Configuración de tu proyecto en Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyABXwHVog3oQ8WdSfZ50016vpmq_cYGjwc",
     authDomain: "ptrabajo-5fe6e.firebaseapp.com",
@@ -176,11 +152,7 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
   const db = getFirestore(app);
-
-  let unsubscribeSnapshot = null;
-  let currentUser = null;
 
   document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
@@ -241,79 +213,36 @@
 
     calendar.render();
 
-    // Control de Estado de Autenticación
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        currentUser = user;
-        document.getElementById('authContainer').classList.add('d-none');
-        document.getElementById('appContainer').classList.remove('d-none');
-        document.getElementById('userDisplay').innerText = user.email;
-        calendar.updateSize();
-
-        // Cargar solo las actividades creadas por el UID autenticado
-        const q = query(collection(db, "actividades"), where("uid", "==", user.uid));
-        
-        if (unsubscribeSnapshot) unsubscribeSnapshot();
-
-        unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
-          const eventos = [];
-          snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            eventos.push({
-              id: docSnap.id,
-              title: data.titulo,
-              start: data.fecha_inicio,
-              backgroundColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
-              borderColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
-              extendedProps: {
-                descripcion: data.descripcion,
-                estatus: data.estatus,
-                folio: data.folio || ''
-              }
-            });
-          });
-          calendar.removeAllEvents();
-          calendar.addEventSource(eventos);
+    // Sincronización en tiempo real desde Firestore
+    onSnapshot(collection(db, "actividades"), (snapshot) => {
+      const eventos = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        eventos.push({
+          id: docSnap.id,
+          title: data.titulo,
+          start: data.fecha_inicio,
+          backgroundColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
+          borderColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
+          extendedProps: {
+            descripcion: data.descripcion,
+            estatus: data.estatus,
+            folio: data.folio || ''
+          }
         });
-
-      } else {
-        currentUser = null;
-        if (unsubscribeSnapshot) unsubscribeSnapshot();
-        document.getElementById('appContainer').classList.add('d-none');
-        document.getElementById('authContainer').classList.remove('d-none');
-      }
+      });
+      calendar.removeAllEvents();
+      calendar.addEventSource(eventos);
     });
 
-    // Iniciar Sesión
-    document.getElementById('formAuth').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const email = document.getElementById('authEmail').value;
-      const pass = document.getElementById('authPass').value;
-      const authError = document.getElementById('authError');
-      authError.classList.add('d-none');
-
-      try {
-        await signInWithEmailAndPassword(auth, email, pass);
-      } catch (error) {
-        authError.innerText = "Error: Credenciales incorrectas o usuario no registrado.";
-        authError.classList.remove('d-none');
-      }
-    });
-
-    // Cerrar Sesión
-    document.getElementById('btnLogout').addEventListener('click', () => signOut(auth));
-
-    // Guardar nueva actividad vinculando el UID del usuario
+    // Guardar nueva actividad en Firestore
     document.getElementById('formNuevaTarea').addEventListener('submit', async function(e) {
       e.preventDefault();
-      if (!currentUser) return;
-
       const btnGuardar = document.getElementById('btnGuardar');
       btnGuardar.disabled = true;
 
       try {
         await addDoc(collection(db, "actividades"), {
-          uid: currentUser.uid,
           titulo: document.getElementById('tareaTitulo').value,
           fecha_inicio: document.getElementById('tareaFecha').value,
           descripcion: document.getElementById('tareaDescripcion').value,
@@ -324,13 +253,13 @@
         document.getElementById('formNuevaTarea').reset();
         modalNueva.hide();
       } catch (error) {
-        console.error("Error al guardar:", error);
+        console.error("Error al guardar en Firebase:", error);
       } finally {
         btnGuardar.disabled = false;
       }
     });
 
-    // Marcar como Concluida
+    // Marcar como Concluida y actualizar en Firestore
     document.getElementById('btnCompletar').addEventListener('click', async function() {
       const tareaId = document.getElementById('detalleTareaId').value;
       const inputFolio = document.getElementById('inputFolio');
@@ -352,7 +281,7 @@
         });
         modalDetalle.hide();
       } catch (error) {
-        console.error("Error al actualizar:", error);
+        console.error("Error al actualizar la tarea:", error);
       }
     });
 
@@ -370,7 +299,6 @@
   document.addEventListener('contextmenu', e => e.preventDefault());
 document.onkeydown = e => {
     if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
-};
 </script>
 </body>
 </html>
