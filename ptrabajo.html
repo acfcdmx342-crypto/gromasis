@@ -14,10 +14,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <style>
-    body { 
-      padding: 10px; 
-      transition: background-color 0.3s, color 0.3s;
-    }
+    body { padding: 10px; transition: background-color 0.3s, color 0.3s; }
     
     .calendar-container {
       width: 100%;
@@ -36,35 +33,17 @@
       background-color: #ffffff;
     }
 
-    /* Reglas específicas para pantallas pequeñas (Celulares) */
     @media (max-width: 576px) {
       body { padding: 5px; }
       .calendar-container { padding: 8px; border-radius: 8px; }
-      
-      /* Reducción de textos en la cabecera */
       .fc .fc-toolbar-title { font-size: 0.95rem !important; }
       .fc .fc-button { padding: 0.2rem 0.4rem !important; font-size: 0.75rem !important; }
-      
-      /* Días de la semana abreviados y compactos */
-      .fc-col-header-cell-cushion { font-size: 0.75rem; padding: 2px !important; }
-      .fc-daygrid-day-number { font-size: 0.75rem; padding: 2px !important; }
-
-      /* Celdas del calendario compactas */
+      .fc-col-header-cell-cushion, .fc-daygrid-day-number { font-size: 0.75rem; padding: 2px !important; }
       .fc-daygrid-day-frame { min-height: 45px !important; }
-      
-      /* Eventos compactos en móviles */
-      .fc-event {
-        margin: 1px 0 !important;
-        padding: 1px 2px !important;
-        border-radius: 3px !important;
-      }
-      .fc-event-title {
-        font-size: 0.7rem !important;
-        line-height: 1.1;
-      }
+      .fc-event { margin: 1px 0 !important; padding: 1px 2px !important; border-radius: 3px !important; }
+      .fc-event-title { font-size: 0.7rem !important; line-height: 1.1; }
     }
 
-    /* Estilos generales para el título del evento */
     .fc-event-title {
       font-weight: 600;
       white-space: nowrap;
@@ -116,7 +95,7 @@
         </div>
         <div class="modal-footer p-2">
           <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="btnGuardar">Guardar</button>
         </div>
       </form>
     </div>
@@ -137,14 +116,12 @@
         <p class="mb-1 small"><strong>Descripción / Detalles:</strong></p>
         <div id="detalleDescripcion" class="p-2 border rounded bg-body-tertiary small mb-3"></div>
         
-        <!-- Campo para Folio obligatorio de Cierre -->
         <div id="seccionFolio" class="mb-2">
           <label for="inputFolio" class="form-label text-warning fw-bold small">Folio de Cierre <span class="text-danger">*</span></label>
           <input type="text" class="form-control form-control-sm" id="inputFolio" placeholder="Ingrese el folio obligatoriamente">
           <div class="invalid-feedback small">El folio es requerido para cerrar la actividad.</div>
         </div>
 
-        <!-- Muestra del Folio cuando la tarea ya está concluida -->
         <div id="seccionFolioGuardado" class="d-none mb-2">
           <p class="mb-0 small"><strong>Folio de Cierre:</strong> <span id="textFolioGuardado" class="badge bg-secondary fs-6"></span></p>
         </div>
@@ -159,157 +136,166 @@
   </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const calendarEl = document.getElementById('calendar');
-  const modalDetalle = new bootstrap.Modal(document.getElementById('modalDetalle'));
-  const modalNueva = new bootstrap.Modal(document.getElementById('modalNuevaTarea'));
+<!-- Módulos de Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  function obtenerActividadesGuardadas() {
-    const tareas = localStorage.getItem('mis_actividades');
-    return tareas ? JSON.parse(tareas) : [];
-  }
+  // Configuración de tu proyecto en Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyABXwHVog3oQ8WdSfZ50016vpmq_cYGjwc",
+    authDomain: "ptrabajo-5fe6e.firebaseapp.com",
+    projectId: "ptrabajo-5fe6e",
+    storageBucket: "ptrabajo-5fe6e.firebasestorage.app",
+    messagingSenderId: "508609780691",
+    appId: "1:508609780691:web:a59b855f5973da9d82ad26"
+  };
 
-  function guardarActividadEnStorage(nuevaActividad) {
-    const tareas = obtenerActividadesGuardadas();
-    tareas.push(nuevaActividad);
-    localStorage.setItem('mis_actividades', JSON.stringify(tareas));
-  }
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-  function actualizarEstatusStorage(id, estatus, folio) {
-    let tareas = obtenerActividadesGuardadas();
-    tareas = tareas.map(t => {
-      if (t.id === id) {
-        t.extendedProps.estatus = estatus;
-        t.extendedProps.folio = folio;
-        t.backgroundColor = estatus === 'concluida' ? '#198754' : '#0d6efd';
+  document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    const modalDetalle = new bootstrap.Modal(document.getElementById('modalDetalle'));
+    const modalNueva = new bootstrap.Modal(document.getElementById('modalNuevaTarea'));
+    const esMovil = window.innerWidth <= 576;
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      locale: 'es',
+      buttonText: { today: 'Hoy', month: 'Mes', week: 'Sem' },
+      headerToolbar: {
+        left: esMovil ? 'prev,next' : 'prev,next today',
+        center: 'title',
+        right: esMovil ? 'today' : 'dayGridMonth,timeGridWeek'
+      },
+      height: 'auto',
+      contentHeight: 'auto',
+      handleWindowResize: true,
+      events: [],
+
+      eventClick: function(info) {
+        const evento = info.event;
+        const props = evento.extendedProps;
+
+        document.getElementById('detalleTareaId').value = evento.id;
+        document.getElementById('detalleTitulo').innerText = evento.title;
+        document.getElementById('detalleDescripcion').innerText = props.descripcion || 'Sin descripción guardada.';
+        document.getElementById('detalleFecha').innerText = evento.start ? evento.start.toLocaleString('es-MX') : '';
+        
+        const badgeEstatus = document.getElementById('detalleEstatus');
+        const btnCompletar = document.getElementById('btnCompletar');
+        const seccionFolio = document.getElementById('seccionFolio');
+        const seccionFolioGuardado = document.getElementById('seccionFolioGuardado');
+        const inputFolio = document.getElementById('inputFolio');
+
+        inputFolio.value = '';
+        inputFolio.classList.remove('is-invalid');
+
+        if (props.estatus === 'concluida') {
+          badgeEstatus.className = 'badge bg-success';
+          badgeEstatus.innerText = 'Concluida';
+          btnCompletar.style.display = 'none';
+          seccionFolio.classList.add('d-none');
+          seccionFolioGuardado.classList.remove('d-none');
+          document.getElementById('textFolioGuardado').innerText = props.folio || 'N/A';
+        } else {
+          badgeEstatus.className = 'badge bg-warning text-dark';
+          badgeEstatus.innerText = 'Pendiente';
+          btnCompletar.style.display = 'block';
+          seccionFolio.classList.remove('d-none');
+          seccionFolioGuardado.classList.add('d-none');
+        }
+
+        modalDetalle.show();
       }
-      return t;
     });
-    localStorage.setItem('mis_actividades', JSON.stringify(tareas));
-  }
 
-  // Detectar si el dispositivo es móvil para ajustar botones y vista inicial
-  const esMovil = window.innerWidth <= 576;
+    calendar.render();
 
-  const calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'dayGridMonth',
-    locale: 'es',
-    buttonText: { today: 'Hoy', month: 'Mes', week: 'Sem' },
-    headerToolbar: {
-      left: esMovil ? 'prev,next' : 'prev,next today',
-      center: 'title',
-      right: esMovil ? 'today' : 'dayGridMonth,timeGridWeek'
-    },
-    height: 'auto',
-    contentHeight: 'auto',
-    handleWindowResize: true,
-    events: obtenerActividadesGuardadas(),
+    // Sincronización en tiempo real desde Firestore
+    onSnapshot(collection(db, "actividades"), (snapshot) => {
+      const eventos = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        eventos.push({
+          id: docSnap.id,
+          title: data.titulo,
+          start: data.fecha_inicio,
+          backgroundColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
+          borderColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
+          extendedProps: {
+            descripcion: data.descripcion,
+            estatus: data.estatus,
+            folio: data.folio || ''
+          }
+        });
+      });
+      calendar.removeAllEvents();
+      calendar.addEventSource(eventos);
+    });
 
-    eventClick: function(info) {
-      const evento = info.event;
-      const props = evento.extendedProps;
+    // Guardar nueva actividad en Firestore
+    document.getElementById('formNuevaTarea').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btnGuardar = document.getElementById('btnGuardar');
+      btnGuardar.disabled = true;
 
-      document.getElementById('detalleTareaId').value = evento.id;
-      document.getElementById('detalleTitulo').innerText = evento.title;
-      document.getElementById('detalleDescripcion').innerText = props.descripcion || 'Sin descripción guardada.';
-      document.getElementById('detalleFecha').innerText = evento.start ? evento.start.toLocaleString('es-MX') : '';
-      
-      const badgeEstatus = document.getElementById('detalleEstatus');
-      const btnCompletar = document.getElementById('btnCompletar');
-      const seccionFolio = document.getElementById('seccionFolio');
-      const seccionFolioGuardado = document.getElementById('seccionFolioGuardado');
+      try {
+        await addDoc(collection(db, "actividades"), {
+          titulo: document.getElementById('tareaTitulo').value,
+          fecha_inicio: document.getElementById('tareaFecha').value,
+          descripcion: document.getElementById('tareaDescripcion').value,
+          estatus: 'pendiente',
+          folio: ''
+        });
+
+        document.getElementById('formNuevaTarea').reset();
+        modalNueva.hide();
+      } catch (error) {
+        console.error("Error al guardar en Firebase:", error);
+      } finally {
+        btnGuardar.disabled = false;
+      }
+    });
+
+    // Marcar como Concluida y actualizar en Firestore
+    document.getElementById('btnCompletar').addEventListener('click', async function() {
+      const tareaId = document.getElementById('detalleTareaId').value;
       const inputFolio = document.getElementById('inputFolio');
+      const folioTexto = inputFolio.value.trim();
 
-      inputFolio.value = '';
+      if (folioTexto === '') {
+        inputFolio.classList.add('is-invalid');
+        inputFolio.focus();
+        return;
+      }
+
       inputFolio.classList.remove('is-invalid');
 
-      if (props.estatus === 'concluida') {
-        badgeEstatus.className = 'badge bg-success';
-        badgeEstatus.innerText = 'Concluida';
-        btnCompletar.style.display = 'none';
-        seccionFolio.classList.add('d-none');
-        seccionFolioGuardado.classList.remove('d-none');
-        document.getElementById('textFolioGuardado').innerText = props.folio || 'N/A';
-      } else {
-        badgeEstatus.className = 'badge bg-warning text-dark';
-        badgeEstatus.innerText = 'Pendiente';
-        btnCompletar.style.display = 'block';
-        seccionFolio.classList.remove('d-none');
-        seccionFolioGuardado.classList.add('d-none');
+      try {
+        const tareaRef = doc(db, "actividades", tareaId);
+        await updateDoc(tareaRef, {
+          estatus: 'concluida',
+          folio: folioTexto
+        });
+        modalDetalle.hide();
+      } catch (error) {
+        console.error("Error al actualizar la tarea:", error);
       }
+    });
 
-      modalDetalle.show();
-    }
+    // Conmutador Día / Noche
+    const btnTheme = document.getElementById('btnThemeToggle');
+    btnTheme.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      document.documentElement.setAttribute('data-bs-theme', newTheme);
+      btnTheme.innerText = newTheme === 'dark' ? '☀️ Día' : '🌙 Noche';
+      btnTheme.className = newTheme === 'dark' ? 'btn btn-outline-warning btn-sm px-2' : 'btn btn-outline-secondary btn-sm px-2';
+    });
   });
-
-  calendar.render();
-
-  // Guardar nueva actividad
-  document.getElementById('formNuevaTarea').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const idUnico = 'task_' + Date.now();
-    const titulo = document.getElementById('tareaTitulo').value;
-    const fecha = document.getElementById('tareaFecha').value;
-    const descripcion = document.getElementById('tareaDescripcion').value;
-
-    const nuevaTarea = {
-      id: idUnico,
-      title: titulo,
-      start: fecha,
-      backgroundColor: '#0d6efd',
-      borderColor: '#0d6efd',
-      extendedProps: {
-        descripcion: descripcion,
-        estatus: 'pendiente',
-        folio: ''
-      }
-    };
-
-    calendar.addEvent(nuevaTarea);
-    guardarActividadEnStorage(nuevaTarea);
-
-    document.getElementById('formNuevaTarea').reset();
-    modalNueva.hide();
-  });
-
-  // Marcar como Concluida con validación
-  document.getElementById('btnCompletar').addEventListener('click', function() {
-    const tareaId = document.getElementById('detalleTareaId').value;
-    const inputFolio = document.getElementById('inputFolio');
-    const folioTexto = inputFolio.value.trim();
-
-    if (folioTexto === '') {
-      inputFolio.classList.add('is-invalid');
-      inputFolio.focus();
-      return;
-    }
-
-    inputFolio.classList.remove('is-invalid');
-    const evento = calendar.getEventById(tareaId);
-
-    if (evento) {
-      evento.setExtendedProp('estatus', 'concluida');
-      evento.setExtendedProp('folio', folioTexto);
-      evento.setProp('backgroundColor', '#198754');
-      evento.setProp('borderColor', '#198754');
-
-      actualizarEstatusStorage(tareaId, 'concluida', folioTexto);
-      modalDetalle.hide();
-    }
-  });
-
-  // Conmutador Día / Noche
-  const btnTheme = document.getElementById('btnThemeToggle');
-  btnTheme.addEventListener('click', () => {
-    const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    document.documentElement.setAttribute('data-bs-theme', newTheme);
-    btnTheme.innerText = newTheme === 'dark' ? '☀️ Día' : '🌙 Noche';
-    btnTheme.className = newTheme === 'dark' ? 'btn btn-outline-warning btn-sm px-2' : 'btn btn-outline-secondary btn-sm px-2';
-  });
-});
   document.addEventListener('contextmenu', e => e.preventDefault());
 document.onkeydown = e => {
     if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
