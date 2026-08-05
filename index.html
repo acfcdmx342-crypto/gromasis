@@ -1,149 +1,169 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>    
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión</title>
-
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
+    <title>Login Sistemas - Grupo Roma</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
+        :root { 
+            --bg: #f0f2f5; 
+            --card: #ffffff; 
+            --text: #1c1e21; 
+            --accent: #0f172a; 
+            --input-border: #ddd;
         }
 
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
+        /* Variables Modo Oscuro */
+        body.dark-mode { 
+            --bg: #0f172a; 
+            --card: #1e293b; 
+            --text: #f8fafc; 
+            --accent: #38bdf8; 
+            --input-border: #334155;
+        }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            color: var(--text);
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            transition: all 0.3s ease;
+        }
+.login-logo {
+  display: block;
+  margin: 0 auto 20px auto;
+  max-width: 100%;
+  height: auto;
+}
+        /* Botón de Modo Oscuro */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--text);
+            background: var(--card);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .theme-toggle:hover { transform: scale(1.1); }
+
+        .login-card { 
+            background: var(--card); 
+            padding: 2.5rem; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 380px; 
+            text-align: center; 
+            position: relative;
         }
 
-        .login-card {
-            background-color: #1e293b;
-            padding: 2.5rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            border: 1px solid #334155;
-        }
-
-        .login-card h2 {
-            margin-bottom: 0.5rem;
-            color: #38bdf8;
-            font-size: 1.8rem;
-        }
-
-        .login-card p {
-            color: #94a3b8;
-            font-size: 0.9rem;
-            margin-bottom: 2rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-            text-align: left;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.85rem;
-            color: #cbd5e1;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid #334155;
-            background-color: #0f172a;
-            color: #fff;
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        .form-group input:focus {
-            border-color: #38bdf8;
-        }
-
-        .btn-submit {
-            width: 100%;
-            padding: 0.75rem;
-            border: none;
-            border-radius: 0.5rem;
-            background-color: #0284c7;
-            color: white;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .btn-submit:hover {
-            background-color: #0369a1;
-        }
-
-        .btn-recuperar {
-            margin-top: 15px;
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 10px 0; 
+            border: 1px solid var(--input-border); 
+            border-radius: 6px; 
+            box-sizing: border-box; 
             background: transparent;
-            border: none;
-            color: #38bdf8;
-            cursor: pointer;
-            font-size: 14px;
-            text-decoration: underline;
+            color: var(--text);
         }
 
-        .btn-recuperar:hover {
-            color: #7dd3fc;
+        .btn-login { 
+            width: 100%; 
+            padding: 12px; 
+            background: var(--accent); 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            margin-top: 10px; 
+            transition: opacity 0.2s;
         }
 
-        #message {
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
+        .btn-login:hover { opacity: 0.9; }
+        
+        #message { margin-top: 15px; font-size: 14px; font-weight: bold; }
+
+        /* Visibilidad de iconos */
+        .bi-sun-fill { display: none; color: #ffca28; }
+        .dark-mode .bi-sun-fill { display: block; }
+        .dark-mode .bi-moon-stars-fill { display: none; }
+        .btn-recover {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.btn-recover:hover {
+    background: var(--accent);
+    color: white;
+}
     </style>
 </head>
 <body>
 
+    <div class="theme-toggle" onclick="toggleTheme()">
+        <i class="bi bi-moon-stars-fill"></i>
+        <i class="bi bi-sun-fill"></i>
+    </div>
     <div class="login-card">
-        <h2>Bienvenido</h2>
-        <p>Ingresa tus credenciales para acceder</p>
-
+        <img src="https://gruporoma.com/wp-content/uploads/2023/06/cropped-cropped-procomex-pachuca-logo-350-%C3%97-100-px-1.png" alt="Logo Procomex" class="login-logo">
+        <h2 style="letter-spacing: -1px; margin-bottom: 5px;">SISTEMAS</h2>
+        <p style="opacity: 0.7; font-size: 14px;">ABCServer Grupo Roma</p>
         <form id="loginForm">
-            <div class="form-group">
-                <label for="user">USUARIO</label>
-                <input type="text" id="user" required autocomplete="off">
-            </div>
-
-            <div class="form-group">
-                <label for="pass">CONTRASEÑA</label>
-                <input type="password" id="pass" required>
-            </div>
-
-            <button type="submit" class="btn-submit" id="btnEntrar">ENTRAR</button>
+            <input type="text" id="user" placeholder="USUARIO" required style="text-transform: uppercase;">
+            <input type="password" id="pass" placeholder="CONTRASEÑA" required>
+            <button type="submit" class="btn-login" id="btnEntrar">ENTRAR</button>
+            <button type="button" class="btn-recover" id="btnRecuperar">
+    Recuperar contraseña
+</button>
         </form>
-
-        <button type="button" class="btn-recuperar" id="btnRecuperar">¿Olvidaste tu contraseña?</button>
-
         <div id="message"></div>
     </div>
 
+    <script>
+        // Funciones de Tema (Sol/Luna)
+        function toggleTheme() {
+            const body = document.body;
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        // Cargar preferencia guardada
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, get, child, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, get, child, update} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         
-        // Base de datos actualizada
+        // Conexión actualizada a la base de datos
         const firebaseConfig = { databaseURL: "https://gromasis-9c094-default-rtdb.firebaseio.com/" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
@@ -151,31 +171,33 @@
         emailjs.init("rCrANJZmFHHsk9Yo0");
 
         async function enviarCodigoCorreo(correo, nombre, codigo) {
-            try {
-                await emailjs.send(
-                    "service_2om03jm",
-                    "template_8e32lm9",
-                    {
-                        nombre: nombre,
-                        codigo: codigo,
-                        email: correo
-                    }
-                );
-                return true;
-            } catch(error) {
-                console.error(error);
-                return false;
+
+    try {
+
+        await emailjs.send(
+            "service_2om03jm",
+            "template_8e32lm9",
+            {
+                nombre: nombre,
+                codigo: codigo,
+                email: correo
             }
-        }
+        );
 
-        let codigoRecuperacion = null;
-        let usuarioKey = null;
+        return true;
 
-        function validarPassword(password) {
-            return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._\-])[A-Za-z\d@$!%*?&._\-]{8,}$/.test(password);
-        }
+    } catch(error) {
 
-        // EVENTO DE LOGIN
+        console.error(error);
+
+        return false;
+    }
+}
+let codigoRecuperacion = null;
+let usuarioKey = null;
+function validarPassword(password) {
+    return /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#_\-])[A-Za-z\d@$!%*?&.#_\-]{8,}$/.test(password);
+}
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const msg = document.getElementById('message');
@@ -224,133 +246,174 @@
                 btn.innerText = "ENTRAR";
             }
         });
+document.getElementById('btnRecuperar').addEventListener('click', async () => {
+    console.log("Botón recuperar presionado");
+    const userIn = document.getElementById('user').value.trim().toUpperCase();
 
-        // EVENTO RECUPERAR CONTRASEÑA
-        document.getElementById('btnRecuperar').addEventListener('click', async () => {
-            const userIn = document.getElementById('user').value.trim().toUpperCase();
+    if (!userIn) {
+        Swal.fire("Atención", "Escribe primero tu usuario para recuperar la contraseña", "warning");
+        return;
+    }
 
-            if (!userIn) {
-                Swal.fire("Atención", "Escribe primero tu usuario para recuperar la contraseña", "warning");
-                return;
-            }
+    try {
+        // Consulta al nodo 'usuarios' en la nueva base de datos
+        const snapshot = await get(child(ref(db), 'usuarios'));
 
-            try {
-                const snapshot = await get(child(ref(db), 'usuarios'));
+        if (!snapshot.exists()) {
+            Swal.fire("Error", "No hay usuarios registrados", "error");
+            return;
+        }
+        const usuariosData = snapshot.val();
+let encontrado = null;
+Object.entries(usuariosData).forEach(([key, value]) => {
+    if (value.usuario?.toUpperCase() === userIn) {
+        encontrado = value;
+        usuarioKey = key;
+    }
+});
+    if (!encontrado) {
+            Swal.fire("No encontrado", "El usuario no existe en el catálogo", "error");
+            return;
+        }
+        const nombre = encontrado.nombreCompleto || "Usuario";
+        const correo = encontrado.correo || 
+                       encontrado.accesosGrupoRoma?.correos?.INSTITUCIONAL || 
+                       encontrado.accesosGrupoRoma?.correos?.GMAIL || "";
+        codigoRecuperacion = Math.floor(
+    100000 + Math.random() * 900000
+).toString();
 
-                if (!snapshot.exists()) {
-                    Swal.fire("Error", "No hay usuarios registrados", "error");
-                    return;
-                }
+        const opcion = await Swal.fire({
+    title: "Recuperar contraseña",
+    text: `Usuario encontrado: ${nombre}`,
+    icon: "info",
+    showCancelButton: true,
+    confirmButtonText: "Enviar código",
+    cancelButtonText: "Cancelar"
+});
 
-                const usuariosData = snapshot.val();
-                let encontrado = null;
-                
-                Object.entries(usuariosData).forEach(([key, value]) => {
-                    if (value.usuario?.toUpperCase() === userIn) {
-                        encontrado = value;
-                        usuarioKey = key;
-                    }
-                });
+       if (opcion.isConfirmed) {
 
-                if (!encontrado) {
-                    Swal.fire("No encontrado", "El usuario no existe en el catálogo", "error");
-                    return;
-                }
+    if (!correo) {
 
-                const nombre = encontrado.nombreCompleto || "Usuario";
-                const correo = encontrado.correo || 
-                               encontrado.accesosGrupoRoma?.correos?.INSTITUCIONAL || 
-                               encontrado.accesosGrupoRoma?.correos?.GMAIL || "";
+        Swal.fire(
+            "Sin correo",
+            "Este usuario no tiene correo registrado",
+            "warning"
+        );
 
-                codigoRecuperacion = Math.floor(100000 + Math.random() * 900000).toString();
+        return;
+    }
 
-                const opcion = await Swal.fire({
-                    title: "Recuperar contraseña",
-                    text: `Usuario encontrado: ${nombre}`,
-                    icon: "info",
-                    showCancelButton: true,
-                    confirmButtonText: "Enviar código",
-                    cancelButtonText: "Cancelar"
-                });
+    Swal.fire({
+        title: "Enviando código...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
 
-                if (opcion.isConfirmed) {
-                    if (!correo) {
-                        Swal.fire("Sin correo", "Este usuario no tiene un correo electrónico registrado", "warning");
-                        return;
-                    }
+    const enviado =
+        await enviarCodigoCorreo(
+            correo,
+            nombre,
+            codigoRecuperacion
+        );
 
-                    Swal.fire({
-                        title: "Enviando código...",
-                        allowOutsideClick: false,
-                        didOpen: () => Swal.showLoading()
-                    });
+    Swal.close();
 
-                    const enviado = await enviarCodigoCorreo(correo, nombre, codigoRecuperacion);
-                    Swal.close();
+    if (!enviado) {
 
-                    if (!enviado) {
-                        Swal.fire("Error", "No fue posible enviar el correo", "error");
-                        return;
-                    }
+        Swal.fire(
+            "Error",
+            "No fue posible enviar el correo",
+            "error"
+        );
 
-                    await Swal.fire("Código enviado", `Se envió un código a ${correo}`, "success");
+        return;
+    }
 
-                    const { value: codigoIngresado } = await Swal.fire({
-                        title: "Validación",
-                        input: "text",
-                        inputLabel: "Ingresa el código recibido",
-                        inputPlaceholder: "Código de 6 dígitos",
-                        confirmButtonText: "Validar"
-                    });
+await Swal.fire(
+    "Código enviado",
+    `Se envió un código a ${correo}`,
+    "success"
+);
+}
+             
+if (opcion.isConfirmed) {
 
-                    if (codigoIngresado !== codigoRecuperacion) {
-                        Swal.fire("Error", "Código incorrecto", "error");
-                        return;
-                    }
+    const { value: codigoIngresado } = await Swal.fire({
+        title: "Validación",
+        input: "text",
+        inputLabel: "Ingresa el código recibido",
+        inputPlaceholder: "Código de 6 dígitos",
+        confirmButtonText: "Validar"
+    });
+if (codigoIngresado !== codigoRecuperacion) {
+    Swal.fire(
+        "Error",
+        "Código incorrecto",
+        "error"
+    );
+    return;
+}
+     const { value: nuevaPassword } = await Swal.fire({
+        title: "Nueva contraseña",
+        input: "password",
+        inputLabel: "Ingresa la nueva contraseña"
+    });
 
-                    const { value: nuevaPassword } = await Swal.fire({
-                        title: "Nueva contraseña",
-                        input: "password",
-                        inputLabel: "Ingresa la nueva contraseña"
-                    });
+    if (!validarPassword(nuevaPassword)) {
 
-                    if (!validarPassword(nuevaPassword)) {
-                        Swal.fire(
-                            "Contraseña inválida",
-                            "Debe contener:\n\n• 8 caracteres mínimo\n• 1 mayúscula\n• 1 minúscula\n• 1 número\n• 1 carácter especial",
-                            "warning"
-                        );
-                        return;
-                    }
+        Swal.fire(
+            "Contraseña inválida",
+            "Debe contener:\n\n• 8 caracteres mínimo\n• 1 mayúscula\n• 1 número\n• 1 carácter especial",
+            "warning"
+        );
 
-                    const { value: confirmarPassword } = await Swal.fire({
-                        title: "Confirmar contraseña",
-                        input: "password",
-                        inputLabel: "Repite la contraseña"
-                    });
+        return;
+    }
 
-                    if (nuevaPassword !== confirmarPassword) {
-                        Swal.fire("Error", "Las contraseñas no coinciden", "error");
-                        return;
-                    }
+    const { value: confirmarPassword } = await Swal.fire({
+        title: "Confirmar contraseña",
+        input: "password",
+        inputLabel: "Repite la contraseña"
+    });
 
-                    await update(ref(db, `usuarios/${usuarioKey}`), {
-                        password: nuevaPassword,
-                        contraseña: nuevaPassword
-                    });
+    if (nuevaPassword !== confirmarPassword) {
 
-                    Swal.fire("Correcto", "Contraseña actualizada correctamente", "success");
-                }
-            } catch (error) {
-                console.error(error);
-                Swal.fire("Error", "No se pudo recuperar la contraseña", "error");
-            }
-        });    
-          
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.onkeydown = e => {
-            if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
-        };
-    </script>
+        Swal.fire(
+            "Error",
+            "Las contraseñas no coinciden",
+            "error"
+        );
+
+        return;
+    }
+
+    await update(
+        ref(db, `usuarios/${usuarioKey}`),
+        {
+            password: nuevaPassword,
+            contraseña: nuevaPassword
+        }
+    );
+
+    Swal.fire(
+        "Correcto",
+        "Contraseña actualizada correctamente",
+        "success"
+    );
+
+}
+    } catch (error) {
+        console.error(error);
+        Swal.fire("Error", "No se pudo recuperar la contraseña", "error");
+    }
+});    
+  
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.onkeydown = e => {
+    if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
+};
+</script>
 </body>
 </html>
