@@ -135,16 +135,16 @@
     </div>
   </div>
 </div>
-
-<!-- Módulos de Firebase -->
+<!-- Módulos de Firebase para Realtime Database -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getDatabase, ref, push, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
   // Configuración de tu proyecto en Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyABXwHVog3oQ8WdSfZ50016vpmq_cYGjwc",
     authDomain: "ptrabajo-5fe6e.firebaseapp.com",
+    databaseURL: "https://ptrabajo-5fe6e-default-rtdb.firebaseio.com",
     projectId: "ptrabajo-5fe6e",
     storageBucket: "ptrabajo-5fe6e.firebasestorage.app",
     messagingSenderId: "508609780691",
@@ -152,7 +152,7 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const db = getDatabase(app);
 
   document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
@@ -213,36 +213,40 @@
 
     calendar.render();
 
-    // Sincronización en tiempo real desde Firestore
-    onSnapshot(collection(db, "actividades"), (snapshot) => {
+    // Sincronización en tiempo real desde Realtime Database
+    const actividadesRef = ref(db, 'actividades');
+    onValue(actividadesRef, (snapshot) => {
       const eventos = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        eventos.push({
-          id: docSnap.id,
-          title: data.titulo,
-          start: data.fecha_inicio,
-          backgroundColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
-          borderColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
-          extendedProps: {
-            descripcion: data.descripcion,
-            estatus: data.estatus,
-            folio: data.folio || ''
-          }
+      if (snapshot.exists()) {
+        snapshot.forEach((childSnapshot) => {
+          const key = childSnapshot.key;
+          const data = childSnapshot.val();
+          eventos.push({
+            id: key,
+            title: data.titulo,
+            start: data.fecha_inicio,
+            backgroundColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
+            borderColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
+            extendedProps: {
+              descripcion: data.descripcion,
+              estatus: data.estatus,
+              folio: data.folio || ''
+            }
+          });
         });
-      });
+      }
       calendar.removeAllEvents();
       calendar.addEventSource(eventos);
     });
 
-    // Guardar nueva actividad en Firestore
+    // Guardar nueva actividad en Realtime Database
     document.getElementById('formNuevaTarea').addEventListener('submit', async function(e) {
       e.preventDefault();
       const btnGuardar = document.getElementById('btnGuardar');
       btnGuardar.disabled = true;
 
       try {
-        await addDoc(collection(db, "actividades"), {
+        await push(ref(db, 'actividades'), {
           titulo: document.getElementById('tareaTitulo').value,
           fecha_inicio: document.getElementById('tareaFecha').value,
           descripcion: document.getElementById('tareaDescripcion').value,
@@ -253,13 +257,13 @@
         document.getElementById('formNuevaTarea').reset();
         modalNueva.hide();
       } catch (error) {
-        console.error("Error al guardar en Firebase:", error);
+        console.error("Error al guardar en Realtime Database:", error);
       } finally {
         btnGuardar.disabled = false;
       }
     });
 
-    // Marcar como Concluida y actualizar en Firestore
+    // Marcar como Concluida y actualizar en Realtime Database
     document.getElementById('btnCompletar').addEventListener('click', async function() {
       const tareaId = document.getElementById('detalleTareaId').value;
       const inputFolio = document.getElementById('inputFolio');
@@ -274,8 +278,8 @@
       inputFolio.classList.remove('is-invalid');
 
       try {
-        const tareaRef = doc(db, "actividades", tareaId);
-        await updateDoc(tareaRef, {
+        const tareaRef = ref(db, `actividades/${tareaId}`);
+        await update(tareaRef, {
           estatus: 'concluida',
           folio: folioTexto
         });
