@@ -160,7 +160,7 @@
         <div class="user-info-card">
             <i class="bi bi-person-fill text-primary fs-5"></i>
             <div>
-                <span class="user-name" id="hdrNombre">LUIS ALBERTO GARCIA SANCHEZ</span>
+                <span class="user-name" id="hdrNombre">LUIS ALBERTO GARCIA SANCHE</span>
                 <span class="user-role" id="hdrPuesto">Puesto: COORDINADOR DE SOPORTE TÉCNICO</span>
             </div>
         </div>
@@ -407,6 +407,14 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+// Cargar credenciales guardadas en localStorage
+    const storedName = localStorage.getItem('user_name');
+    const storedRole = localStorage.getItem('user_puesto');
+    const elNombre = document.getElementById('hdrNombre');
+    const elPuesto = document.getElementById('hdrPuesto');
+
+    if (elNombre && storedName) elNombre.innerText = storedName.toUpperCase();
+    if (elPuesto && storedRole) elPuesto.innerText = `Puesto: ${storedRole.toUpperCase()}`;
     
     const config = { databaseURL: "https://gromasis-9c094-default-rtdb.firebaseio.com/" };
     const db = getDatabase(initializeApp(config));
@@ -1578,5 +1586,6 @@
         if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
     };
 </script>
+    
 </body>
 </html>
