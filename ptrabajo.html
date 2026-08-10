@@ -55,10 +55,17 @@
   </style>
 </head>
 <body>
-
 <div class="container-fluid p-0 my-2">
-  <div class="d-flex justify-content-between align-items-center mb-2 mx-auto px-1" style="max-width: 720px;">
-    <h4 class="m-0 fs-5 fw-bold">Mis Actividades</h4>
+  <div class="d-flex justify-content-between align-items-center mb-2 mx-auto px-1 gap-2" style="max-width: 720px;">
+    <!-- Badges / Info de Usuario Activo -->
+    <div id="userInfoHeader" class="d-flex align-items-center bg-dark text-white border border-secondary px-2 py-1 rounded shadow-sm small">
+      <span class="me-2">👤</span>
+      <div>
+        <div id="userNombre" class="fw-bold text-truncate" style="max-width: 180px; font-size: 0.75rem;">Cargando...</div>
+        <div id="userPuesto" class="text-info text-uppercase" style="font-size: 0.65rem;">PUESTO: ---</div>
+      </div>
+    </div>
+
     <div class="d-flex gap-1">
       <button class="btn btn-outline-warning btn-sm px-2" id="btnThemeToggle">☀️ Día</button>
       <button class="btn btn-primary btn-sm px-2" data-bs-toggle="modal" data-bs-target="#modalNuevaTarea">+ Nueva</button>
@@ -69,7 +76,6 @@
     <div id="calendar"></div>
   </div>
 </div>
-
 <!-- Modal Registrar Nueva Tarea -->
 <div class="modal fade" id="modalNuevaTarea" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -135,13 +141,11 @@
     </div>
   </div>
 </div>
-
 <!-- Módulos de Firebase para Realtime Database -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, push, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  // Configuración de tu proyecto en Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyABXwHVog3oQ8WdSfZ50016vpmq_cYGjwc",
     authDomain: "ptrabajo-5fe6e.firebaseapp.com",
@@ -156,6 +160,28 @@
   const db = getDatabase(app);
 
   document.addEventListener('DOMContentLoaded', function() {
+    // 1. OBTENER INFORMACIÓN DE LA SESIÓN ACTIVA (Ajusta las claves si usas sessionStorage)
+    const usuarioSesion = JSON.parse(localStorage.getItem('usuario_sesion') || '{}');
+    
+    // Valores por defecto en caso de no encontrar sesión
+    const usuarioNombre = usuarioSesion.nombre || usuarioSesion.usuario || 'USUARIO ANÓNIMO';
+    const usuarioPuesto = (usuarioSesion.puesto || 'SOPORTE TECNICO JR').toUpperCase();
+    const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
+
+    // Mostrar datos en el widget superior
+    document.getElementById('userNombre').innerText = usuarioNombre;
+    document.getElementById('userPuesto').innerText = `PUESTO: ${usuarioPuesto}`;
+
+    // Definición de Puestos Supervisores / Coordinadores que ven todo
+    const puestosConAccesoTotal = [
+      "COORDINADOR DE SOPORTE TECNICO",
+      "JEFE DE INFRA ESTRUCTURA Y SOPORTE TECNICO",
+      "JEFE DE INFRAESTRUCTURA Y SOPORTE TECNICO"
+    ];
+
+    const tieneAccesoTotal = puestosConAccesoTotal.some(puesto => usuarioPuesto.includes(puesto));
+
+    // 2. INICIALIZAR CALENDARIO
     const calendarEl = document.getElementById('calendar');
     const modalDetalle = new bootstrap.Modal(document.getElementById('modalDetalle'));
     const modalNueva = new bootstrap.Modal(document.getElementById('modalNuevaTarea'));
@@ -181,7 +207,10 @@
 
         document.getElementById('detalleTareaId').value = evento.id;
         document.getElementById('detalleTitulo').innerText = evento.title;
-        document.getElementById('detalleDescripcion').innerText = props.descripcion || 'Sin descripción guardada.';
+        document.getElementById('detalleDescripcion').innerHTML = `
+          ${props.descripcion || 'Sin descripción guardada.'}<br>
+          <small class="text-muted border-top d-block mt-2 pt-1"><strong>Registrado por:</strong> ${props.usuarioNombre || 'Desconocido'}</small>
+        `;
         document.getElementById('detalleFecha').innerText = evento.start ? evento.start.toLocaleString('es-MX') : '';
         
         const badgeEstatus = document.getElementById('detalleEstatus');
@@ -214,7 +243,7 @@
 
     calendar.render();
 
-    // Sincronización en tiempo real desde Realtime Database
+    // 3. LECTURA Y FILTRADO DE ACTIVIDADES EN TIEMPO REAL
     const actividadesRef = ref(db, 'actividades');
     onValue(actividadesRef, (snapshot) => {
       const eventos = [];
@@ -222,18 +251,28 @@
         snapshot.forEach((childSnapshot) => {
           const key = childSnapshot.key;
           const data = childSnapshot.val();
-          eventos.push({
-            id: key,
-            title: data.titulo,
-            start: data.fecha_inicio,
-            backgroundColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
-            borderColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
-            extendedProps: {
-              descripcion: data.descripcion,
-              estatus: data.estatus,
-              folio: data.folio || ''
-            }
-          });
+
+          // REGLA DE FILTRADO:
+          // Si tiene acceso total (Jefe/Coordinador), ve todo.
+          // Si es Soporte Técnico Jr u otro rol, solo ve sus propios registros.
+          const esPropio = (data.usuario_id === usuarioId) || (data.usuario_nombre === usuarioNombre);
+
+          if (tieneAccesoTotal || esPropio) {
+            eventos.push({
+              id: key,
+              title: tieneAccesoTotal ? `[${data.usuario_nombre || 'Soporte'}] ${data.titulo}` : data.titulo,
+              start: data.fecha_inicio,
+              backgroundColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
+              borderColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
+              extendedProps: {
+                descripcion: data.descripcion,
+                estatus: data.estatus,
+                folio: data.folio || '',
+                usuarioNombre: data.usuario_nombre || 'N/A',
+                usuarioPuesto: data.puesto || 'N/A'
+              }
+            });
+          }
         });
       }
       calendar.removeAllEvents();
@@ -242,7 +281,7 @@
       console.error("Error al leer de Realtime Database:", error);
     });
 
-    // Guardar nueva actividad en Realtime Database
+    // 4. GUARDAR NUEVA ACTIVIDAD (ASOCIANDO EL USUARIO DE LA SESIÓN)
     document.getElementById('formNuevaTarea').addEventListener('submit', async function(e) {
       e.preventDefault();
       const btnGuardar = document.getElementById('btnGuardar');
@@ -262,20 +301,25 @@
           fecha_inicio: inputFecha,
           descripcion: document.getElementById('tareaDescripcion').value,
           estatus: 'pendiente',
-          folio: ''
+          folio: '',
+          // Campos de auditoría de usuario
+          usuario_id: usuarioId,
+          usuario_nombre: usuarioNombre,
+          puesto: usuarioPuesto,
+          creado_el: new Date().toISOString()
         });
 
         document.getElementById('formNuevaTarea').reset();
         modalNueva.hide();
       } catch (error) {
         console.error("Error al guardar en Realtime Database:", error);
-        alert("No se pudo guardar. Revisa que las Reglas de Firebase en la consola permitan escritura (.write: true).\n\nError: " + error.message);
+        alert("No se pudo guardar: " + error.message);
       } finally {
         btnGuardar.disabled = false;
       }
     });
 
-    // Marcar como Concluida y actualizar en Realtime Database
+    // Marcar como Concluida
     document.getElementById('btnCompletar').addEventListener('click', async function() {
       const tareaId = document.getElementById('detalleTareaId').value;
       const inputFolio = document.getElementById('inputFolio');
