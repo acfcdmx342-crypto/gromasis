@@ -36,12 +36,14 @@
             margin: 0; 
             transition: all 0.3s ease;
         }
-.login-logo {
-  display: block;
-  margin: 0 auto 20px auto;
-  max-width: 100%;
-  height: auto;
-}
+
+        .login-logo {
+            display: block;
+            margin: 0 auto 20px auto;
+            max-width: 100%;
+            height: auto;
+        }
+
         /* Botón de Modo Oscuro */
         .theme-toggle {
             position: absolute;
@@ -105,22 +107,23 @@
         .bi-sun-fill { display: none; color: #ffca28; }
         .dark-mode .bi-sun-fill { display: block; }
         .dark-mode .bi-moon-stars-fill { display: none; }
-        .btn-recover {
-    width: 100%;
-    padding: 10px;
-    background: transparent;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
-}
 
-.btn-recover:hover {
-    background: var(--accent);
-    color: white;
-}
+        .btn-recover {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-recover:hover {
+            background: var(--accent);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -138,8 +141,8 @@
             <input type="password" id="pass" placeholder="CONTRASEÑA" required>
             <button type="submit" class="btn-login" id="btnEntrar">ENTRAR</button>
             <button type="button" class="btn-recover" id="btnRecuperar">
-    Recuperar contraseña
-</button>
+                Recuperar contraseña
+            </button>
         </form>
         <div id="message"></div>
     </div>
@@ -171,33 +174,30 @@
         emailjs.init("rCrANJZmFHHsk9Yo0");
 
         async function enviarCodigoCorreo(correo, nombre, codigo) {
-
-    try {
-
-        await emailjs.send(
-            "service_2om03jm",
-            "template_8e32lm9",
-            {
-                nombre: nombre,
-                codigo: codigo,
-                email: correo
+            try {
+                await emailjs.send(
+                    "service_2om03jm",
+                    "template_8e32lm9",
+                    {
+                        nombre: nombre,
+                        codigo: codigo,
+                        email: correo
+                    }
+                );
+                return true;
+            } catch(error) {
+                console.error(error);
+                return false;
             }
-        );
+        }
 
-        return true;
+        let codigoRecuperacion = null;
+        let usuarioKey = null;
 
-    } catch(error) {
+        function validarPassword(password) {
+            return /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#_\-])[A-Za-z\d@$!%*?&.#_\-]{8,}$/.test(password);
+        }
 
-        console.error(error);
-
-        return false;
-    }
-}
-let codigoRecuperacion = null;
-let usuarioKey = null;
-function validarPassword(password) {
-    return /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#_\-])[A-Za-z\d@$!%*?&.#_\-]{8,}$/.test(password);
-}
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const msg = document.getElementById('message');
@@ -225,7 +225,10 @@ function validarPassword(password) {
                             msg.style.color = "#ef4444";
                             msg.innerText = "Usuario dado de baja. Acceso denegado.";
                         } else {
-                            localStorage.setItem('user_name', encontrado.nombreCompleto || encontrado.usuario);
+                            // Se guardan Nombre completo y Puesto en localStorage
+                            localStorage.setItem('user_name', encontrado.nombreCompleto || encontrado.usuario || 'USUARIO');
+                            localStorage.setItem('user_puesto', encontrado.puesto || 'SIN PUESTO');
+
                             msg.style.color = "#22c55e";
                             msg.innerText = "¡Acceso correcto!";
                             setTimeout(() => window.location.href = "info.html", 800);
@@ -246,174 +249,166 @@ function validarPassword(password) {
                 btn.innerText = "ENTRAR";
             }
         });
-document.getElementById('btnRecuperar').addEventListener('click', async () => {
-    console.log("Botón recuperar presionado");
-    const userIn = document.getElementById('user').value.trim().toUpperCase();
 
-    if (!userIn) {
-        Swal.fire("Atención", "Escribe primero tu usuario para recuperar la contraseña", "warning");
-        return;
-    }
+        document.getElementById('btnRecuperar').addEventListener('click', async () => {
+            console.log("Botón recuperar presionado");
+            const userIn = document.getElementById('user').value.trim().toUpperCase();
 
-    try {
-        // Consulta al nodo 'usuarios' en la nueva base de datos
-        const snapshot = await get(child(ref(db), 'usuarios'));
+            if (!userIn) {
+                Swal.fire("Atención", "Escribe primero tu usuario para recuperar la contraseña", "warning");
+                return;
+            }
 
-        if (!snapshot.exists()) {
-            Swal.fire("Error", "No hay usuarios registrados", "error");
-            return;
-        }
-        const usuariosData = snapshot.val();
-let encontrado = null;
-Object.entries(usuariosData).forEach(([key, value]) => {
-    if (value.usuario?.toUpperCase() === userIn) {
-        encontrado = value;
-        usuarioKey = key;
-    }
-});
-    if (!encontrado) {
-            Swal.fire("No encontrado", "El usuario no existe en el catálogo", "error");
-            return;
-        }
-        const nombre = encontrado.nombreCompleto || "Usuario";
-        const correo = encontrado.correo || 
-                       encontrado.accesosGrupoRoma?.correos?.INSTITUCIONAL || 
-                       encontrado.accesosGrupoRoma?.correos?.GMAIL || "";
-        codigoRecuperacion = Math.floor(
-    100000 + Math.random() * 900000
-).toString();
+            try {
+                // Consulta al nodo 'usuarios' en la nueva base de datos
+                const snapshot = await get(child(ref(db), 'usuarios'));
 
-        const opcion = await Swal.fire({
-    title: "Recuperar contraseña",
-    text: `Usuario encontrado: ${nombre}`,
-    icon: "info",
-    showCancelButton: true,
-    confirmButtonText: "Enviar código",
-    cancelButtonText: "Cancelar"
-});
+                if (!snapshot.exists()) {
+                    Swal.fire("Error", "No hay usuarios registrados", "error");
+                    return;
+                }
 
-       if (opcion.isConfirmed) {
+                const usuariosData = snapshot.val();
+                let encontrado = null;
 
-    if (!correo) {
+                Object.entries(usuariosData).forEach(([key, value]) => {
+                    if (value.usuario?.toUpperCase() === userIn) {
+                        encontrado = value;
+                        usuarioKey = key;
+                    }
+                });
 
-        Swal.fire(
-            "Sin correo",
-            "Este usuario no tiene correo registrado",
-            "warning"
-        );
+                if (!encontrado) {
+                    Swal.fire("No encontrado", "El usuario no existe en el catálogo", "error");
+                    return;
+                }
 
-        return;
-    }
+                const nombre = encontrado.nombreCompleto || "Usuario";
+                const correo = encontrado.correo || 
+                               encontrado.accesosGrupoRoma?.correos?.INSTITUCIONAL || 
+                               encontrado.accesosGrupoRoma?.correos?.GMAIL || "";
 
-    Swal.fire({
-        title: "Enviando código...",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-    });
+                codigoRecuperacion = Math.floor(100000 + Math.random() * 900000).toString();
 
-    const enviado =
-        await enviarCodigoCorreo(
-            correo,
-            nombre,
-            codigoRecuperacion
-        );
+                const opcion = await Swal.fire({
+                    title: "Recuperar contraseña",
+                    text: `Usuario encontrado: ${nombre}`,
+                    icon: "info",
+                    showCancelButton: true,
+                    confirmButtonText: "Enviar código",
+                    cancelButtonText: "Cancelar"
+                });
 
-    Swal.close();
+                if (opcion.isConfirmed) {
+                    if (!correo) {
+                        Swal.fire(
+                            "Sin correo",
+                            "Este usuario no tiene correo registrado",
+                            "warning"
+                        );
+                        return;
+                    }
 
-    if (!enviado) {
+                    Swal.fire({
+                        title: "Enviando código...",
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
 
-        Swal.fire(
-            "Error",
-            "No fue posible enviar el correo",
-            "error"
-        );
+                    const enviado = await enviarCodigoCorreo(
+                        correo,
+                        nombre,
+                        codigoRecuperacion
+                    );
 
-        return;
-    }
+                    Swal.close();
 
-await Swal.fire(
-    "Código enviado",
-    `Se envió un código a ${correo}`,
-    "success"
-);
-}
-             
-if (opcion.isConfirmed) {
+                    if (!enviado) {
+                        Swal.fire(
+                            "Error",
+                            "No fue posible enviar el correo",
+                            "error"
+                        );
+                        return;
+                    }
 
-    const { value: codigoIngresado } = await Swal.fire({
-        title: "Validación",
-        input: "text",
-        inputLabel: "Ingresa el código recibido",
-        inputPlaceholder: "Código de 6 dígitos",
-        confirmButtonText: "Validar"
-    });
-if (codigoIngresado !== codigoRecuperacion) {
-    Swal.fire(
-        "Error",
-        "Código incorrecto",
-        "error"
-    );
-    return;
-}
-     const { value: nuevaPassword } = await Swal.fire({
-        title: "Nueva contraseña",
-        input: "password",
-        inputLabel: "Ingresa la nueva contraseña"
-    });
+                    await Swal.fire(
+                        "Código enviado",
+                        `Se envió un código a ${correo}`,
+                        "success"
+                    );
 
-    if (!validarPassword(nuevaPassword)) {
+                    const { value: codigoIngresado } = await Swal.fire({
+                        title: "Validación",
+                        input: "text",
+                        inputLabel: "Ingresa el código recibido",
+                        inputPlaceholder: "Código de 6 dígitos",
+                        confirmButtonText: "Validar"
+                    });
 
-        Swal.fire(
-            "Contraseña inválida",
-            "Debe contener:\n\n• 8 caracteres mínimo\n• 1 mayúscula\n• 1 número\n• 1 carácter especial",
-            "warning"
-        );
+                    if (codigoIngresado !== codigoRecuperacion) {
+                        Swal.fire(
+                            "Error",
+                            "Código incorrecto",
+                            "error"
+                        );
+                        return;
+                    }
 
-        return;
-    }
+                    const { value: nuevaPassword } = await Swal.fire({
+                        title: "Nueva contraseña",
+                        input: "password",
+                        inputLabel: "Ingresa la nueva contraseña"
+                    });
 
-    const { value: confirmarPassword } = await Swal.fire({
-        title: "Confirmar contraseña",
-        input: "password",
-        inputLabel: "Repite la contraseña"
-    });
+                    if (!validarPassword(nuevaPassword)) {
+                        Swal.fire(
+                            "Contraseña inválida",
+                            "Debe contener:\n\n• 8 caracteres mínimo\n• 1 mayúscula\n• 1 número\n• 1 carácter especial",
+                            "warning"
+                        );
+                        return;
+                    }
 
-    if (nuevaPassword !== confirmarPassword) {
+                    const { value: confirmarPassword } = await Swal.fire({
+                        title: "Confirmar contraseña",
+                        input: "password",
+                        inputLabel: "Repite la contraseña"
+                    });
 
-        Swal.fire(
-            "Error",
-            "Las contraseñas no coinciden",
-            "error"
-        );
+                    if (nuevaPassword !== confirmarPassword) {
+                        Swal.fire(
+                            "Error",
+                            "Las contraseñas no coinciden",
+                            "error"
+                        );
+                        return;
+                    }
 
-        return;
-    }
+                    await update(
+                        ref(db, `usuarios/${usuarioKey}`),
+                        {
+                            password: nuevaPassword,
+                            contraseña: nuevaPassword
+                        }
+                    );
 
-    await update(
-        ref(db, `usuarios/${usuarioKey}`),
-        {
-            password: nuevaPassword,
-            contraseña: nuevaPassword
-        }
-    );
+                    Swal.fire(
+                        "Correcto",
+                        "Contraseña actualizada correctamente",
+                        "success"
+                    );
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire("Error", "No se pudo recuperar la contraseña", "error");
+            }
+        });    
 
-    Swal.fire(
-        "Correcto",
-        "Contraseña actualizada correctamente",
-        "success"
-    );
-
-}
-    } catch (error) {
-        console.error(error);
-        Swal.fire("Error", "No se pudo recuperar la contraseña", "error");
-    }
-});    
-  
-document.addEventListener('contextmenu', e => e.preventDefault());
-document.onkeydown = e => {
-    if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
-};
-</script>
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.onkeydown = e => {
+            if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
+        };
+    </script>
 </body>
 </html>
