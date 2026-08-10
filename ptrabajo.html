@@ -135,6 +135,7 @@
     </div>
   </div>
 </div>
+
 <!-- Módulos de Firebase para Realtime Database -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -237,6 +238,8 @@
       }
       calendar.removeAllEvents();
       calendar.addEventSource(eventos);
+    }, (error) => {
+      console.error("Error al leer de Realtime Database:", error);
     });
 
     // Guardar nueva actividad en Realtime Database
@@ -245,10 +248,18 @@
       const btnGuardar = document.getElementById('btnGuardar');
       btnGuardar.disabled = true;
 
+      const inputFecha = document.getElementById('tareaFecha').value;
+
+      if (!inputFecha) {
+        alert("Por favor selecciona una fecha válida.");
+        btnGuardar.disabled = false;
+        return;
+      }
+
       try {
         await push(ref(db, 'actividades'), {
           titulo: document.getElementById('tareaTitulo').value,
-          fecha_inicio: document.getElementById('tareaFecha').value,
+          fecha_inicio: inputFecha,
           descripcion: document.getElementById('tareaDescripcion').value,
           estatus: 'pendiente',
           folio: ''
@@ -258,6 +269,7 @@
         modalNueva.hide();
       } catch (error) {
         console.error("Error al guardar en Realtime Database:", error);
+        alert("No se pudo guardar. Revisa que las Reglas de Firebase en la consola permitan escritura (.write: true).\n\nError: " + error.message);
       } finally {
         btnGuardar.disabled = false;
       }
@@ -286,6 +298,7 @@
         modalDetalle.hide();
       } catch (error) {
         console.error("Error al actualizar la tarea:", error);
+        alert("Error al actualizar: " + error.message);
       }
     });
 
