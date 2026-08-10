@@ -108,7 +108,6 @@
 <div class="sidebar" id="sidebar">
     <div class="text-center py-4 border-bottom border-secondary mb-2"><h6 class="mb-0 fw-bold text-white">CATÁLOGOS</h6></div>
     <a onclick="renderDashboard()" id="link-dashboard" class="active"><i class="bi bi-house-door me-2"></i> Inicio</a>
-    <a onclick="render('plan_trabajo')" id="link-plan_trabajo"><i class="bi bi-calendar-check me-2"></i> Plan de Trabajo</a>
     <a onclick="render('empresas')" id="link-empresas"><i class="bi bi-building me-2"></i> Empresas</a>
     <a onclick="render('servidores')" id="link-servidores"><i class="bi bi-hdd-network me-2"></i> Servidores</a>
     <a onclick="render('zonas')" id="link-zonas"><i class="bi bi-geo-alt me-2"></i> Zonas</a>
@@ -137,51 +136,6 @@
             <div class="modal-body p-4">
                 <input type="hidden" id="fID">
                 
-                <!-- Sección Plan de Trabajo -->
-                <div id="secPlanTrabajo" class="d-none row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold small">Empresa</label>
-                        <select id="ptEmpresa" class="form-select"></select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold small">Zona</label>
-                        <select id="ptZona" class="form-select"><option value="">SELECCIONE ZONA...</option></select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold small">Sucursal</label>
-                        <select id="ptSucursal" class="form-select"><option value="">SELECCIONE SUCURSAL...</option></select>
-                    </div>
-                    <div class="col-md-8">
-                        <label class="form-label fw-bold small">Actividad / Tarea</label>
-                        <input type="text" id="ptActividad" class="form-control">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold small">Responsable</label>
-                        <input type="text" id="ptResponsable" class="form-control">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold small">Prioridad</label>
-                        <select id="ptPrioridad" class="form-select">
-                            <option value="BAJA">BAJA</option>
-                            <option value="MEDIA" selected>MEDIA</option>
-                            <option value="ALTA">ALTA</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold small">Estatus</label>
-                        <select id="ptEstatus" class="form-select">
-                            <option value="PENDIENTE" selected>PENDIENTE</option>
-                            <option value="EN PROCESO">EN PROCESO</option>
-                            <option value="COMPLETADO">COMPLETADO</option>
-                            <option value="CANCELADO">CANCELADO</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold small">Fecha Límite</label>
-                        <input type="date" id="ptFechaLimite" class="form-control">
-                    </div>
-                </div>
-
                 <!-- Sección Específica Redes Inalámbricas -->
                 <div id="secRedesInalambricas" class="d-none row g-3">
                     <div class="col-md-4">
@@ -285,7 +239,7 @@
                         </div>
                         <div class="col-md-4"><label class="form-label fw-bold small">Correo Electrónico</label><input type="email" id="upCorreo" class="form-control"></div>
                         
-                        <!-- CAMPO CONTRASEÑA -->
+                        <!-- CAMPO CONTRASEÑA (SEGURIDAD Y CARACTERES PERMITIDOS) -->
                         <div class="col-md-4">
                             <label class="form-label fw-bold small">Contraseña</label>
                             <div class="input-group">
@@ -409,7 +363,7 @@
     const config = { databaseURL: "https://gromasis-9c094-default-rtdb.firebaseio.com/" };
     const db = getDatabase(initializeApp(config));
     
-    let store = { colorcenter:{}, redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, servidores: {}, sucursales: {}, usuarios: {}, plan_trabajo: {} };
+    let store = { colorcenter:{}, redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, servidores: {}, sucursales: {}, usuarios: {} };
     let currentPath = '';
     let loadsPending = Object.keys(store).length;
     const urlParams = new URLSearchParams(window.location.search);
@@ -648,18 +602,7 @@
                 <thead>
                     <tr>`;
             
-            if (path === 'plan_trabajo') {
-                html += `
-                    ${wrapTh('Empresa', colIdx++)}
-                    ${wrapTh('Zona', colIdx++)}
-                    ${wrapTh('Sucursal', colIdx++)}
-                    ${wrapTh('Actividad / Tarea', colIdx++)}
-                    ${wrapTh('Responsable', colIdx++)}
-                    ${wrapTh('Prioridad', colIdx++)}
-                    ${wrapTh('Estatus', colIdx++)}
-                    ${wrapTh('Fecha Límite', colIdx++)}
-                `;
-            } else if (['usuarios', 'personal'].includes(path)) {
+            if (['usuarios', 'personal'].includes(path)) {
                 html += `
                     ${wrapTh('Empresa', colIdx++)}
                     ${wrapTh('Zona', colIdx++)}
@@ -714,36 +657,11 @@
                 
             keys.forEach(id => {
                 const r = items[id];
-                if (path === 'plan_trabajo') {
-                    let stBadge = 'bg-secondary';
-                    if (r.estatus === 'COMPLETADO') stBadge = 'bg-success';
-                    else if (r.estatus === 'EN PROCESO') stBadge = 'bg-primary';
-                    else if (r.estatus === 'PENDIENTE') stBadge = 'bg-warning text-dark';
-                    else if (r.estatus === 'CANCELADO') stBadge = 'bg-danger';
-
-                    let prBadge = 'bg-info text-dark';
-                    if (r.prioridad === 'ALTA') prBadge = 'bg-danger';
-                    else if (r.prioridad === 'BAJA') prBadge = 'bg-secondary';
-
-                    html += `<tr>
-                        <td><small>${r.empresa || '-'}</small></td>
-                        <td><small>${r.zona || '-'}</small></td>
-                        <td><small>${r.sucursal || '-'}</small></td>
-                        <td class="text-start fw-semibold">${r.actividad || '-'}</td>
-                        <td><small>${r.responsable || '-'}</small></td>
-                        <td><span class="badge ${prBadge}">${r.prioridad || 'MEDIA'}</span></td>
-                        <td><span class="badge ${stBadge}">${r.estatus || 'PENDIENTE'}</span></td>
-                        <td><small>${r.fechaLimite || '-'}</small></td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
-                        </td>
-                    </tr>`;
-                } else if (['usuarios', 'personal'].includes(path)) {
+                if (['usuarios', 'personal'].includes(path)) {
                     const badgeClass = r.statusActual === 'ACTIVO' ? 'bg-success' : 'bg-danger';
                     const correoMostrar = r.correo || r.accesosGrupoRoma?.correos?.INSTITUCIONAL || r.accesosGrupoRoma?.correos?.GMAIL || '-';
                     const rawPass = r.password || r.contrasena || '';
-                    const passMostrar = rawPass ? '••••••••' : '-';
+const passMostrar = rawPass ? '••••••••' : '-'; // o usando '********'
                     const usuarioMostrar = r.usuario || '-';
 
                     html += `<tr>
@@ -1030,55 +948,14 @@
         let displayTitle = path.toUpperCase().replace('_', ' ');
         document.getElementById("mTitle").innerText = (id ? 'Editar ' : 'Nuevo ') + displayTitle;
         
-        ['secEmpresa', 'secZona', 'secMasivo', 'secToggleMasivo', 'secSucursalesCamaras', 'secUsuariosPersonal', 'secOtrosCatalogos', 'secRedesInalambricas', 'secPlanTrabajo'].forEach(s => document.getElementById(s)?.classList.add('d-none'));
+        ['secEmpresa', 'secZona', 'secMasivo', 'secToggleMasivo', 'secSucursalesCamaras', 'secUsuariosPersonal', 'secOtrosCatalogos', 'secRedesInalambricas'].forEach(s => document.getElementById(s)?.classList.add('d-none'));
         document.getElementById("secIndividual").classList.remove('d-none');
         document.getElementById("checkMasivo").checked = false;
         document.getElementById("secColorCenter")?.remove();
         document.getElementById("fCamaras").value = "";
         document.getElementById("fMasivo").value = "";
 
-        if (path === 'plan_trabajo') {
-            document.getElementById("secPlanTrabajo").classList.remove('d-none');
-            document.getElementById("secOtrosCatalogos").classList.add('d-none');
-            document.getElementById("secIndividual").classList.add('d-none');
-            document.getElementById("secToggleMasivo").classList.remove('d-none');
-
-            const emps = Object.values(store.empresas).map(e => e.nombre).sort();
-            document.getElementById("ptEmpresa").innerHTML = '<option value="">SELECCIONE EMPRESA...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
-            
-            const renderZonasPT = (empSel, zonaPrev = "") => {
-                const zs = Object.values(store.zonas).filter(z => z.empresa === empSel).map(z => z.nombre).sort();
-                document.getElementById("ptZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}" ${zonaPrev === z ? 'selected' : ''}>${z}</option>`).join('');
-                document.getElementById("ptSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>';
-            };
-
-            const renderSucursalesPT = (zonaSel, sucPrev = "") => {
-                const empSel = document.getElementById("ptEmpresa").value;
-                const ss = Object.values(store.sucursales).filter(s => s.empresa === empSel && s.zona === zonaSel).map(s => s.nombre).sort();
-                document.getElementById("ptSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>' + ss.map(s => `<option value="${s}" ${sucPrev === s ? 'selected' : ''}>${s}</option>`).join('');
-            };
-
-            document.getElementById("ptEmpresa").onchange = (e) => renderZonasPT(e.target.value);
-            document.getElementById("ptZona").onchange = (e) => renderSucursalesPT(e.target.value);
-
-            if(item.empresa) {
-                renderZonasPT(item.empresa, item.zona);
-                if(item.zona) renderSucursalesPT(item.zona, item.sucursal);
-            } else {
-                document.getElementById("ptZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>';
-                document.getElementById("ptSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>';
-            }
-
-            document.getElementById("ptActividad").value = item.actividad || "";
-            document.getElementById("ptResponsable").value = item.responsable || "";
-            document.getElementById("ptPrioridad").value = item.prioridad || "MEDIA";
-            document.getElementById("ptEstatus").value = item.estatus || "PENDIENTE";
-            document.getElementById("ptFechaLimite").value = item.fechaLimite || "";
-
-            document.getElementById("lblMasivo").innerHTML = `Ingresa las tareas usando comas para separar cada campo (Una línea por actividad):<br>
-            <span class="text-secondary" style="font-size:0.75rem;">Formato: Actividad, Responsable, Prioridad (BAJA/MEDIA/ALTA), Estatus (PENDIENTE/EN PROCESO/COMPLETADO/CANCELADO), Fecha_Límite(AAAA-MM-DD)</span>`;
-
-        } else if (path === 'redes_inalambricas') {
+        if (path === 'redes_inalambricas') {
             document.getElementById("secRedesInalambricas").classList.remove('d-none');
             document.getElementById("secOtrosCatalogos").classList.add('d-none');
             document.getElementById("secIndividual").classList.add('d-none');
@@ -1281,48 +1158,7 @@
         const isM = document.getElementById("checkMasivo").checked;
         let data = {};
 
-        if (currentPath === 'plan_trabajo') {
-            const empPT = document.getElementById("ptEmpresa").value;
-            const zonPT = document.getElementById("ptZona").value;
-            const sucPT = document.getElementById("ptSucursal").value;
-
-            if (isM) {
-                if(!empPT || !zonPT || !sucPT) {
-                    Swal.fire("Atención", "Para la carga masiva debe seleccionar previamente Empresa, Zona y Sucursal.", "warning");
-                    return;
-                }
-                const lineas = document.getElementById("fMasivo").value.split('\n').filter(l => l.trim());
-                if (lineas.length === 0) { Swal.fire("Atención", "Ingrese datos en la caja de texto masivo.", "warning"); return; }
-
-                for(let l of lineas) {
-                    const c = l.split(',').map(field => field.trim());
-                    if(c.length >= 1) {
-                        let regPT = {
-                            empresa: empPT, zona: zonPT, sucursal: sucPT,
-                            actividad: c[0].toUpperCase(), responsable: (c[1] || '').toUpperCase(),
-                            prioridad: (c[2] || 'MEDIA').toUpperCase(), estatus: (c[3] || 'PENDIENTE').toUpperCase(),
-                            fechaLimite: c[4] || ''
-                        };
-                        await push(ref(db, currentPath), regPT);
-                    }
-                }
-            } else {
-                const actividad = document.getElementById("ptActividad").value.trim().toUpperCase();
-                const responsable = document.getElementById("ptResponsable").value.trim().toUpperCase();
-                const prioridad = document.getElementById("ptPrioridad").value;
-                const estatus = document.getElementById("ptEstatus").value;
-                const fechaLimite = document.getElementById("ptFechaLimite").value;
-
-                if (!empPT || !zonPT || !sucPT || !actividad) {
-                    Swal.fire("Atención", "Empresa, Zona, Sucursal y Actividad son obligatorios.", "warning");
-                    return;
-                }
-
-                data = { empresa: empPT, zona: zonPT, sucursal: sucPT, actividad, responsable, prioridad, estatus, fechaLimite };
-                id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
-            }
-
-        } else if (currentPath === 'redes_inalambricas') {
+        if (currentPath === 'redes_inalambricas') {
             const empRI = document.getElementById("riEmpresa").value;
             const zonRI = document.getElementById("riZona").value;
             const sucRI = document.getElementById("riSucursal").value;
@@ -1418,6 +1254,7 @@
                 }
             } else {
                 const passVal = document.getElementById("upPassword").value;
+                // EXPRESIÓN REGULAR CORREGIDA: Mínimo 8 caracteres, 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial
                 const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._\-])[A-Za-z\d@$!%*?&._\-]{8,}$/;
 
                 if (passVal && !passRegex.test(passVal)) {
@@ -1506,10 +1343,7 @@
         const checked = e.target.checked;
         document.getElementById("secMasivo").classList.toggle('d-none', !checked);
         
-        if (currentPath === 'plan_trabajo') {
-            ['ptActividad','ptResponsable','ptPrioridad','ptEstatus','ptFechaLimite']
-            .forEach(id => document.getElementById(id).closest('.col-md-4, .col-md-8').classList.toggle('d-none', checked));
-        } else if (currentPath === 'redes_inalambricas') {
+        if (currentPath === 'redes_inalambricas') {
             ['riModem','riModelo','riSsidFabrica','riWpaFabrica','riDestinado','riSsidModificado','riWpaModificado','riAccesoModem','riFechaActualizacion']
             .forEach(id => document.getElementById(id).closest('.col-md-4, .col-md-6, .col-12').classList.toggle('d-none', checked));
         } else if (['usuarios', 'personal'].includes(currentPath)) {
