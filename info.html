@@ -45,6 +45,7 @@
             align-items: center;
             width: 100%;
             margin-bottom: 20px;
+            gap: 12px;
         }
         .user-info-card {
             display: flex;
@@ -155,7 +156,7 @@
 </div>
 
 <div class="main-content" id="main-content">
-    <!-- Header superior con el usuario logueado -->
+    <!-- Header superior con el usuario logueado y botones de acción -->
     <div class="top-header">
         <div class="user-info-card">
             <i class="bi bi-person-fill text-primary fs-5"></i>
@@ -164,6 +165,16 @@
                 <span class="user-role" id="hdrPuesto">Puesto: COORDINADOR DE SOPORTE TÉCNICO</span>
             </div>
         </div>
+
+        <!-- Botón de Calendario (ir a ptrabajo.html) -->
+        <a href="ptrabajo.html" class="btn btn-primary d-flex align-items-center justify-content-center p-2" title="Plan de Trabajo" style="height: 42px; width: 42px; border-radius: 8px;">
+            <i class="bi bi-calendar-event fs-5"></i>
+        </a>
+
+        <!-- Botón para Salir (regresar a login.html) -->
+        <button onclick="logout()" class="btn btn-danger d-flex align-items-center justify-content-center p-2" title="Cerrar Sesión" style="height: 42px; width: 42px; border-radius: 8px;">
+            <i class="bi bi-box-arrow-right fs-5"></i>
+        </button>
     </div>
 
     <div id="view" class="table-container">
@@ -407,7 +418,8 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-// Cargar credenciales guardadas en localStorage
+
+    // Cargar credenciales guardadas en localStorage
     const storedName = localStorage.getItem('user_name');
     const storedRole = localStorage.getItem('user_puesto');
     const elNombre = document.getElementById('hdrNombre');
@@ -416,6 +428,13 @@
     if (elNombre && storedName) elNombre.innerText = storedName.toUpperCase();
     if (elPuesto && storedRole) elPuesto.innerText = `Puesto: ${storedRole.toUpperCase()}`;
     
+    // Función global para cerrar sesión
+    window.logout = () => {
+        localStorage.removeItem('user_name');
+        localStorage.removeItem('user_puesto');
+        window.location.href = 'login.html';
+    };
+
     const config = { databaseURL: "https://gromasis-9c094-default-rtdb.firebaseio.com/" };
     const db = getDatabase(initializeApp(config));
     
