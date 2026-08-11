@@ -419,17 +419,35 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // Cargar credenciales guardadas en localStorage
- // Cargar credenciales desde 'usuario_sesion' o 'user_name' por compatibilidad
-const sesionGuardada = JSON.parse(localStorage.getItem('usuario_sesion')) || {};
-const storedName = sesionGuardada.nombre || localStorage.getItem('user_name');
-const storedRole = sesionGuardada.puesto || localStorage.getItem('user_puesto');
+// Obtener la sesión del usuario activo desde localStorage
+function cargarDatosUsuarioHeader() {
+    let sesion = {};
+    
+    try {
+        sesion = JSON.parse(localStorage.getItem('usuario_sesion')) || {};
+    } catch (e) {
+        console.warn("Error leyendo usuario_sesion de localStorage", e);
+    }
 
-const elNombre = document.getElementById('hdrNombre');
-const elPuesto = document.getElementById('hdrPuesto');
+    // Busca de forma jerárquica para no fallar sin importar la estructura guardada en el Login
+    const nombre = sesion.nombre || sesion.nombreCompleto || localStorage.getItem('user_name') || localStorage.getItem('nombre');
+    const puesto = sesion.puesto || localStorage.getItem('user_puesto') || localStorage.getItem('puesto');
 
-if (elNombre && storedName) elNombre.innerText = storedName.toUpperCase();
-if (elPuesto && storedRole) elPuesto.innerText = `Puesto: ${storedRole.toUpperCase()}`;
+    const elNombre = document.getElementById('hdrNombre');
+    const elPuesto = document.getElementById('hdrPuesto');
+
+    if (elNombre && nombre) {
+        elNombre.innerText = nombre.toUpperCase();
+    }
+    
+    if (elPuesto && puesto) {
+        elPuesto.innerText = `Puesto: ${puesto.toUpperCase()}`;
+    }
+}
+
+// Ejecutar al cargar la vista
+cargarDatosUsuarioHeader();
+    
     // Función global para cerrar sesión
     window.logout = () => {
         localStorage.removeItem('user_name');
