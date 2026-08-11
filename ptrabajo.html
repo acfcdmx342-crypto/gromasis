@@ -161,12 +161,14 @@
 
   document.addEventListener('DOMContentLoaded', function() {
     // 1. OBTENER INFORMACIÓN DE LA SESIÓN ACTIVA (Ajusta las claves si usas sessionStorage)
-    const usuarioSesion = JSON.parse(localStorage.getItem('usuario_sesion') || '{}');
-    
-    // Valores por defecto en caso de no encontrar sesión
-    const usuarioNombre = usuarioSesion.nombre || usuarioSesion.usuario || 'USUARIO ANÓNIMO';
-    const usuarioPuesto = (usuarioSesion.puesto || 'SOPORTE TECNICO JR').toUpperCase();
-    const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
+
+const storedName = localStorage.getItem('user_name');
+const storedRole = localStorage.getItem('user_puesto');
+const usuarioSesion = JSON.parse(localStorage.getItem('usuario_sesion') || '{}');
+
+const usuarioNombre = storedName || usuarioSesion.nombre || usuarioSesion.usuario || 'USUARIO ANÓNIMO';
+const usuarioPuesto = (storedRole || usuarioSesion.puesto || 'SOPORTE TECNICO JR').toUpperCase();
+const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
 
     // Mostrar datos en el widget superior
     document.getElementById('userNombre').innerText = usuarioNombre;
