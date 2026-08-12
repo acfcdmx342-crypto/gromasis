@@ -294,14 +294,14 @@
                         <div class="col-md-4"><label class="form-label fw-bold small">Marcación Corta</label><input type="text" id="upMarcCorta" class="form-control"></div>
                         
                         <!-- CAMPO USUARIO (FORZADO A MAYÚSCULAS) -->
-                        <div class="col-md-4">
+                        <div class="col-md-4" id="wrapUpUsuario">
                             <label class="form-label fw-bold small">Usuario</label>
                             <input type="text" id="upUsuario" class="form-control" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">
                         </div>
-                        <div class="col-md-4"><label class="form-label fw-bold small">Correo Electrónico</label><input type="email" id="upCorreo" class="form-control"></div>
+                        <div class="col-md-4" id="wrapUpCorreo"><label class="form-label fw-bold small">Correo Electrónico</label><input type="email" id="upCorreo" class="form-control"></div>
                         
                         <!-- CAMPO CONTRASEÑA -->
-                        <div class="col-md-4">
+                        <div class="col-md-4" id="wrapUpPassword">
                             <label class="form-label fw-bold small">Contraseña</label>
                             <div class="input-group">
                                 <input type="password" id="upPassword" class="form-control">
@@ -1206,6 +1206,21 @@
             document.getElementById('check-camaras').checked = false;
             document.getElementById('desplegable-camaras').style.display = 'none';
 
+            // MOSTRAR U OCULTAR CAMPOS DE USUARIO/CORREO/PASSWORD SEGÚN MÓDULO
+            const wrapUsuario = document.getElementById("wrapUpUsuario");
+            const wrapCorreo = document.getElementById("wrapUpCorreo");
+            const wrapPassword = document.getElementById("wrapUpPassword");
+
+            if (path === 'personal') {
+                wrapUsuario?.classList.add('d-none');
+                wrapCorreo?.classList.add('d-none');
+                wrapPassword?.classList.add('d-none');
+            } else {
+                wrapUsuario?.classList.remove('d-none');
+                wrapCorreo?.classList.remove('d-none');
+                wrapPassword?.classList.remove('d-none');
+            }
+
             document.querySelectorAll('.ctx-trigger').forEach(c => { c.checked = false; });
             ['boxDesarrollos', 'boxServidores', 'boxComex', 'boxCorreos', 'boxFirewall'].forEach(b => document.getElementById(b).classList.add('d-none'));
 
@@ -1477,7 +1492,7 @@
                 const passVal = document.getElementById("upPassword").value;
                 const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._\-])[A-Za-z\d@$!%*?&._\-]{8,}$/;
 
-                if (passVal && !passRegex.test(passVal)) {
+                if (passVal && !passRegex.test(passVal) && currentPath !== 'personal') {
                     Swal.fire({
                         title: "Contraseña Insegura",
                         html: `<div class="text-start">La contraseña ingresada no cumple con los requisitos de seguridad:<br><br>
