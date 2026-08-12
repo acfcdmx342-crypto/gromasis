@@ -800,11 +800,11 @@
                     ${wrapTh('N° Emp', colIdx++)}
                     ${wrapTh('Nombre Completo', colIdx++)}
                     ${wrapTh('Puesto', colIdx++)}
-                    ${wrapTh('Número Largo', colIdx++)}
-                    ${wrapTh('Marcación Corta', colIdx++)}
-                    ${wrapTh('Usuario', colIdx++)}
+                    ${path !== 'personal' ? wrapTh('Número Largo', colIdx++) : ''}
+                    ${path !== 'personal' ? wrapTh('Marcación Corta', colIdx++) : ''}
+                    ${path !== 'personal' ? wrapTh('Usuario', colIdx++) : ''}
                     ${wrapTh('Correo', colIdx++)}
-                    ${wrapTh('Contraseña', colIdx++)}
+                    ${path !== 'personal' ? wrapTh('Contraseña', colIdx++) : ''}
                     ${wrapTh('Status', colIdx++)}
                 `;
             } else if (path === 'colorcenter') {
@@ -862,16 +862,16 @@
                         <td>${r.numeroEmpleado || '-'}</td>
                         <td class="text-start fw-bold">${r.nombreCompleto || '-'}</td>
                         <td><small>${r.puesto || '-'}</small></td>
-                        <td>${r.numeroLargo || '-'}</td>
-                        <td>${r.marcacionCorta || '-'}</td>
-                        <td><small class="fw-semibold text-primary">${usuarioMostrar}</small></td>
+                        ${path !== 'personal' ? `<td>${r.numeroLargo || '-'}</td>` : ''}
+                        ${path !== 'personal' ? `<td>${r.marcacionCorta || '-'}</td>` : ''}
+                        ${path !== 'personal' ? `<td><small class="fw-semibold text-primary">${usuarioMostrar}</small></td>` : ''}
                         <td><small>${correoMostrar}</small></td>
-                        <td><small>${passMostrar}</small></td>
+                        ${path !== 'personal' ? `<td><small>${passMostrar}</small></td>` : ''}
                         <td><span class="badge ${badgeClass}">${r.statusActual || 'ACTIVO'}</span></td>
                         <td class="text-end">
                             <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
-                            <button class="btn btn-sm btn-outline-success border-0" onclick="openEmpresaModal('${id}')"><i class="bi bi-building"></i></button>
+                            ${path !== 'personal' ? `<button class="btn btn-sm btn-outline-success border-0" onclick="openEmpresaModal('${id}')"><i class="bi bi-building"></i></button>` : ''}
                         </td>
                     </tr>`;
                 } else if (path === 'colorcenter') {
@@ -1870,16 +1870,9 @@
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-dark text-white py-2">
-                <h6 class="modal-title fw-bold m-0 d-flex align-items-center gap-2">
-                    <i class="bi bi-calendar-event text-primary"></i> Plan de Trabajo / Agenda
-                </h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0" style="height: 80vh; min-height: 500px;">
-                <iframe src="ptrabajo.html" style="width: 100%; height: 100%; border: none;"></iframe>
             </div>
         </div>
     </div>
-</div> 
+</div>
 </body>
 </html>
