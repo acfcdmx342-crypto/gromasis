@@ -270,15 +270,19 @@
                 
                 <!-- Campos compartidos / Estructura para Usuarios y Personal -->
                 <div id="secUsuariosPersonal" class="d-none row g-3 mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label fw-bold small">Empresa</label>
                         <select id="upEmpresa" class="form-select"></select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label fw-bold small">Zona</label>
                         <select id="upZona" class="form-select"><option value="">SELECCIONE ZONA...</option></select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small">Sucursal</label>
+                        <select id="upSucursal" class="form-select"><option value="">SELECCIONE SUCURSAL...</option></select>
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label fw-bold small">Status Actual</label>
                         <select id="upStatus" class="form-select select-status-activo" onchange="updateStatusStyle(this)">
                             <option value="ACTIVO" class="select-status-activo">ACTIVO</option>
@@ -792,6 +796,7 @@
                 html += `
                     ${wrapTh('Empresa', colIdx++)}
                     ${wrapTh('Zona', colIdx++)}
+                    ${wrapTh('Sucursal', colIdx++)}
                     ${wrapTh('N° Emp', colIdx++)}
                     ${wrapTh('Nombre Completo', colIdx++)}
                     ${wrapTh('Puesto', colIdx++)}
@@ -853,6 +858,7 @@
                     html += `<tr>
                         <td><small>${r.empresa || '-'}</small></td>
                         <td><small>${r.zona || '-'}</small></td>
+                        <td><small>${r.sucursal || '-'}</small></td>
                         <td>${r.numeroEmpleado || '-'}</td>
                         <td class="text-start fw-bold">${r.nombreCompleto || '-'}</td>
                         <td><small>${r.puesto || '-'}</small></td>
@@ -1244,14 +1250,27 @@
                     .map(z => z.nombre).sort();
 
                 document.getElementById("upZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}" ${zonaPrevia === z ? 'selected' : ''}>${z}</option>`).join('');
+                document.getElementById("upSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>';
+            };
+
+            const renderSucursalesUP = (zonaSel, sucPrevia = "") => {
+                const empresaSel = document.getElementById("upEmpresa").value;
+                const ss = Object.values(store.sucursales)
+                    .filter(s => s.empresa === empresaSel && s.zona === zonaSel && esRegistroPermitido(usrObj, empresaSel, zonaSel, s.nombre))
+                    .map(s => s.nombre).sort();
+
+                document.getElementById("upSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>' + ss.map(s => `<option value="${s}" ${sucPrevia === s ? 'selected' : ''}>${s}</option>`).join('');
             };
 
             document.getElementById("upEmpresa").onchange = (e) => renderZonasUP(e.target.value);
+            document.getElementById("upZona").onchange = (e) => renderSucursalesUP(e.target.value);
 
             if(item.empresa) {
                 renderZonasUP(item.empresa, item.zona);
+                if(item.zona) renderSucursalesUP(item.zona, item.sucursal);
             } else {
                 document.getElementById("upZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>';
+                document.getElementById("upSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>';
             }
 
             document.getElementById("upNumEmp").value = item.numeroEmpleado || "";
@@ -1470,6 +1489,7 @@
         } else if (['usuarios', 'personal'].includes(currentPath)) {
             const empresaSeleccionada = document.getElementById("upEmpresa").value;
             const zonaSeleccionada = document.getElementById("upZona").value;
+            const sucursalSeleccionada = document.getElementById("upSucursal").value;
             const statusActualizado = document.getElementById("upStatus").value;
 
             if(!empresaSeleccionada) { Swal.fire("Atención", "Por favor seleccione una Empresa.", "warning"); return; }
@@ -1481,7 +1501,7 @@
                 for (let l of lineas) {
                     const campos = l.split(',').map(c => c.trim());
                     let registroMasivo = {
-                        empresa: empresaSeleccionada, zona: zonaSeleccionada, statusActual: statusActualizado,
+                        empresa: empresaSeleccionada, zona: zonaSeleccionada, sucursal: sucursalSeleccionada, statusActual: statusActualizado,
                         numeroEmpleado: (campos[0] || '').toUpperCase(), nombreCompleto: (campos[1] || '').toUpperCase(),
                         puesto: (campos[2] || '').toUpperCase(), numeroLargo: campos[3] || '', marcacionCorta: campos[4] || '',
                         usuario: (campos[5] || '').toUpperCase(), correo: (campos[6] || '').toUpperCase(), password: campos[7] || ''
@@ -1507,7 +1527,7 @@
                 }
 
                 data = {
-                    empresa: empresaSeleccionada, zona: zonaSeleccionada, statusActual: statusActualizado,
+                    empresa: empresaSeleccionada, zona: zonaSeleccionada, sucursal: sucursalSeleccionada, statusActual: statusActualizado,
                     numeroEmpleado: document.getElementById("upNumEmp").value.toUpperCase(),
                     nombreCompleto: document.getElementById("upNombre").value.toUpperCase(),
                     puesto: document.getElementById("upPuesto").value.toUpperCase(),
