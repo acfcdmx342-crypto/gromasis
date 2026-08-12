@@ -477,11 +477,36 @@
         document.body.classList.add('hide-menu');
     }
 
+    // APLICACIÓN DE PERMISOS PARA OCULTAR/MOSTRAR MENÚS LATERALES
+    const aplicarPermisosMenu = () => {
+        const currentUserNombre = storedName ? storedName.toUpperCase().trim() : '';
+        if (!currentUserNombre) return;
+
+        // Buscar el usuario logueado dentro del catálogo 'usuarios' o 'personal'
+        let usrObj = Object.values(store.usuarios || {}).find(u => (u.nombreCompleto || '').toUpperCase().trim() === currentUserNombre);
+        if (!usrObj) {
+            usrObj = Object.values(store.personal || {}).find(p => (p.nombreCompleto || '').toUpperCase().trim() === currentUserNombre);
+        }
+
+        // Si el usuario existe y tiene permisos configurados, ocultar aquellos no marcados
+        if (usrObj && Array.isArray(usrObj.modulosPermitidos)) {
+            const permitidos = usrObj.modulosPermitidos;
+            document.querySelectorAll('.sidebar a').forEach(link => {
+                if (permitidos.includes(link.id)) {
+                    link.style.display = 'block';
+                } else {
+                    link.style.display = 'none';
+                }
+            });
+        }
+    };
+
     Object.keys(store).forEach(path => {
         onValue(ref(db, path), (s) => {
             store[path] = s.val() || {};
             if (loadsPending > 0) loadsPending--;
             if (loadsPending === 0) {
+                aplicarPermisosMenu();
                 if (urlParams.get('tipo') === 'colorcenter') {
                     render('colorcenter');
                 } else if (currentPath === '') {
@@ -1688,6 +1713,7 @@
                 asignacionSucursales,
                 modulosPermitidos 
             });
+            aplicarPermisosMenu();
             Swal.fire({ icon: "success", title: "Asignación y permisos guardados", timer: 1200, showConfirmButton: false });
             bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
         } catch (e) { Swal.fire("Error", e.message, "error"); }
