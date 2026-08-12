@@ -477,16 +477,21 @@
         document.body.classList.add('hide-menu');
     }
 
-    // APLICACIÓN DE PERMISOS PARA OCULTAR/MOSTRAR MENÚS LATERALES
-    const aplicarPermisosMenu = () => {
+    // HELPER PARA OBTENER EL USUARIO QUE INICIÓ SESIÓN
+    const getCurrentUserObj = () => {
         const currentUserNombre = storedName ? storedName.toUpperCase().trim() : '';
-        if (!currentUserNombre) return;
+        if (!currentUserNombre) return null;
 
-        // Buscar el usuario logueado dentro del catálogo 'usuarios' o 'personal'
         let usrObj = Object.values(store.usuarios || {}).find(u => (u.nombreCompleto || '').toUpperCase().trim() === currentUserNombre);
         if (!usrObj) {
             usrObj = Object.values(store.personal || {}).find(p => (p.nombreCompleto || '').toUpperCase().trim() === currentUserNombre);
         }
+        return usrObj;
+    };
+
+    // APLICACIÓN DE PERMISOS PARA OCULTAR/MOSTRAR MENÚS LATERALES
+    const aplicarPermisosMenu = () => {
+        const usrObj = getCurrentUserObj();
 
         // Si el usuario existe y tiene permisos configurados, ocultar aquellos no marcados
         if (usrObj && Array.isArray(usrObj.modulosPermitidos)) {
@@ -499,6 +504,39 @@
                 }
             });
         }
+    };
+
+    // HELPER: EVALÚA SI UN REGISTRO ES VISIBLE SEGÚN LAS SUCURSALES/EMPRESAS ASIGNADAS AL USUARIO LOGUEADO
+    const esRegistroPermitido = (usrObj, regEmpresa, regZona = null, regSucursal = null) => {
+        if (!usrObj || !Array.isArray(usrObj.asignacionSucursales) || usrObj.asignacionSucursales.length === 0) {
+            return true; // Si no hay asignaciones configuradas, se le permite acceso total
+        }
+
+        const asignaciones = usrObj.asignacionSucursales;
+        
+        // Comprobar si tiene acceso a la empresa
+        const empMatch = asignaciones.find(a => (a.empresa || '').toUpperCase() === (regEmpresa || '').toUpperCase());
+        if (!empMatch) return false;
+
+        // Si no se especifica sucursal ni zona para el registro (o no aplica), la empresa ya coincide
+        if (!regSucursal && !regZona) return true;
+
+        // Validar filtro por zona/sucursal si se proporciona sucursal o zona
+        if (Array.isArray(empMatch.zonas)) {
+            if (regZona && !regSucursal) {
+                return empMatch.zonas.some(z => (z.zona || '').toUpperCase() === (regZona || '').toUpperCase());
+            }
+
+            if (regSucursal) {
+                return empMatch.zonas.some(z => {
+                    const matchZona = !regZona || (z.zona || '').toUpperCase() === (regZona || '').toUpperCase();
+                    const sucs = Array.isArray(z.sucursales) ? z.sucursales.map(s => s.toUpperCase()) : [];
+                    return matchZona && sucs.includes((regSucursal || '').toUpperCase());
+                });
+            }
+        }
+
+        return true;
     };
 
     Object.keys(store).forEach(path => {
@@ -523,7 +561,13 @@
         document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
         document.getElementById('link-dashboard')?.classList.add('active');
 
-        const empsDisponibles = Object.values(store.empresas).map(e => e.nombre).filter(Boolean).sort();
+        const usrObj = getCurrentUserObj();
+
+        // Filtrar empresas visibles según asignación
+        const empsDisponibles = Object.values(store.empresas)
+            .filter(e => e.nombre && esRegistroPermitido(usrObj, e.nombre))
+            .map(e => e.nombre)
+            .sort();
 
         const html = `
             <div class="p-3">
@@ -571,7 +615,14 @@
             return;
         }
 
-        const zs = Object.values(store.zonas).filter(z => z.empresa === empSel).map(z => z.nombre).filter(Boolean).sort();
+        const usrObj = getCurrentUserObj();
+
+        const zs = Object.values(store.zonas)
+            .filter(z => z.empresa === empSel && esRegistroPermitido(usrObj, empSel, z.nombre))
+            .map(z => z.nombre)
+            .filter(Boolean)
+            .sort();
+
         selectZona.innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}">${z}</option>`).join('');
         selectZona.disabled = false;
     };
@@ -587,7 +638,11 @@
             return;
         }
 
-        const sucursalesFiltradas = Object.values(store.sucursales).filter(s => s.empresa === empSel && s.zona === zonaSel).sort((a,b) => (a.nombre || "").localeCompare(b.nombre || ""));
+        const usrObj = getCurrentUserObj();
+
+        const sucursalesFiltradas = Object.values(store.sucursales)
+            .filter(s => s.empresa === empSel && s.zona === zonaSel && esRegistroPermitido(usrObj, empSel, zonaSel, s.nombre))
+            .sort((a,b) => (a.nombre || "").localeCompare(b.nombre || ""));
 
         if(sucursalesFiltradas.length === 0) {
             contenedor.innerHTML = `<div class="col-12 text-center text-muted py-3">No hay sucursales registradas para esta empresa y zona.</div>`;
@@ -706,8 +761,18 @@
         document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
         document.getElementById(`link-${path}`)?.classList.add('active');
         
+        const usrObj = getCurrentUserObj();
         const items = store[path] || {};
-        const keys = Object.keys(items);
+        
+        // Filtrado dinámico según asignación de empresa/sucursal para el usuario logueado
+        const keys = Object.keys(items).filter(id => {
+            const r = items[id];
+            const emp = r.empresa || (path === 'empresas' ? r.nombre : null);
+            const zon = r.zona || null;
+            const suc = r.sucursal || (path === 'sucursales' ? r.nombre : null);
+            return esRegistroPermitido(usrObj, emp, zon, suc);
+        });
+
         let displayTitle = path.toUpperCase().replace('_', ' ');
 
         let html = `<div class="d-flex justify-content-between align-items-center mb-4">
@@ -716,7 +781,7 @@
                     </div>`;
         
         if (keys.length === 0) {
-            html += `<div class="text-center py-5 text-muted">No hay registros</div>`;
+            html += `<div class="text-center py-5 text-muted">No hay registros para mostrar</div>`;
         } else {
             let colIdx = 0;
             html += `<div class="table-responsive"><table class="table table-hover border align-middle" id="mainCatalogTable">
@@ -1076,24 +1141,35 @@
         document.getElementById("fCamaras").value = "";
         document.getElementById("fMasivo").value = "";
 
+        const usrObj = getCurrentUserObj();
+
         if (path === 'redes_inalambricas') {
             document.getElementById("secRedesInalambricas").classList.remove('d-none');
             document.getElementById("secOtrosCatalogos").classList.add('d-none');
             document.getElementById("secIndividual").classList.add('d-none');
             document.getElementById("secToggleMasivo").classList.remove('d-none');
 
-            const emps = Object.values(store.empresas).map(e => e.nombre).sort();
+            const emps = Object.values(store.empresas)
+                .filter(e => e.nombre && esRegistroPermitido(usrObj, e.nombre))
+                .map(e => e.nombre).sort();
+
             document.getElementById("riEmpresa").innerHTML = '<option value="">SELECCIONE EMPRESA...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
             
             const renderZonasRI = (empSel, zonaPrev = "") => {
-                const zs = Object.values(store.zonas).filter(z => z.empresa === empSel).map(z => z.nombre).sort();
+                const zs = Object.values(store.zonas)
+                    .filter(z => z.empresa === empSel && esRegistroPermitido(usrObj, empSel, z.nombre))
+                    .map(z => z.nombre).sort();
+
                 document.getElementById("riZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}" ${zonaPrev === z ? 'selected' : ''}>${z}</option>`).join('');
                 document.getElementById("riSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>';
             };
 
             const renderSucursalesRI = (zonaSel, sucPrev = "") => {
                 const empSel = document.getElementById("riEmpresa").value;
-                const ss = Object.values(store.sucursales).filter(s => s.empresa === empSel && s.zona === zonaSel).map(s => s.nombre).sort();
+                const ss = Object.values(store.sucursales)
+                    .filter(s => s.empresa === empSel && s.zona === zonaSel && esRegistroPermitido(usrObj, empSel, zonaSel, s.nombre))
+                    .map(s => s.nombre).sort();
+
                 document.getElementById("riSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>' + ss.map(s => `<option value="${s}" ${sucPrev === s ? 'selected' : ''}>${s}</option>`).join('');
             };
 
@@ -1141,11 +1217,17 @@
             const arrServidores = Object.values(store.servidores || {}).map(s => s.nombre).sort();
             buildSubListHtml("boxServidores", arrServidores, "srv");
 
-            const emps = Object.values(store.empresas).map(e => e.nombre).sort();
+            const emps = Object.values(store.empresas)
+                .filter(e => e.nombre && esRegistroPermitido(usrObj, e.nombre))
+                .map(e => e.nombre).sort();
+
             document.getElementById("upEmpresa").innerHTML = '<option value="">SELECCIONE EMPRESA...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
             
             const renderZonasUP = (empresaSel, zonaPrevia = "") => {
-                const zs = Object.values(store.zonas).filter(z => z.empresa === empresaSel).map(z => z.nombre).sort();
+                const zs = Object.values(store.zonas)
+                    .filter(z => z.empresa === empresaSel && esRegistroPermitido(usrObj, empresaSel, z.nombre))
+                    .map(z => z.nombre).sort();
+
                 document.getElementById("upZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}" ${zonaPrevia === z ? 'selected' : ''}>${z}</option>`).join('');
             };
 
@@ -1198,17 +1280,26 @@
                 `;
                 document.getElementById("secIndividual").parentNode.insertBefore(divCC, document.getElementById("secIndividual"));
 
-                const emps = Object.values(store.empresas).map(e => e.nombre).sort();
+                const emps = Object.values(store.empresas)
+                    .filter(e => e.nombre && esRegistroPermitido(usrObj, e.nombre))
+                    .map(e => e.nombre).sort();
+
                 document.getElementById("ccEmp").innerHTML = '<option value="">SELECCIONE...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
 
                 const actualizarZonasCC = (empSel, zonaPrev = "") => {
-                    const zs = Object.values(store.zonas).filter(z => z.empresa === empSel).map(z => z.nombre).sort();
+                    const zs = Object.values(store.zonas)
+                        .filter(z => z.empresa === empSel && esRegistroPermitido(usrObj, empSel, z.nombre))
+                        .map(z => z.nombre).sort();
+
                     document.getElementById("ccZona").innerHTML = '<option value="">ZONA</option>' + zs.map(z => `<option value="${z}" ${zonaPrev === z ? 'selected' : ''}>${z}</option>`).join('');
                     document.getElementById("ccSuc").innerHTML = '<option value="">SUCURSAL</option>';
                 };
                 const actualizarSucursalesCC = (zonaSel, sucPrev = "") => {
                     const empSel = document.getElementById("ccEmp").value;
-                    const ss = Object.values(store.sucursales).filter(s => s.empresa === empSel && s.zona === zonaSel).map(s => s.nombre).sort();
+                    const ss = Object.values(store.sucursales)
+                        .filter(s => s.empresa === empSel && s.zona === zonaSel && esRegistroPermitido(usrObj, empSel, zonaSel, s.nombre))
+                        .map(s => s.nombre).sort();
+
                     document.getElementById("ccSuc").innerHTML = '<option value="">SUCURSAL</option>' + ss.map(s => `<option value="${s}" ${sucPrev === s ? 'selected' : ''}>${s}</option>`).join('');
                 };
                 document.getElementById("ccEmp").onchange = (e) => actualizarZonasCC(e.target.value);
@@ -1241,11 +1332,17 @@
 
             if (['zonas', 'sucursales'].includes(path)) {
                 document.getElementById("secEmpresa").classList.remove('d-none');
-                const emps = Object.values(store.empresas).map(e => e.nombre).sort();
+                const emps = Object.values(store.empresas)
+                    .filter(e => e.nombre && esRegistroPermitido(usrObj, e.nombre))
+                    .map(e => e.nombre).sort();
+
                 document.getElementById("fEmp").innerHTML = '<option value="">SELECCIONE...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
                 
                 if(item.empresa) {
-                   const zs = Object.values(store.zonas).filter(z => z.empresa === item.empresa).map(z => z.nombre).sort();
+                   const zs = Object.values(store.zonas)
+                    .filter(z => z.empresa === item.empresa && esRegistroPermitido(usrObj, item.empresa, z.nombre))
+                    .map(z => z.nombre).sort();
+
                    document.getElementById("secZona").classList.remove('d-none');
                    document.getElementById("fZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}" ${item.zona === z ? 'selected' : ''}>${z}</option>`).join('');
                 }
@@ -1264,7 +1361,10 @@
 
             document.getElementById("fEmp").onchange = (e) => {
                 if(path === 'sucursales'){
-                    const zs = Object.values(store.zonas).filter(z => z.empresa === e.target.value).map(z => z.nombre).sort();
+                    const zs = Object.values(store.zonas)
+                        .filter(z => z.empresa === e.target.value && esRegistroPermitido(usrObj, e.target.value, z.nombre))
+                        .map(z => z.nombre).sort();
+
                     document.getElementById("secZona").classList.remove('d-none');
                     document.getElementById("fZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}">${z}</option>`).join('');
                 }
@@ -1714,6 +1814,7 @@
                 modulosPermitidos 
             });
             aplicarPermisosMenu();
+            if (currentPath) render(currentPath);
             Swal.fire({ icon: "success", title: "Asignación y permisos guardados", timer: 1200, showConfirmButton: false });
             bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
         } catch (e) { Swal.fire("Error", e.message, "error"); }
