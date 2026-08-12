@@ -157,29 +157,28 @@
 
 <div class="main-content" id="main-content">
     <!-- Header superior con el usuario logueado y botones de acción -->
-<!-- Header superior con el usuario logueado y botones de acción -->
-<div class="top-header">
-    <div class="user-info-card">
-        <i class="bi bi-person-fill text-primary fs-5"></i>
-        <div>
-            <span class="user-name" id="hdrNombre">LUIS ALBERTO GARCIA SANCHE</span>
-            <span class="user-role" id="hdrPuesto">Puesto: COORDINADOR DE SOPORTE TÉCNICO</span>
+    <div class="top-header">
+        <div class="user-info-card">
+            <i class="bi bi-person-fill text-primary fs-5"></i>
+            <div>
+                <span class="user-name" id="hdrNombre">LUIS ALBERTO GARCIA SANCHE</span>
+                <span class="user-role" id="hdrPuesto">Puesto: COORDINADOR DE SOPORTE TÉCNICO</span>
+            </div>
         </div>
+
+        <!-- Botón de Calendario (Abre el Modal de Plan de Trabajo) -->
+        <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center p-2" 
+                title="Plan de Trabajo" data-bs-toggle="modal" data-bs-target="#modalPlanTrabajo" 
+                style="height: 42px; width: 42px; border-radius: 8px;">
+            <i class="bi bi-calendar-event fs-5"></i>
+        </button>
+
+        <!-- Botón para Salir -->
+        <a href="index.html" class="btn btn-danger d-flex align-items-center justify-content-center p-2" 
+           title="Cerrar Sesión" style="height: 42px; width: 42px; border-radius: 8px;">
+            <i class="bi bi-box-arrow-right fs-5"></i>
+        </a>
     </div>
-
-    <!-- Botón de Calendario (Abre el Modal de Plan de Trabajo) -->
-    <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center p-2" 
-            title="Plan de Trabajo" data-bs-toggle="modal" data-bs-target="#modalPlanTrabajo" 
-            style="height: 42px; width: 42px; border-radius: 8px;">
-        <i class="bi bi-calendar-event fs-5"></i>
-    </button>
-
-    <!-- Botón para Salir -->
-    <a href="index.html" class="btn btn-danger d-flex align-items-center justify-content-center p-2" 
-       title="Cerrar Sesión" style="height: 42px; width: 42px; border-radius: 8px;">
-        <i class="bi bi-box-arrow-right fs-5"></i>
-    </a>
-</div>
     <div id="view" class="table-container">
         <!-- Dashboard renderizado inicialmente por JavaScript -->
     </div>
@@ -403,16 +402,35 @@
     </div>
 </div>
 
+<!-- MODAL ASIGNACIÓN DE SUCURSALES Y MÓDULOS -->
 <div class="modal fade" id="modalEmpresas" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title">Asignar sucursales</h5>
+        <h5 class="modal-title">Asignar Sucursales y Permisos</h5>
         <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body" id="empresa-tree"></div>
+      <div class="modal-body p-3">
+        <!-- Pestañas para Sucursales y Módulos -->
+        <ul class="nav nav-tabs mb-3" id="tabAsignacion" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold small text-dark" id="tab-sucursales-tab" data-bs-toggle="tab" data-bs-target="#tab-sucursales" type="button" role="tab"><i class="bi bi-shop me-1"></i> Sucursales</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold small text-dark" id="tab-modulos-tab" data-bs-toggle="tab" data-bs-target="#tab-modulos" type="button" role="tab"><i class="bi bi-grid-fill me-1"></i> Módulos y Catálogos</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="tabAsignacionContent">
+            <div class="tab-pane fade show active" id="tab-sucursales" role="tabpanel">
+                <div id="empresa-tree"></div>
+            </div>
+            <div class="tab-pane fade" id="tab-modulos" role="tabpanel">
+                <div id="modulos-tree" class="p-2"></div>
+            </div>
+        </div>
+      </div>
       <div class="modal-footer">
-        <button class="btn btn-primary" onclick="guardarAsignacion()">Guardar</button>
+        <button class="btn btn-primary" onclick="guardarAsignacion()">Guardar Permisos</button>
       </div>
     </div>
   </div>
@@ -1436,6 +1454,10 @@
         const asignacion = store[currentPath][currentUserId]?.asignacionSucursales;
         return Array.isArray(asignacion) ? asignacion : [];
     };
+    const getModulosPermitidosUsuario = () => {
+        const modulos = store[currentPath][currentUserId]?.modulosPermitidos;
+        return Array.isArray(modulos) ? modulos : null;
+    };
     const getEmpresaAsignada = (empresa) => getAsignacionUsuario().find(a => a.empresa === empresa);
     const getZonaAsignada = (empresa, zona) => getEmpresaAsignada(empresa)?.zonas?.find(z => z.zona === zona);
 
@@ -1519,10 +1541,76 @@
         }).join('');
     };
 
+    // CONSTRUCCIÓN DINÁMICA DEL ÁRBOL DE MÓDULOS DESDE EL SIDEBAR
+    const buildModulosTree = () => {
+        const sidebarLinks = Array.from(document.querySelectorAll(".sidebar a"));
+        if (!sidebarLinks.length) return '<div class="text-center text-muted py-3">No hay módulos disponibles.</div>';
+
+        const modulosGuardados = getModulosPermitidosUsuario();
+
+        let html = `
+            <div class="mb-3 pb-2 border-bottom">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="chkAllModulos" onchange="toggleSelectAllModulos(this)">
+                    <label class="form-check-label fw-bold text-primary" for="chkAllModulos">(Seleccionar todos los módulos)</label>
+                </div>
+            </div>
+            <div class="row g-2">`;
+
+        sidebarLinks.forEach((link, idx) => {
+            const id = link.id || `mod-${idx}`;
+            const nombre = link.innerText.trim();
+            const iconHtml = link.querySelector('i')?.outerHTML || '';
+            // Si no tiene registro previo, por defecto vienen seleccionados todos
+            const isChecked = modulosGuardados === null ? true : modulosGuardados.includes(id);
+
+            html += `
+                <div class="col-md-6">
+                    <div class="p-2 border rounded bg-light d-flex align-items-center">
+                        <div class="form-check m-0 w-100">
+                            <input class="form-check-input mod-check" type="checkbox" value="${id}" id="chkMod_${id}" ${isChecked ? 'checked' : ''} onchange="syncMasterModuloCheck()">
+                            <label class="form-check-label small fw-semibold text-dark cursor-pointer d-flex align-items-center gap-2" for="chkMod_${id}">
+                                ${iconHtml} <span>${nombre}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>`;
+        });
+
+        html += `</div>`;
+        return html;
+    };
+
+    window.toggleSelectAllModulos = (master) => {
+        document.querySelectorAll("#modulos-tree .mod-check").forEach(chk => {
+            chk.checked = master.checked;
+        });
+    };
+
+    window.syncMasterModuloCheck = () => {
+        const master = document.getElementById("chkAllModulos");
+        if (!master) return;
+        const checks = Array.from(document.querySelectorAll("#modulos-tree .mod-check"));
+        const checkedCount = checks.filter(c => c.checked).length;
+
+        if (checkedCount === checks.length) {
+            master.checked = true;
+            master.indeterminate = false;
+        } else if (checkedCount === 0) {
+            master.checked = false;
+            master.indeterminate = false;
+        } else {
+            master.checked = false;
+            master.indeterminate = true;
+        }
+    };
+
     window.openEmpresaModal = (userId) => {
         currentUserId = userId;
         document.getElementById("empresa-tree").innerHTML = buildAsignacionTree();
+        document.getElementById("modulos-tree").innerHTML = buildModulosTree();
         syncAllSucursalesChecks();
+        syncMasterModuloCheck();
         new bootstrap.Modal(document.getElementById("modalEmpresas")).show();
     };
 
@@ -1591,9 +1679,16 @@
             });
             asignacionSucursales.push({ empresa, zonas: zones });
         });
+
+        // RECOLECCIÓN DE MÓDULOS PERMITIDOS
+        const modulosPermitidos = Array.from(document.querySelectorAll("#modulos-tree .mod-check:checked")).map(c => c.value);
+
         try {
-            await update(ref(db, `${currentPath}/${currentUserId}`), { asignacionSucursales });
-            Swal.fire({ icon: "success", title: "Asignación guardada", timer: 1200, showConfirmButton: false });
+            await update(ref(db, `${currentPath}/${currentUserId}`), { 
+                asignacionSucursales,
+                modulosPermitidos 
+            });
+            Swal.fire({ icon: "success", title: "Asignación y permisos guardados", timer: 1200, showConfirmButton: false });
             bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
         } catch (e) { Swal.fire("Error", e.message, "error"); }
     };
@@ -1608,7 +1703,7 @@
         if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
     };
 </script>
-   <!-- MODAL PLAN DE TRABAJO (CALENDARIO) -->
+<!-- MODAL PLAN DE TRABAJO (CALENDARIO) -->
 <div class="modal fade" id="modalPlanTrabajo" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg">
