@@ -179,7 +179,6 @@
             <i class="bi bi-box-arrow-right fs-5"></i>
         </a>
     </div>
-
     <div id="view" class="table-container">
         <!-- Dashboard renderizado inicialmente por JavaScript -->
     </div>
@@ -271,15 +270,19 @@
                 
                 <!-- Campos compartidos / Estructura para Usuarios y Personal -->
                 <div id="secUsuariosPersonal" class="d-none row g-3 mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label fw-bold small">Empresa</label>
                         <select id="upEmpresa" class="form-select"></select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label fw-bold small">Zona</label>
                         <select id="upZona" class="form-select"><option value="">SELECCIONE ZONA...</option></select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small">Sucursal</label>
+                        <select id="upSucursal" class="form-select"><option value="">SELECCIONE SUCURSAL...</option></select>
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label fw-bold small">Status Actual</label>
                         <select id="upStatus" class="form-select select-status-activo" onchange="updateStatusStyle(this)">
                             <option value="ACTIVO" class="select-status-activo">ACTIVO</option>
@@ -295,14 +298,14 @@
                         <div class="col-md-4"><label class="form-label fw-bold small">Marcación Corta</label><input type="text" id="upMarcCorta" class="form-control"></div>
                         
                         <!-- CAMPO USUARIO (FORZADO A MAYÚSCULAS) -->
-                        <div class="col-md-4">
+                        <div class="col-md-4" id="wrapUpUsuario">
                             <label class="form-label fw-bold small">Usuario</label>
                             <input type="text" id="upUsuario" class="form-control" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">
                         </div>
-                        <div class="col-md-4"><label class="form-label fw-bold small">Correo Electrónico</label><input type="email" id="upCorreo" class="form-control"></div>
+                        <div class="col-md-4" id="wrapUpCorreo"><label class="form-label fw-bold small">Correo Electrónico</label><input type="email" id="upCorreo" class="form-control"></div>
                         
                         <!-- CAMPO CONTRASEÑA -->
-                        <div class="col-md-4">
+                        <div class="col-md-4" id="wrapUpPassword">
                             <label class="form-label fw-bold small">Contraseña</label>
                             <div class="input-group">
                                 <input type="password" id="upPassword" class="form-control">
@@ -403,36 +406,38 @@
     </div>
 </div>
 
+<!-- MODAL ASIGNACIÓN DE SUCURSALES Y MÓDULOS -->
 <div class="modal fade" id="modalEmpresas" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title">Asignar sucursales</h5>
+        <h5 class="modal-title">Asignar Sucursales y Permisos</h5>
         <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body" id="empresa-tree"></div>
+      <div class="modal-body p-3">
+        <!-- Pestañas para Sucursales y Módulos -->
+        <ul class="nav nav-tabs mb-3" id="tabAsignacion" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold small text-dark" id="tab-sucursales-tab" data-bs-toggle="tab" data-bs-target="#tab-sucursales" type="button" role="tab"><i class="bi bi-shop me-1"></i> Sucursales</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold small text-dark" id="tab-modulos-tab" data-bs-toggle="tab" data-bs-target="#tab-modulos" type="button" role="tab"><i class="bi bi-grid-fill me-1"></i> Módulos y Catálogos</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="tabAsignacionContent">
+            <div class="tab-pane fade show active" id="tab-sucursales" role="tabpanel">
+                <div id="empresa-tree"></div>
+            </div>
+            <div class="tab-pane fade" id="tab-modulos" role="tabpanel">
+                <div id="modulos-tree" class="p-2"></div>
+            </div>
+        </div>
+      </div>
       <div class="modal-footer">
-        <button class="btn btn-primary" onclick="guardarAsignacion()">Guardar</button>
+        <button class="btn btn-primary" onclick="guardarAsignacion()">Guardar Permisos</button>
       </div>
     </div>
   </div>
-</div>
-
-<!-- MODAL PLAN DE TRABAJO (CALENDARIO) -->
-<div class="modal fade" id="modalPlanTrabajo" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-dark text-white py-2">
-                <h6 class="modal-title fw-bold m-0 d-flex align-items-center gap-2">
-                    <i class="bi bi-calendar-event text-primary"></i> Plan de Trabajo / Agenda
-                </h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0" style="height: 80vh; min-height: 500px;">
-                <iframe src="ptrabajo.html" style="width: 100%; height: 100%; border: none;"></iframe>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script type="module">
@@ -476,11 +481,74 @@
         document.body.classList.add('hide-menu');
     }
 
+    // HELPER PARA OBTENER EL USUARIO QUE INICIÓ SESIÓN
+    const getCurrentUserObj = () => {
+        const currentUserNombre = storedName ? storedName.toUpperCase().trim() : '';
+        if (!currentUserNombre) return null;
+
+        let usrObj = Object.values(store.usuarios || {}).find(u => (u.nombreCompleto || '').toUpperCase().trim() === currentUserNombre);
+        if (!usrObj) {
+            usrObj = Object.values(store.personal || {}).find(p => (p.nombreCompleto || '').toUpperCase().trim() === currentUserNombre);
+        }
+        return usrObj;
+    };
+
+    // APLICACIÓN DE PERMISOS PARA OCULTAR/MOSTRAR MENÚS LATERALES
+    const aplicarPermisosMenu = () => {
+        const usrObj = getCurrentUserObj();
+
+        // Si el usuario existe y tiene permisos configurados, ocultar aquellos no marcados
+        if (usrObj && Array.isArray(usrObj.modulosPermitidos)) {
+            const permitidos = usrObj.modulosPermitidos;
+            document.querySelectorAll('.sidebar a').forEach(link => {
+                if (permitidos.includes(link.id)) {
+                    link.style.display = 'block';
+                } else {
+                    link.style.display = 'none';
+                }
+            });
+        }
+    };
+
+    // HELPER: EVALÚA SI UN REGISTRO ES VISIBLE SEGÚN LAS SUCURSALES/EMPRESAS ASIGNADAS AL USUARIO LOGUEADO
+    const esRegistroPermitido = (usrObj, regEmpresa, regZona = null, regSucursal = null) => {
+        if (!usrObj || !Array.isArray(usrObj.asignacionSucursales) || usrObj.asignacionSucursales.length === 0) {
+            return true; // Si no hay asignaciones configuradas, se le permite acceso total
+        }
+
+        const asignaciones = usrObj.asignacionSucursales;
+        
+        // Comprobar si tiene acceso a la empresa
+        const empMatch = asignaciones.find(a => (a.empresa || '').toUpperCase() === (regEmpresa || '').toUpperCase());
+        if (!empMatch) return false;
+
+        // Si no se especifica sucursal ni zona para el registro (o no aplica), la empresa ya coincide
+        if (!regSucursal && !regZona) return true;
+
+        // Validar filtro por zona/sucursal si se proporciona sucursal o zona
+        if (Array.isArray(empMatch.zonas)) {
+            if (regZona && !regSucursal) {
+                return empMatch.zonas.some(z => (z.zona || '').toUpperCase() === (regZona || '').toUpperCase());
+            }
+
+            if (regSucursal) {
+                return empMatch.zonas.some(z => {
+                    const matchZona = !regZona || (z.zona || '').toUpperCase() === (regZona || '').toUpperCase();
+                    const sucs = Array.isArray(z.sucursales) ? z.sucursales.map(s => s.toUpperCase()) : [];
+                    return matchZona && sucs.includes((regSucursal || '').toUpperCase());
+                });
+            }
+        }
+
+        return true;
+    };
+
     Object.keys(store).forEach(path => {
         onValue(ref(db, path), (s) => {
             store[path] = s.val() || {};
             if (loadsPending > 0) loadsPending--;
             if (loadsPending === 0) {
+                aplicarPermisosMenu();
                 if (urlParams.get('tipo') === 'colorcenter') {
                     render('colorcenter');
                 } else if (currentPath === '') {
@@ -497,7 +565,13 @@
         document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
         document.getElementById('link-dashboard')?.classList.add('active');
 
-        const empsDisponibles = Object.values(store.empresas).map(e => e.nombre).filter(Boolean).sort();
+        const usrObj = getCurrentUserObj();
+
+        // Filtrar empresas visibles según asignación
+        const empsDisponibles = Object.values(store.empresas)
+            .filter(e => e.nombre && esRegistroPermitido(usrObj, e.nombre))
+            .map(e => e.nombre)
+            .sort();
 
         const html = `
             <div class="p-3">
@@ -545,7 +619,14 @@
             return;
         }
 
-        const zs = Object.values(store.zonas).filter(z => z.empresa === empSel).map(z => z.nombre).filter(Boolean).sort();
+        const usrObj = getCurrentUserObj();
+
+        const zs = Object.values(store.zonas)
+            .filter(z => z.empresa === empSel && esRegistroPermitido(usrObj, empSel, z.nombre))
+            .map(z => z.nombre)
+            .filter(Boolean)
+            .sort();
+
         selectZona.innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}">${z}</option>`).join('');
         selectZona.disabled = false;
     };
@@ -561,7 +642,11 @@
             return;
         }
 
-        const sucursalesFiltradas = Object.values(store.sucursales).filter(s => s.empresa === empSel && s.zona === zonaSel).sort((a,b) => (a.nombre || "").localeCompare(b.nombre || ""));
+        const usrObj = getCurrentUserObj();
+
+        const sucursalesFiltradas = Object.values(store.sucursales)
+            .filter(s => s.empresa === empSel && s.zona === zonaSel && esRegistroPermitido(usrObj, empSel, zonaSel, s.nombre))
+            .sort((a,b) => (a.nombre || "").localeCompare(b.nombre || ""));
 
         if(sucursalesFiltradas.length === 0) {
             contenedor.innerHTML = `<div class="col-12 text-center text-muted py-3">No hay sucursales registradas para esta empresa y zona.</div>`;
@@ -680,8 +765,18 @@
         document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
         document.getElementById(`link-${path}`)?.classList.add('active');
         
+        const usrObj = getCurrentUserObj();
         const items = store[path] || {};
-        const keys = Object.keys(items);
+        
+        // Filtrado dinámico según asignación de empresa/sucursal para el usuario logueado
+        const keys = Object.keys(items).filter(id => {
+            const r = items[id];
+            const emp = r.empresa || (path === 'empresas' ? r.nombre : null);
+            const zon = r.zona || null;
+            const suc = r.sucursal || (path === 'sucursales' ? r.nombre : null);
+            return esRegistroPermitido(usrObj, emp, zon, suc);
+        });
+
         let displayTitle = path.toUpperCase().replace('_', ' ');
 
         let html = `<div class="d-flex justify-content-between align-items-center mb-4">
@@ -690,7 +785,7 @@
                     </div>`;
         
         if (keys.length === 0) {
-            html += `<div class="text-center py-5 text-muted">No hay registros</div>`;
+            html += `<div class="text-center py-5 text-muted">No hay registros para mostrar</div>`;
         } else {
             let colIdx = 0;
             html += `<div class="table-responsive"><table class="table table-hover border align-middle" id="mainCatalogTable">
@@ -701,14 +796,15 @@
                 html += `
                     ${wrapTh('Empresa', colIdx++)}
                     ${wrapTh('Zona', colIdx++)}
+                    ${wrapTh('Sucursal', colIdx++)}
                     ${wrapTh('N° Emp', colIdx++)}
                     ${wrapTh('Nombre Completo', colIdx++)}
                     ${wrapTh('Puesto', colIdx++)}
-                    ${wrapTh('Número Largo', colIdx++)}
-                    ${wrapTh('Marcación Corta', colIdx++)}
-                    ${wrapTh('Usuario', colIdx++)}
-                    ${wrapTh('Correo', colIdx++)}
-                    ${wrapTh('Contraseña', colIdx++)}
+                    ${path !== 'personal' ? wrapTh('Número Largo', colIdx++) : ''}
+                    ${path !== 'personal' ? wrapTh('Marcación Corta', colIdx++) : ''}
+                    ${path !== 'personal' ? wrapTh('Usuario', colIdx++) : ''}
+                    ${path !== 'personal' ? wrapTh('Correo', colIdx++) : ''}
+                    ${path !== 'personal' ? wrapTh('Contraseña', colIdx++) : ''}
                     ${wrapTh('Status', colIdx++)}
                 `;
             } else if (path === 'colorcenter') {
@@ -762,19 +858,20 @@
                     html += `<tr>
                         <td><small>${r.empresa || '-'}</small></td>
                         <td><small>${r.zona || '-'}</small></td>
+                        <td><small>${r.sucursal || '-'}</small></td>
                         <td>${r.numeroEmpleado || '-'}</td>
                         <td class="text-start fw-bold">${r.nombreCompleto || '-'}</td>
                         <td><small>${r.puesto || '-'}</small></td>
-                        <td>${r.numeroLargo || '-'}</td>
-                        <td>${r.marcacionCorta || '-'}</td>
-                        <td><small class="fw-semibold text-primary">${usuarioMostrar}</small></td>
-                        <td><small>${correoMostrar}</small></td>
-                        <td><small>${passMostrar}</small></td>
+                        ${path !== 'personal' ? `<td>${r.numeroLargo || '-'}</td>` : ''}
+                        ${path !== 'personal' ? `<td>${r.marcacionCorta || '-'}</td>` : ''}
+                        ${path !== 'personal' ? `<td><small class="fw-semibold text-primary">${usuarioMostrar}</small></td>` : ''}
+                        ${path !== 'personal' ? `<td><small>${correoMostrar}</small></td>` : ''}
+                        ${path !== 'personal' ? `<td><small>${passMostrar}</small></td>` : ''}
                         <td><span class="badge ${badgeClass}">${r.statusActual || 'ACTIVO'}</span></td>
                         <td class="text-end">
                             <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
-                            <button class="btn btn-sm btn-outline-success border-0" onclick="openEmpresaModal('${id}')"><i class="bi bi-building"></i></button>
+                            ${path !== 'personal' ? `<button class="btn btn-sm btn-outline-success border-0" onclick="openEmpresaModal('${id}')"><i class="bi bi-building"></i></button>` : ''}
                         </td>
                     </tr>`;
                 } else if (path === 'colorcenter') {
@@ -1050,24 +1147,35 @@
         document.getElementById("fCamaras").value = "";
         document.getElementById("fMasivo").value = "";
 
+        const usrObj = getCurrentUserObj();
+
         if (path === 'redes_inalambricas') {
             document.getElementById("secRedesInalambricas").classList.remove('d-none');
             document.getElementById("secOtrosCatalogos").classList.add('d-none');
             document.getElementById("secIndividual").classList.add('d-none');
             document.getElementById("secToggleMasivo").classList.remove('d-none');
 
-            const emps = Object.values(store.empresas).map(e => e.nombre).sort();
+            const emps = Object.values(store.empresas)
+                .filter(e => e.nombre && esRegistroPermitido(usrObj, e.nombre))
+                .map(e => e.nombre).sort();
+
             document.getElementById("riEmpresa").innerHTML = '<option value="">SELECCIONE EMPRESA...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
             
             const renderZonasRI = (empSel, zonaPrev = "") => {
-                const zs = Object.values(store.zonas).filter(z => z.empresa === empSel).map(z => z.nombre).sort();
+                const zs = Object.values(store.zonas)
+                    .filter(z => z.empresa === empSel && esRegistroPermitido(usrObj, empSel, z.nombre))
+                    .map(z => z.nombre).sort();
+
                 document.getElementById("riZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}" ${zonaPrev === z ? 'selected' : ''}>${z}</option>`).join('');
                 document.getElementById("riSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>';
             };
 
             const renderSucursalesRI = (zonaSel, sucPrev = "") => {
                 const empSel = document.getElementById("riEmpresa").value;
-                const ss = Object.values(store.sucursales).filter(s => s.empresa === empSel && s.zona === zonaSel).map(s => s.nombre).sort();
+                const ss = Object.values(store.sucursales)
+                    .filter(s => s.empresa === empSel && s.zona === zonaSel && esRegistroPermitido(usrObj, empSel, zonaSel, s.nombre))
+                    .map(s => s.nombre).sort();
+
                 document.getElementById("riSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>' + ss.map(s => `<option value="${s}" ${sucPrev === s ? 'selected' : ''}>${s}</option>`).join('');
             };
 
@@ -1104,6 +1212,21 @@
             document.getElementById('check-camaras').checked = false;
             document.getElementById('desplegable-camaras').style.display = 'none';
 
+            // MOSTRAR U OCULTAR CAMPOS DE USUARIO/CORREO/PASSWORD SEGÚN MÓDULO
+            const wrapUsuario = document.getElementById("wrapUpUsuario");
+            const wrapCorreo = document.getElementById("wrapUpCorreo");
+            const wrapPassword = document.getElementById("wrapUpPassword");
+
+            if (path === 'personal') {
+                wrapUsuario?.classList.add('d-none');
+                wrapCorreo?.classList.add('d-none');
+                wrapPassword?.classList.add('d-none');
+            } else {
+                wrapUsuario?.classList.remove('d-none');
+                wrapCorreo?.classList.remove('d-none');
+                wrapPassword?.classList.remove('d-none');
+            }
+
             document.querySelectorAll('.ctx-trigger').forEach(c => { c.checked = false; });
             ['boxDesarrollos', 'boxServidores', 'boxComex', 'boxCorreos', 'boxFirewall'].forEach(b => document.getElementById(b).classList.add('d-none'));
 
@@ -1115,20 +1238,39 @@
             const arrServidores = Object.values(store.servidores || {}).map(s => s.nombre).sort();
             buildSubListHtml("boxServidores", arrServidores, "srv");
 
-            const emps = Object.values(store.empresas).map(e => e.nombre).sort();
+            const emps = Object.values(store.empresas)
+                .filter(e => e.nombre && esRegistroPermitido(usrObj, e.nombre))
+                .map(e => e.nombre).sort();
+
             document.getElementById("upEmpresa").innerHTML = '<option value="">SELECCIONE EMPRESA...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
             
             const renderZonasUP = (empresaSel, zonaPrevia = "") => {
-                const zs = Object.values(store.zonas).filter(z => z.empresa === empresaSel).map(z => z.nombre).sort();
+                const zs = Object.values(store.zonas)
+                    .filter(z => z.empresa === empresaSel && esRegistroPermitido(usrObj, empresaSel, z.nombre))
+                    .map(z => z.nombre).sort();
+
                 document.getElementById("upZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}" ${zonaPrevia === z ? 'selected' : ''}>${z}</option>`).join('');
+                document.getElementById("upSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>';
+            };
+
+            const renderSucursalesUP = (zonaSel, sucPrevia = "") => {
+                const empresaSel = document.getElementById("upEmpresa").value;
+                const ss = Object.values(store.sucursales)
+                    .filter(s => s.empresa === empresaSel && s.zona === zonaSel && esRegistroPermitido(usrObj, empresaSel, zonaSel, s.nombre))
+                    .map(s => s.nombre).sort();
+
+                document.getElementById("upSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>' + ss.map(s => `<option value="${s}" ${sucPrevia === s ? 'selected' : ''}>${s}</option>`).join('');
             };
 
             document.getElementById("upEmpresa").onchange = (e) => renderZonasUP(e.target.value);
+            document.getElementById("upZona").onchange = (e) => renderSucursalesUP(e.target.value);
 
             if(item.empresa) {
                 renderZonasUP(item.empresa, item.zona);
+                if(item.zona) renderSucursalesUP(item.zona, item.sucursal);
             } else {
                 document.getElementById("upZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>';
+                document.getElementById("upSucursal").innerHTML = '<option value="">SELECCIONE SUCURSAL...</option>';
             }
 
             document.getElementById("upNumEmp").value = item.numeroEmpleado || "";
@@ -1172,17 +1314,26 @@
                 `;
                 document.getElementById("secIndividual").parentNode.insertBefore(divCC, document.getElementById("secIndividual"));
 
-                const emps = Object.values(store.empresas).map(e => e.nombre).sort();
+                const emps = Object.values(store.empresas)
+                    .filter(e => e.nombre && esRegistroPermitido(usrObj, e.nombre))
+                    .map(e => e.nombre).sort();
+
                 document.getElementById("ccEmp").innerHTML = '<option value="">SELECCIONE...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
 
                 const actualizarZonasCC = (empSel, zonaPrev = "") => {
-                    const zs = Object.values(store.zonas).filter(z => z.empresa === empSel).map(z => z.nombre).sort();
+                    const zs = Object.values(store.zonas)
+                        .filter(z => z.empresa === empSel && esRegistroPermitido(usrObj, empSel, z.nombre))
+                        .map(z => z.nombre).sort();
+
                     document.getElementById("ccZona").innerHTML = '<option value="">ZONA</option>' + zs.map(z => `<option value="${z}" ${zonaPrev === z ? 'selected' : ''}>${z}</option>`).join('');
                     document.getElementById("ccSuc").innerHTML = '<option value="">SUCURSAL</option>';
                 };
                 const actualizarSucursalesCC = (zonaSel, sucPrev = "") => {
                     const empSel = document.getElementById("ccEmp").value;
-                    const ss = Object.values(store.sucursales).filter(s => s.empresa === empSel && s.zona === zonaSel).map(s => s.nombre).sort();
+                    const ss = Object.values(store.sucursales)
+                        .filter(s => s.empresa === empSel && s.zona === zonaSel && esRegistroPermitido(usrObj, empSel, zonaSel, s.nombre))
+                        .map(s => s.nombre).sort();
+
                     document.getElementById("ccSuc").innerHTML = '<option value="">SUCURSAL</option>' + ss.map(s => `<option value="${s}" ${sucPrev === s ? 'selected' : ''}>${s}</option>`).join('');
                 };
                 document.getElementById("ccEmp").onchange = (e) => actualizarZonasCC(e.target.value);
@@ -1215,11 +1366,17 @@
 
             if (['zonas', 'sucursales'].includes(path)) {
                 document.getElementById("secEmpresa").classList.remove('d-none');
-                const emps = Object.values(store.empresas).map(e => e.nombre).sort();
+                const emps = Object.values(store.empresas)
+                    .filter(e => e.nombre && esRegistroPermitido(usrObj, e.nombre))
+                    .map(e => e.nombre).sort();
+
                 document.getElementById("fEmp").innerHTML = '<option value="">SELECCIONE...</option>' + emps.map(e => `<option value="${e}" ${item.empresa === e ? 'selected' : ''}>${e}</option>`).join('');
                 
                 if(item.empresa) {
-                   const zs = Object.values(store.zonas).filter(z => z.empresa === item.empresa).map(z => z.nombre).sort();
+                   const zs = Object.values(store.zonas)
+                    .filter(z => z.empresa === item.empresa && esRegistroPermitido(usrObj, item.empresa, z.nombre))
+                    .map(z => z.nombre).sort();
+
                    document.getElementById("secZona").classList.remove('d-none');
                    document.getElementById("fZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}" ${item.zona === z ? 'selected' : ''}>${z}</option>`).join('');
                 }
@@ -1238,7 +1395,10 @@
 
             document.getElementById("fEmp").onchange = (e) => {
                 if(path === 'sucursales'){
-                    const zs = Object.values(store.zonas).filter(z => z.empresa === e.target.value).map(z => z.nombre).sort();
+                    const zs = Object.values(store.zonas)
+                        .filter(z => z.empresa === e.target.value && esRegistroPermitido(usrObj, e.target.value, z.nombre))
+                        .map(z => z.nombre).sort();
+
                     document.getElementById("secZona").classList.remove('d-none');
                     document.getElementById("fZona").innerHTML = '<option value="">SELECCIONE ZONA...</option>' + zs.map(z => `<option value="${z}">${z}</option>`).join('');
                 }
@@ -1329,6 +1489,7 @@
         } else if (['usuarios', 'personal'].includes(currentPath)) {
             const empresaSeleccionada = document.getElementById("upEmpresa").value;
             const zonaSeleccionada = document.getElementById("upZona").value;
+            const sucursalSeleccionada = document.getElementById("upSucursal").value;
             const statusActualizado = document.getElementById("upStatus").value;
 
             if(!empresaSeleccionada) { Swal.fire("Atención", "Por favor seleccione una Empresa.", "warning"); return; }
@@ -1340,7 +1501,7 @@
                 for (let l of lineas) {
                     const campos = l.split(',').map(c => c.trim());
                     let registroMasivo = {
-                        empresa: empresaSeleccionada, zona: zonaSeleccionada, statusActual: statusActualizado,
+                        empresa: empresaSeleccionada, zona: zonaSeleccionada, sucursal: sucursalSeleccionada, statusActual: statusActualizado,
                         numeroEmpleado: (campos[0] || '').toUpperCase(), nombreCompleto: (campos[1] || '').toUpperCase(),
                         puesto: (campos[2] || '').toUpperCase(), numeroLargo: campos[3] || '', marcacionCorta: campos[4] || '',
                         usuario: (campos[5] || '').toUpperCase(), correo: (campos[6] || '').toUpperCase(), password: campos[7] || ''
@@ -1351,7 +1512,7 @@
                 const passVal = document.getElementById("upPassword").value;
                 const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._\-])[A-Za-z\d@$!%*?&._\-]{8,}$/;
 
-                if (passVal && !passRegex.test(passVal)) {
+                if (passVal && !passRegex.test(passVal) && currentPath !== 'personal') {
                     Swal.fire({
                         title: "Contraseña Insegura",
                         html: `<div class="text-start">La contraseña ingresada no cumple con los requisitos de seguridad:<br><br>
@@ -1366,7 +1527,7 @@
                 }
 
                 data = {
-                    empresa: empresaSeleccionada, zona: zonaSeleccionada, statusActual: statusActualizado,
+                    empresa: empresaSeleccionada, zona: zonaSeleccionada, sucursal: sucursalSeleccionada, statusActual: statusActualizado,
                     numeroEmpleado: document.getElementById("upNumEmp").value.toUpperCase(),
                     nombreCompleto: document.getElementById("upNombre").value.toUpperCase(),
                     puesto: document.getElementById("upPuesto").value.toUpperCase(),
@@ -1453,6 +1614,10 @@
         const asignacion = store[currentPath][currentUserId]?.asignacionSucursales;
         return Array.isArray(asignacion) ? asignacion : [];
     };
+    const getModulosPermitidosUsuario = () => {
+        const modulos = store[currentPath][currentUserId]?.modulosPermitidos;
+        return Array.isArray(modulos) ? modulos : null;
+    };
     const getEmpresaAsignada = (empresa) => getAsignacionUsuario().find(a => a.empresa === empresa);
     const getZonaAsignada = (empresa, zona) => getEmpresaAsignada(empresa)?.zonas?.find(z => z.zona === zona);
 
@@ -1536,10 +1701,76 @@
         }).join('');
     };
 
+    // CONSTRUCCIÓN DINÁMICA DEL ÁRBOL DE MÓDULOS DESDE EL SIDEBAR
+    const buildModulosTree = () => {
+        const sidebarLinks = Array.from(document.querySelectorAll(".sidebar a"));
+        if (!sidebarLinks.length) return '<div class="text-center text-muted py-3">No hay módulos disponibles.</div>';
+
+        const modulosGuardados = getModulosPermitidosUsuario();
+
+        let html = `
+            <div class="mb-3 pb-2 border-bottom">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="chkAllModulos" onchange="toggleSelectAllModulos(this)">
+                    <label class="form-check-label fw-bold text-primary" for="chkAllModulos">(Seleccionar todos los módulos)</label>
+                </div>
+            </div>
+            <div class="row g-2">`;
+
+        sidebarLinks.forEach((link, idx) => {
+            const id = link.id || `mod-${idx}`;
+            const nombre = link.innerText.trim();
+            const iconHtml = link.querySelector('i')?.outerHTML || '';
+            // Si no tiene registro previo, por defecto vienen seleccionados todos
+            const isChecked = modulosGuardados === null ? true : modulosGuardados.includes(id);
+
+            html += `
+                <div class="col-md-6">
+                    <div class="p-2 border rounded bg-light d-flex align-items-center">
+                        <div class="form-check m-0 w-100">
+                            <input class="form-check-input mod-check" type="checkbox" value="${id}" id="chkMod_${id}" ${isChecked ? 'checked' : ''} onchange="syncMasterModuloCheck()">
+                            <label class="form-check-label small fw-semibold text-dark cursor-pointer d-flex align-items-center gap-2" for="chkMod_${id}">
+                                ${iconHtml} <span>${nombre}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>`;
+        });
+
+        html += `</div>`;
+        return html;
+    };
+
+    window.toggleSelectAllModulos = (master) => {
+        document.querySelectorAll("#modulos-tree .mod-check").forEach(chk => {
+            chk.checked = master.checked;
+        });
+    };
+
+    window.syncMasterModuloCheck = () => {
+        const master = document.getElementById("chkAllModulos");
+        if (!master) return;
+        const checks = Array.from(document.querySelectorAll("#modulos-tree .mod-check"));
+        const checkedCount = checks.filter(c => c.checked).length;
+
+        if (checkedCount === checks.length) {
+            master.checked = true;
+            master.indeterminate = false;
+        } else if (checkedCount === 0) {
+            master.checked = false;
+            master.indeterminate = false;
+        } else {
+            master.checked = false;
+            master.indeterminate = true;
+        }
+    };
+
     window.openEmpresaModal = (userId) => {
         currentUserId = userId;
         document.getElementById("empresa-tree").innerHTML = buildAsignacionTree();
+        document.getElementById("modulos-tree").innerHTML = buildModulosTree();
         syncAllSucursalesChecks();
+        syncMasterModuloCheck();
         new bootstrap.Modal(document.getElementById("modalEmpresas")).show();
     };
 
@@ -1608,9 +1839,18 @@
             });
             asignacionSucursales.push({ empresa, zonas: zones });
         });
+
+        // RECOLECCIÓN DE MÓDULOS PERMITIDOS
+        const modulosPermitidos = Array.from(document.querySelectorAll("#modulos-tree .mod-check:checked")).map(c => c.value);
+
         try {
-            await update(ref(db, `${currentPath}/${currentUserId}`), { asignacionSucursales });
-            Swal.fire({ icon: "success", title: "Asignación guardada", timer: 1200, showConfirmButton: false });
+            await update(ref(db, `${currentPath}/${currentUserId}`), { 
+                asignacionSucursales,
+                modulosPermitidos 
+            });
+            aplicarPermisosMenu();
+            if (currentPath) render(currentPath);
+            Swal.fire({ icon: "success", title: "Asignación y permisos guardados", timer: 1200, showConfirmButton: false });
             bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
         } catch (e) { Swal.fire("Error", e.message, "error"); }
     };
@@ -1625,5 +1865,8 @@
         if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
     };
 </script>
+<!-- MODAL PLAN DE TRABAJO (CALENDARIO) -->
+<div class="modal fade" id="modalPlanTrabajo" tabindex="-1" aria-hidden="true">
+</div>
 </body>
 </html>
