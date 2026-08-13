@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         :root { --dark: #0f172a; --accent: #38bdf8; --cctv-blue: #0070c0; --cctv-green: #38b050; --tech-purple: #6366f1; }
         body { background: #f1f5f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
@@ -156,7 +157,6 @@
 </div>
 
 <div class="main-content" id="main-content">
-    <!-- Header superior con el usuario logueado y botones de acción -->
     <div class="top-header">
         <div class="user-info-card">
             <i class="bi bi-person-fill text-primary fs-5"></i>
@@ -185,6 +185,25 @@
 </div>
 
 <div id="excelFilterMenu" class="excel-filter-menu"></div>
+
+<!-- MODAL PLAN DE TRABAJO -->
+<div class="modal fade" id="modalPlanTrabajo" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-dark text-white py-3">
+                <h5 class="modal-title fw-bold"><i class="bi bi-calendar-event me-2"></i>Plan de Trabajo</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted">Módulo de gestión de calendario y tareas del personal.</p>
+                <div id="contenedorPlanTrabajo" class="p-3 border rounded bg-light text-center">
+                    <i class="bi bi-calendar-check text-primary display-4 mb-2"></i>
+                    <h6>Cargando actividades del calendario...</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- MODAL PRINCIPAL -->
 <div class="modal fade" id="modalApp" tabindex="-1">
@@ -297,14 +316,12 @@
                         <div class="col-md-4"><label class="form-label fw-bold small">Número Largo</label><input type="text" id="upNumLargo" class="form-control"></div>
                         <div class="col-md-4"><label class="form-label fw-bold small">Marcación Corta</label><input type="text" id="upMarcCorta" class="form-control"></div>
                         
-                        <!-- CAMPO USUARIO (FORZADO A MAYÚSCULAS) -->
                         <div class="col-md-4" id="wrapUpUsuario">
                             <label class="form-label fw-bold small">Usuario</label>
                             <input type="text" id="upUsuario" class="form-control" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">
                         </div>
                         <div class="col-md-4" id="wrapUpCorreo"><label class="form-label fw-bold small">Correo Electrónico</label><input type="email" id="upCorreo" class="form-control"></div>
                         
-                        <!-- CAMPO CONTRASEÑA -->
                         <div class="col-md-4" id="wrapUpPassword">
                             <label class="form-label fw-bold small">Contraseña</label>
                             <div class="input-group">
@@ -415,7 +432,6 @@
         <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body p-3">
-        <!-- Pestañas para Sucursales y Módulos -->
         <ul class="nav nav-tabs mb-3" id="tabAsignacion" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active fw-bold small text-dark" id="tab-sucursales-tab" data-bs-toggle="tab" data-bs-target="#tab-sucursales" type="button" role="tab"><i class="bi bi-shop me-1"></i> Sucursales</button>
@@ -453,7 +469,6 @@
     if (elNombre && storedName) elNombre.innerText = storedName.toUpperCase();
     if (elPuesto && storedRole) elPuesto.innerText = `Puesto: ${storedRole.toUpperCase()}`;
     
-    // Función global para cerrar sesión
     window.logout = () => {
         localStorage.removeItem('user_name');
         localStorage.removeItem('user_puesto');
@@ -481,7 +496,6 @@
         document.body.classList.add('hide-menu');
     }
 
-    // HELPER PARA OBTENER EL USUARIO QUE INICIÓ SESIÓN
     const getCurrentUserObj = () => {
         const currentUserNombre = storedName ? storedName.toUpperCase().trim() : '';
         if (!currentUserNombre) return null;
@@ -493,11 +507,8 @@
         return usrObj;
     };
 
-    // APLICACIÓN DE PERMISOS PARA OCULTAR/MOSTRAR MENÚS LATERALES
     const aplicarPermisosMenu = () => {
         const usrObj = getCurrentUserObj();
-
-        // Si el usuario existe y tiene permisos configurados, ocultar aquellos no marcados
         if (usrObj && Array.isArray(usrObj.modulosPermitidos)) {
             const permitidos = usrObj.modulosPermitidos;
             document.querySelectorAll('.sidebar a').forEach(link => {
@@ -510,22 +521,17 @@
         }
     };
 
-    // HELPER: EVALÚA SI UN REGISTRO ES VISIBLE SEGÚN LAS SUCURSALES/EMPRESAS ASIGNADAS AL USUARIO LOGUEADO
     const esRegistroPermitido = (usrObj, regEmpresa, regZona = null, regSucursal = null) => {
         if (!usrObj || !Array.isArray(usrObj.asignacionSucursales) || usrObj.asignacionSucursales.length === 0) {
-            return true; // Si no hay asignaciones configuradas, se le permite acceso total
+            return true;
         }
 
         const asignaciones = usrObj.asignacionSucursales;
-        
-        // Comprobar si tiene acceso a la empresa
         const empMatch = asignaciones.find(a => (a.empresa || '').toUpperCase() === (regEmpresa || '').toUpperCase());
         if (!empMatch) return false;
 
-        // Si no se especifica sucursal ni zona para el registro (o no aplica), la empresa ya coincide
         if (!regSucursal && !regZona) return true;
 
-        // Validar filtro por zona/sucursal si se proporciona sucursal o zona
         if (Array.isArray(empMatch.zonas)) {
             if (regZona && !regSucursal) {
                 return empMatch.zonas.some(z => (z.zona || '').toUpperCase() === (regZona || '').toUpperCase());
@@ -566,8 +572,6 @@
         document.getElementById('link-dashboard')?.classList.add('active');
 
         const usrObj = getCurrentUserObj();
-
-        // Filtrar empresas visibles según asignación
         const empsDisponibles = Object.values(store.empresas)
             .filter(e => e.nombre && esRegistroPermitido(usrObj, e.nombre))
             .map(e => e.nombre)
@@ -600,8 +604,7 @@
                     </div>
                 </div>
 
-                <div id="dashContenedorSucursales" class="row g-3 mb-5 d-none">
-                </div>
+                <div id="dashContenedorSucursales" class="row g-3 mb-5 d-none"></div>
             </div>
         `;
         document.getElementById("view").innerHTML = html;
@@ -620,7 +623,6 @@
         }
 
         const usrObj = getCurrentUserObj();
-
         const zs = Object.values(store.zonas)
             .filter(z => z.empresa === empSel && esRegistroPermitido(usrObj, empSel, z.nombre))
             .map(z => z.nombre)
@@ -643,7 +645,6 @@
         }
 
         const usrObj = getCurrentUserObj();
-
         const sucursalesFiltradas = Object.values(store.sucursales)
             .filter(s => s.empresa === empSel && s.zona === zonaSel && esRegistroPermitido(usrObj, empSel, zonaSel, s.nombre))
             .sort((a,b) => (a.nombre || "").localeCompare(b.nombre || ""));
@@ -693,11 +694,7 @@
     };
 
     window.updateStatusStyle = (selectEl) => {
-        if (selectEl.value === 'ACTIVO') {
-            selectEl.className = "form-select select-status-activo";
-        } else {
-            selectEl.className = "form-select select-status-baja";
-        }
+        selectEl.className = selectEl.value === 'ACTIVO' ? "form-select select-status-activo" : "form-select select-status-baja";
     };
 
     window.toggleCamaras = () => {
@@ -708,8 +705,7 @@
             desplegable.style.display = 'block';
         } else if (desplegable) {
             desplegable.style.display = 'none';
-            const subChecks = desplegable.querySelectorAll('input[type="checkbox"]');
-            subChecks.forEach(cb => cb.checked = false);
+            desplegable.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
         }
     };
 
@@ -741,7 +737,7 @@
     const buildSubListHtml = (containerId, itemsArray, storagePrefix) => {
         const container = document.getElementById(containerId);
         if(!container) return;
-        container.innerHTML = itemsArray.map((item, index) => {
+        container.innerHTML = itemsArray.map((item) => {
             const cleanName = item.replace(/[^a-zA-Z0-9]/g, '');
             return `
                 <div class="row align-items-center mb-1 g-2">
@@ -768,7 +764,6 @@
         const usrObj = getCurrentUserObj();
         const items = store[path] || {};
         
-        // Filtrado dinámico según asignación de empresa/sucursal para el usuario logueado
         const keys = Object.keys(items).filter(id => {
             const r = items[id];
             const emp = r.empresa || (path === 'empresas' ? r.nombre : null);
@@ -778,7 +773,6 @@
         });
 
         let displayTitle = path.toUpperCase().replace('_', ' ');
-
         let html = `<div class="d-flex justify-content-between align-items-center mb-4">
                         <h4 class="fw-bold m-0">${displayTitle}</h4>
                         <button class="btn btn-dark" onclick="showModal('${path}')"><i class="bi bi-plus-lg"></i> Nuevo</button>
@@ -788,9 +782,7 @@
             html += `<div class="text-center py-5 text-muted">No hay registros para mostrar</div>`;
         } else {
             let colIdx = 0;
-            html += `<div class="table-responsive"><table class="table table-hover border align-middle" id="mainCatalogTable">
-                <thead>
-                    <tr>`;
+            html += `<div class="table-responsive"><table class="table table-hover border align-middle" id="mainCatalogTable"><thead><tr>`;
             
             if (['usuarios', 'personal'].includes(path)) {
                 html += `
@@ -841,19 +833,14 @@
                 `;
             }
             
-            html += `<th class="text-end" style="width: 120px;">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>`;
+            html += `<th class="text-end" style="width: 120px;">Acciones</th></tr></thead><tbody>`;
                 
             keys.forEach(id => {
                 const r = items[id];
                 if (['usuarios', 'personal'].includes(path)) {
                     const badgeClass = r.statusActual === 'ACTIVO' ? 'bg-success' : 'bg-danger';
                     const correoMostrar = r.correo || r.accesosGrupoRoma?.correos?.INSTITUCIONAL || r.accesosGrupoRoma?.correos?.GMAIL || '-';
-                    const rawPass = r.password || r.contrasena || '';
-                    const passMostrar = rawPass ? '••••••••' : '-';
-                    const usuarioMostrar = r.usuario || '-';
+                    const passMostrar = (r.password || r.contrasena) ? '••••••••' : '-';
 
                     html += `<tr>
                         <td><small>${r.empresa || '-'}</small></td>
@@ -864,7 +851,7 @@
                         <td><small>${r.puesto || '-'}</small></td>
                         ${path !== 'personal' ? `<td>${r.numeroLargo || '-'}</td>` : ''}
                         ${path !== 'personal' ? `<td>${r.marcacionCorta || '-'}</td>` : ''}
-                        ${path !== 'personal' ? `<td><small class="fw-semibold text-primary">${usuarioMostrar}</small></td>` : ''}
+                        ${path !== 'personal' ? `<td><small class="fw-semibold text-primary">${r.usuario || '-'}</small></td>` : ''}
                         ${path !== 'personal' ? `<td><small>${correoMostrar}</small></td>` : ''}
                         ${path !== 'personal' ? `<td><small>${passMostrar}</small></td>` : ''}
                         <td><span class="badge ${badgeClass}">${r.statusActual || 'ACTIVO'}</span></td>
@@ -938,16 +925,13 @@
         
         for (let i = 0; i < rows.length; i++) {
             const cell = rows[i].getElementsByTagName("td")[colIndex];
-            if(cell) {
-                let txt = cell.textContent || cell.innerText;
-                uniqueValues.add(txt.trim());
-            }
+            if(cell) uniqueValues.add((cell.textContent || cell.innerText).trim());
         }
         
         const sortedValues = Array.from(uniqueValues).sort((a,b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
         const savedChecked = activeFiltersState[colIndex];
 
-        let menuHtml = `
+        menu.innerHTML = `
             <div class="excel-filter-item" onclick="sortColumn(${colIndex}, 'ASC')"><i class="bi bi-sort-alpha-down"></i> Ordenar de A a Z</div>
             <div class="excel-filter-item" onclick="sortColumn(${colIndex}, 'DESC')"><i class="bi bi-sort-alpha-up"></i> Ordenar de Z a A</div>
             <div class="excel-filter-divider"></div>
@@ -976,7 +960,6 @@
             </div>
         `;
         
-        menu.innerHTML = menuHtml;
         menu.style.top = `${rect.bottom + window.scrollY}px`;
         menu.style.left = `${Math.min(rect.left + window.scrollX, window.innerWidth - 270)}px`;
         menu.style.display = "block";
@@ -987,8 +970,7 @@
     window.filterExcelList = (input) => {
         const text = input.value.toUpperCase();
         const container = input.closest(".excel-filter-menu");
-        const items = container.querySelectorAll(".val-item");
-        items.forEach(item => {
+        container.querySelectorAll(".val-item").forEach(item => {
             const label = item.querySelector(".form-check-label").textContent.toUpperCase();
             item.style.setProperty("display", label.includes(text) ? "flex" : "none", "important");
         });
@@ -996,11 +978,8 @@
 
     window.toggleSelectAllExcel = (master) => {
         const container = master.closest(".excel-filter-list");
-        const checks = container.querySelectorAll(".val-item input[type='checkbox']");
-        checks.forEach(chk => {
-            if(chk.closest(".val-item").style.display !== "none") {
-                chk.checked = master.checked;
-            }
+        container.querySelectorAll(".val-item input[type='checkbox']").forEach(chk => {
+            if(chk.closest(".val-item").style.display !== "none") chk.checked = master.checked;
         });
     };
 
@@ -1010,21 +989,11 @@
         const checks = Array.from(menu.querySelectorAll(".val-item input[type='checkbox']"));
         const checkedCount = checks.filter(c => c.checked).length;
         
-        if (checkedCount === checks.length) {
-            master.checked = true;
-            master.indeterminate = false;
-        } else if (checkedCount === 0) {
-            master.checked = false;
-            master.indeterminate = false;
-        } else {
-            master.checked = false;
-            master.indeterminate = true;
-        }
+        master.checked = checkedCount === checks.length;
+        master.indeterminate = checkedCount > 0 && checkedCount < checks.length;
     };
 
-    window.closeExcelMenu = () => {
-        document.getElementById("excelFilterMenu").style.display = "none";
-    };
+    window.closeExcelMenu = () => document.getElementById("excelFilterMenu").style.display = "none";
 
     window.submitExcelFilter = (colIndex) => {
         const menu = document.getElementById("excelFilterMenu");
@@ -1055,11 +1024,7 @@
         
         table.querySelectorAll(".filter-trigger").forEach(trig => {
             const idx = trig.dataset.colIndex;
-            if (activeFiltersState[idx]) {
-                trig.className = "bi bi-funnel-fill filter-trigger active-filter";
-            } else {
-                trig.className = "bi bi-caret-down-fill filter-trigger";
-            }
+            trig.className = activeFiltersState[idx] ? "bi bi-funnel-fill filter-trigger active-filter" : "bi bi-caret-down-fill filter-trigger";
         });
 
         for (let i = 0; i < rows.length; i++) {
@@ -1069,8 +1034,7 @@
             for (let colIdx of filterKeys) {
                 if (cells[colIdx]) {
                     const txt = (cells[colIdx].textContent || cells[colIdx].innerText).trim();
-                    const allowedValues = activeFiltersState[colIdx];
-                    if (!allowedValues.includes(txt)) {
+                    if (!activeFiltersState[colIdx].includes(txt)) {
                         rowVisible = false;
                         break;
                     }
@@ -1081,14 +1045,12 @@
     };
 
     window.sortColumn = (colIndex, direction) => {
-        const table = document.getElementById("mainCatalogTable");
-        const tbody = table.getElementsByTagName("tbody")[0];
+        const tbody = document.getElementById("mainCatalogTable").getElementsByTagName("tbody")[0];
         const rows = Array.from(tbody.getElementsByTagName("tr"));
         
         rows.sort((rowA, rowB) => {
             const cellA = rowA.getElementsByTagName("td")[colIndex].textContent.trim();
             const cellB = rowB.getElementsByTagName("td")[colIndex].textContent.trim();
-            
             return direction === 'ASC' 
                 ? cellA.localeCompare(cellB, undefined, {numeric: true, sensitivity: 'base'})
                 : cellB.localeCompare(cellA, undefined, {numeric: true, sensitivity: 'base'});
@@ -1100,9 +1062,7 @@
 
     document.addEventListener("click", (e) => {
         const menu = document.getElementById("excelFilterMenu");
-        if(menu && !menu.contains(e.target)) {
-            closeExcelMenu();
-        }
+        if(menu && !menu.contains(e.target)) closeExcelMenu();
     });
 
     const setBoxData = (boxId, storagePrefix, savedData) => {
@@ -1119,16 +1079,14 @@
         });
     };
 
-    const collectBoxData = (boxId, storagePrefix) => {
+    const collectBoxData = (boxId) => {
         const box = document.getElementById(boxId);
         if(!box) return null;
         let res = {};
         box.querySelectorAll('.row').forEach(row => {
             const chk = row.querySelector('.sub-item-chk');
             const input = row.querySelector('.sub-item-user');
-            if(chk && chk.checked) {
-                res[chk.dataset.name] = input.value.trim().toUpperCase();
-            }
+            if(chk && chk.checked) res[chk.dataset.name] = input.value.trim().toUpperCase();
         });
         return Object.keys(res).length > 0 ? res : null;
     };
@@ -1212,7 +1170,6 @@
             document.getElementById('check-camaras').checked = false;
             document.getElementById('desplegable-camaras').style.display = 'none';
 
-            // MOSTRAR U OCULTAR CAMPOS DE USUARIO/CORREO/PASSWORD SEGÚN MÓDULO
             const wrapUsuario = document.getElementById("wrapUpUsuario");
             const wrapCorreo = document.getElementById("wrapUpCorreo");
             const wrapPassword = document.getElementById("wrapUpPassword");
@@ -1420,7 +1377,7 @@
 
             if (isM) {
                 if(!empRI || !zonRI || !sucRI) {
-                    Swal.fire("Atención", "Para la carga masiva debe seleccionar previamente Empresa, Zona y Sucursal en los desplegables.", "warning");
+                    Swal.fire("Atención", "Para la carga masiva debe seleccionar previamente Empresa, Zona y Sucursal.", "warning");
                     return;
                 }
                 const lineas = document.getElementById("fMasivo").value.split('\n').filter(l => l.trim());
@@ -1440,10 +1397,6 @@
                 }
            } else {
                 let camposFaltantes = [];
-                
-                const empRI = document.getElementById("riEmpresa").value;
-                const zonRI = document.getElementById("riZona").value;
-                const sucRI = document.getElementById("riSucursal").value;
                 const modem = document.getElementById("riModem").value.trim().toUpperCase();
                 const modelo = document.getElementById("riModelo").value.trim().toUpperCase();
                 const ssidFabrica = document.getElementById("riSsidFabrica").value.trim().toUpperCase();
@@ -1470,19 +1423,13 @@
                 if (camposFaltantes.length > 0) {
                     Swal.fire({
                         title: "Falta Información",
-                        html: `<div class="text-start"><strong>No se puede guardar el registro. Hacen falta los siguientes campos obligatorios:</strong><br><br>
-                               ${camposFaltantes.map(f => `<span class="text-danger">• ${f}</span>`).join('<br>')}</div>`,
+                        html: `<div class="text-start"><strong>Campos requeridos:</strong><br><br>${camposFaltantes.map(f => `<span class="text-danger">• ${f}</span>`).join('<br>')}</div>`,
                         icon: "error"
                     });
                     return; 
                 }
 
-                data = {
-                    empresa: empRI, zona: zonRI, sucursal: sucRI, modem, modelo,
-                    ssidFabrica, wpaFabrica, destinado, ssidModificado, wpaModificado,
-                    accesoModem, fechaActualizacion
-                };
-
+                data = { empresa: empRI, zona: zonRI, sucursal: sucRI, modem, modelo, ssidFabrica, wpaFabrica, destinado, ssidModificado, wpaModificado, accesoModem, fechaActualizacion };
                 id ? await update(ref(db, `${currentPath}/${id}`), data) : await push(ref(db, currentPath), data);
             }
 
@@ -1515,12 +1462,7 @@
                 if (passVal && !passRegex.test(passVal) && currentPath !== 'personal') {
                     Swal.fire({
                         title: "Contraseña Insegura",
-                        html: `<div class="text-start">La contraseña ingresada no cumple con los requisitos de seguridad:<br><br>
-                               • Mínimo 8 caracteres<br>
-                               • Al menos una letra mayúscula<br>
-                               • Al menos una letra minúscula<br>
-                               • Al menos un número<br>
-                               • Al menos un carácter especial (@, $, !, %, *, ?, &, ., _, -)</div>`,
+                        html: `<div class="text-start">La contraseña ingresada no cumple con los requisitos:<br><br>• Mínimo 8 caracteres<br>• 1 mayúscula, 1 minúscula, 1 número, 1 símbolo especial</div>`,
                         icon: "error"
                     });
                     return;
@@ -1537,11 +1479,11 @@
                     correo: document.getElementById("upCorreo").value.toUpperCase(),
                     password: passVal,
                     accesosGrupoRoma: {
-                        desarrollosPropios: document.getElementById("chkGroupDesarrollos").checked ? collectBoxData("boxDesarrollos", "des") : null,
-                        servidores: document.getElementById("chkGroupServidores").checked ? collectBoxData("boxServidores", "srv") : null,
-                        comex: document.getElementById("chkGroupComex").checked ? collectBoxData("boxComex", "cmx") : null,
-                        correos: document.getElementById("chkGroupCorreos").checked ? collectBoxData("boxCorreos", "crr") : null,
-                        firewall: document.getElementById("chkGroupFirewall").checked ? collectBoxData("boxFirewall", "frw") : null
+                        desarrollosPropios: document.getElementById("chkGroupDesarrollos").checked ? collectBoxData("boxDesarrollos") : null,
+                        servidores: document.getElementById("chkGroupServidores").checked ? collectBoxData("boxServidores") : null,
+                        comex: document.getElementById("chkGroupComex").checked ? collectBoxData("boxComex") : null,
+                        correos: document.getElementById("chkGroupCorreos").checked ? collectBoxData("boxCorreos") : null,
+                        firewall: document.getElementById("chkGroupFirewall").checked ? collectBoxData("boxFirewall") : null
                     }
                 };
                 if (!data.nombreCompleto) { Swal.fire("Atención", "El campo Nombre Completo es obligatorio.", "warning"); return; }
@@ -1610,14 +1552,17 @@
 
     let currentUserId = null;
     const cleanAsignacionId = (txt) => String(txt || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+    
     const getAsignacionUsuario = () => {
-        const asignacion = store[currentPath][currentUserId]?.asignacionSucursales;
+        const asignacion = store[currentPath]?.[currentUserId]?.asignacionSucursales;
         return Array.isArray(asignacion) ? asignacion : [];
     };
+
     const getModulosPermitidosUsuario = () => {
-        const modulos = store[currentPath][currentUserId]?.modulosPermitidos;
+        const modulos = store[currentPath]?.[currentUserId]?.modulosPermitidos;
         return Array.isArray(modulos) ? modulos : null;
     };
+
     const getEmpresaAsignada = (empresa) => getAsignacionUsuario().find(a => a.empresa === empresa);
     const getZonaAsignada = (empresa, zona) => getEmpresaAsignada(empresa)?.zonas?.find(z => z.zona === zona);
 
@@ -1656,7 +1601,6 @@
                 const sucursales = Object.values(store.sucursales).filter(s => s.empresa === empresa && s.zona === zona).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
                 const allSucId = `all-${cleanAsignacionId(empresa)}-${cleanAsignacionId(zona)}`;
                 const todasSeleccionadas = sucursales.length > 0 && sucursales.every(s => sucursalesSeleccionadas.includes(s.nombre || ''));
-                const allSucChecked = todasSeleccionadas ? 'checked' : '';
 
                 const sucursalesHtml = sucursales.length ? sucursales.map(s => {
                     const sucursal = s.nombre || '';
@@ -1668,12 +1612,6 @@
                             <label class="form-check-label small" for="${sucId}">${sucursal}</label>
                         </div>`;
                 }).join('') : '<div class="tree-muted">Sin sucursales.</div>';
-                
-                const seleccionarTodasHtml = sucursales.length ? `
-                    <div class="form-check tree-row">
-                        <input class="form-check-input all-suc-check" type="checkbox" id="${allSucId}" data-empresa="${empresa}" data-zona="${zona}" ${allSucChecked}>
-                        <label class="form-check-label small tree-select-all" for="${allSucId}">Seleccionar todas</label>
-                    </div>` : '';
 
                 return `
                     <div class="mb-1">
@@ -1682,7 +1620,11 @@
                             <label class="form-check-label small fw-semibold" for="${zonaId}">${zona}</label>
                         </div>
                         <div class="tree-level sucursal-group ${zonaVisible}" data-empresa="${empresa}" data-zona="${zona}">
-                            ${seleccionarTodasHtml}
+                            ${sucursales.length ? `
+                            <div class="form-check tree-row">
+                                <input class="form-check-input all-suc-check" type="checkbox" id="${allSucId}" data-empresa="${empresa}" data-zona="${zona}" ${todasSeleccionadas ? 'checked' : ''}>
+                                <label class="form-check-label small tree-select-all" for="${allSucId}">Seleccionar todas</label>
+                            </div>` : ''}
                             ${sucursalesHtml}
                         </div>
                     </div>`;
@@ -1701,7 +1643,6 @@
         }).join('');
     };
 
-    // CONSTRUCCIÓN DINÁMICA DEL ÁRBOL DE MÓDULOS DESDE EL SIDEBAR
     const buildModulosTree = () => {
         const sidebarLinks = Array.from(document.querySelectorAll(".sidebar a"));
         if (!sidebarLinks.length) return '<div class="text-center text-muted py-3">No hay módulos disponibles.</div>';
@@ -1721,7 +1662,6 @@
             const id = link.id || `mod-${idx}`;
             const nombre = link.innerText.trim();
             const iconHtml = link.querySelector('i')?.outerHTML || '';
-            // Si no tiene registro previo, por defecto vienen seleccionados todos
             const isChecked = modulosGuardados === null ? true : modulosGuardados.includes(id);
 
             html += `
@@ -1753,16 +1693,8 @@
         const checks = Array.from(document.querySelectorAll("#modulos-tree .mod-check"));
         const checkedCount = checks.filter(c => c.checked).length;
 
-        if (checkedCount === checks.length) {
-            master.checked = true;
-            master.indeterminate = false;
-        } else if (checkedCount === 0) {
-            master.checked = false;
-            master.indeterminate = false;
-        } else {
-            master.checked = false;
-            master.indeterminate = true;
-        }
+        master.checked = checkedCount === checks.length;
+        master.indeterminate = checkedCount > 0 && checkedCount < checks.length;
     };
 
     window.openEmpresaModal = (userId) => {
@@ -1780,46 +1712,18 @@
             const empresa = target.value;
             const grupoZonas = document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`);
             grupoZonas?.classList.toggle("d-none", !target.checked);
-            if (!target.checked) {
-                grupoZonas?.querySelectorAll("input[type='checkbox']").forEach(chk => {
-                    chk.checked = false;
-                    chk.indeterminate = false;
-                    if (chk.classList.contains("zona-check")) {
-                        document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(chk.value)}"]`)?.classList.add("d-none");
-                    }
-                });
-            }
         }
         if (target.classList.contains("zona-check")) {
             const empresa = target.dataset.empresa;
             const zona = target.value;
             const grupoSucursales = document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`);
             grupoSucursales?.classList.toggle("d-none", !target.checked);
-            if (target.checked) {
-                document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
-                document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
-            } else {
-                grupoSucursales?.querySelectorAll(".suc-check, .all-suc-check").forEach(chk => { chk.checked = false; chk.indeterminate = false; });
-            }
         }
         if (target.classList.contains("all-suc-check")) {
             const empresa = target.dataset.empresa;
             const zona = target.dataset.zona;
             const checked = target.checked;
-            document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
-            document.querySelector(`.zona-check[data-empresa="${CSS.escape(empresa)}"][value="${CSS.escape(zona)}"]`).checked = true;
-            document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
-            document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`)?.classList.remove("d-none");
             document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`).forEach(chk => chk.checked = checked);
-            target.indeterminate = false;
-        }
-        if (target.classList.contains("suc-check") && target.checked) {
-            const empresa = target.dataset.empresa;
-            const zona = target.dataset.zona;
-            document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
-            document.querySelector(`.zona-check[data-empresa="${CSS.escape(empresa)}"][value="${CSS.escape(zona)}"]`).checked = true;
-            document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
-            document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`)?.classList.remove("d-none");
         }
         if (target.classList.contains("suc-check")) {
             syncAllSucursalesCheck(target.dataset.empresa, target.dataset.zona);
@@ -1840,33 +1744,16 @@
             asignacionSucursales.push({ empresa, zonas: zones });
         });
 
-        // RECOLECCIÓN DE MÓDULOS PERMITIDOS
-        const modulosPermitidos = Array.from(document.querySelectorAll("#modulos-tree .mod-check:checked")).map(c => c.value);
+        const modulosPermitidos = Array.from(document.querySelectorAll("#modulos-tree .mod-check:checked")).map(chk => chk.value);
 
-        try {
-            await update(ref(db, `${currentPath}/${currentUserId}`), { 
-                asignacionSucursales,
-                modulosPermitidos 
-            });
-            aplicarPermisosMenu();
-            if (currentPath) render(currentPath);
-            Swal.fire({ icon: "success", title: "Asignación y permisos guardados", timer: 1200, showConfirmButton: false });
-            bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
-        } catch (e) { Swal.fire("Error", e.message, "error"); }
-    };
+        await update(ref(db, `${currentPath}/${currentUserId}`), {
+            asignacionSucursales: asignacionSucursales,
+            modulosPermitidos: modulosPermitidos
+        });
 
-    window.renderDashboard = renderDashboard;
-    window.render = render;
-</script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.onkeydown = e => {
-        if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
+        bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
+        Swal.fire({ icon: "success", title: "Permisos actualizados", timer: 1000, showConfirmButton: false });
     };
 </script>
-<!-- MODAL PLAN DE TRABAJO (CALENDARIO) -->
-<div class="modal fade" id="modalPlanTrabajo" tabindex="-1" aria-hidden="true">
-</div>
 </body>
 </html>
