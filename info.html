@@ -803,7 +803,7 @@
                     ${path !== 'personal' ? wrapTh('Número Largo', colIdx++) : ''}
                     ${path !== 'personal' ? wrapTh('Marcación Corta', colIdx++) : ''}
                     ${path !== 'personal' ? wrapTh('Usuario', colIdx++) : ''}
-                    ${wrapTh('Correo', colIdx++)}
+                    ${path !== 'personal' ? wrapTh('Correo', colIdx++) : ''}
                     ${path !== 'personal' ? wrapTh('Contraseña', colIdx++) : ''}
                     ${wrapTh('Status', colIdx++)}
                 `;
@@ -865,7 +865,7 @@
                         ${path !== 'personal' ? `<td>${r.numeroLargo || '-'}</td>` : ''}
                         ${path !== 'personal' ? `<td>${r.marcacionCorta || '-'}</td>` : ''}
                         ${path !== 'personal' ? `<td><small class="fw-semibold text-primary">${usuarioMostrar}</small></td>` : ''}
-                        <td><small>${correoMostrar}</small></td>
+                        ${path !== 'personal' ? `<td><small>${correoMostrar}</small></td>` : ''}
                         ${path !== 'personal' ? `<td><small>${passMostrar}</small></td>` : ''}
                         <td><span class="badge ${badgeClass}">${r.statusActual || 'ACTIVO'}</span></td>
                         <td class="text-end">
@@ -1867,12 +1867,6 @@
 </script>
 <!-- MODAL PLAN DE TRABAJO (CALENDARIO) -->
 <div class="modal fade" id="modalPlanTrabajo" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-dark text-white py-2">
-            </div>
-        </div>
-    </div>
 </div>
 </body>
 </html>
