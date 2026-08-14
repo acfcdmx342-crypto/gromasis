@@ -368,7 +368,7 @@
     });
   });
 
-  // Exposición de la función al objeto global window
+// Exposición de la función al objeto global window
   window.compartirPlanDeTrabajo = () => {
     if (!calendar) return;
 
@@ -393,26 +393,16 @@
 
     Swal.fire({
         title: 'Exportar Plan de Trabajo',
-        text: 'Selecciona una opción para enviar o sincronizar tus actividades:',
+        text: 'Selecciona una opción para sincronizar tus actividades:',
         icon: 'question',
+        showConfirmButton: false, // Oculta el botón principal
         showCancelButton: true,
-        confirmButtonText: '<i class="bi bi-envelope"></i> Enviar por Correo',
         denyButtonText: '<i class="bi bi-google"></i> Google Calendar',
         cancelButtonText: 'Cancelar',
         showDenyButton: true,
-        confirmButtonColor: '#0d6efd',
         denyButtonColor: '#4285F4'
     }).then((result) => {
-        if (result.isConfirmed) {
-            const subject = encodeURIComponent("Plan de Trabajo / Agenda de Actividades");
-            const body = encodeURIComponent(textoPlan);
-            
-            // Crea un enlace tipo mailto temporal para abrir el cliente predeterminado (Outlook, Mail, etc.)
-            const mailtoLink = document.createElement('a');
-            mailtoLink.href = `mailto:?subject=${subject}&body=${body}`;
-            mailtoLink.click();
-
-        } else if (result.isDenied) {
+        if (result.isDenied) {
             const titulo = encodeURIComponent("Plan de Trabajo - Actividades");
             const detalles = encodeURIComponent(textoPlan);
             
