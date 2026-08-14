@@ -406,10 +406,7 @@
             const subject = encodeURIComponent("Plan de Trabajo / Agenda de Actividades");
             const body = encodeURIComponent(textoPlan);
             
-            // Crea un enlace tipo mailto temporal para abrir el cliente predeterminado (Outlook, Mail, etc.)
-            const mailtoLink = document.createElement('a');
-            mailtoLink.href = `mailto:?subject=${subject}&body=${body}`;
-            mailtoLink.click();
+          
 
         } else if (result.isDenied) {
             const titulo = encodeURIComponent("Plan de Trabajo - Actividades");
