@@ -368,7 +368,7 @@
     });
   });
 
-// Exposición de la función al objeto global window
+  // Exposición de la función al objeto global window
   window.compartirPlanDeTrabajo = () => {
     if (!calendar) return;
 
@@ -407,22 +407,14 @@
             const detalles = encodeURIComponent(textoPlan);
             
             const urlGoogle = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titulo}&details=${detalles}`;
-            window.open(urlGoogle, '_blank');
+            
+            const win = window.open(urlGoogle, '_blank');
+            if (win) {
+                win.focus();
+            }
         }
     });
   };
-  } else if (result.isDenied) {
-    const titulo = encodeURIComponent("Plan de Trabajo - Actividades");
-    const detalles = encodeURIComponent(textoPlan);
-    
-    const urlGoogle = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titulo}&details=${detalles}`;
-    
-    // Abre solo una pestaña
-    const win = window.open(urlGoogle, '_blank');
-    if (win) {
-        win.focus();
-    }
-}
 </script>
 </body>
 </html>
