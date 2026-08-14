@@ -1,422 +1,426 @@
 <!DOCTYPE html>
 <html lang="es" data-bs-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mi Agenda de Actividades</title> 
- 
-  <!-- FullCalendar CSS & JS -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/locales/es.global.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mi Agenda de Actividades</title> 
+ 
+  <!-- FullCalendar CSS & JS -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/locales/es.global.min.js"></script>
 
-  <!-- Bootstrap 5 & Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Bootstrap 5 & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- SweetAlert2 CSS & JS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- SweetAlert2 CSS & JS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <style>
-    body { padding: 10px; transition: background-color 0.3s, color 0.3s; }
-   
-    .calendar-container {
-      width: 100%;
-      max-width: 720px; 
-      margin: 0 auto;
-      padding: 10px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
+  <style>
+    body { padding: 10px; transition: background-color 0.3s, color 0.3s; }
+   
+    .calendar-container {
+      width: 100%;
+      max-width: 720px; 
+      margin: 0 auto;
+      padding: 10px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
 
-    [data-bs-theme="dark"] .calendar-container {
-      background-color: #2b3035;
-      border: 1px solid #495057;
-    }
-    [data-bs-theme="light"] .calendar-container {
-      background-color: #ffffff;
-    }
+    [data-bs-theme="dark"] .calendar-container {
+      background-color: #2b3035;
+      border: 1px solid #495057;
+    }
+    [data-bs-theme="light"] .calendar-container {
+      background-color: #ffffff;
+    }
 
-    @media (max-width: 576px) {
-      body { padding: 5px; }
-      .calendar-container { padding: 8px; border-radius: 8px; }
-      .fc .fc-toolbar-title { font-size: 0.95rem !important; }
-      .fc .fc-button { padding: 0.2rem 0.4rem !important; font-size: 0.75rem !important; }
-      .fc-col-header-cell-cushion, .fc-daygrid-day-number { font-size: 0.75rem; padding: 2px !important; }
-      .fc-daygrid-day-frame { min-height: 45px !important; }
-      .fc-event { margin: 1px 0 !important; padding: 1px 2px !important; border-radius: 3px !important; }
-      .fc-event-title { font-size: 0.7rem !important; line-height: 1.1; }
-    }
+    @media (max-width: 576px) {
+      body { padding: 5px; }
+      .calendar-container { padding: 8px; border-radius: 8px; }
+      .fc .fc-toolbar-title { font-size: 0.95rem !important; }
+      .fc .fc-button { padding: 0.2rem 0.4rem !important; font-size: 0.75rem !important; }
+      .fc-col-header-cell-cushion, .fc-daygrid-day-number { font-size: 0.75rem; padding: 2px !important; }
+      .fc-daygrid-day-frame { min-height: 45px !important; }
+      .fc-event { margin: 1px 0 !important; padding: 1px 2px !important; border-radius: 3px !important; }
+      .fc-event-title { font-size: 0.7rem !important; line-height: 1.1; }
+    }
 
-    .fc-event-title {
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: block;
-    }
-    .fc-event-time { display: none; }
-  </style>
+    .fc-event-title {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+    .fc-event-time { display: none; }
+  </style>
 </head>
 <body>
 <div class="container-fluid p-0 my-2">
-  <div class="d-flex justify-content-between align-items-center mb-2 mx-auto px-1 gap-2" style="max-width: 720px;">
-    <!-- Badges / Info de Usuario Activo -->
-    <div id="userInfoHeader" class="d-flex align-items-center bg-dark text-white border border-secondary px-2 py-1 rounded shadow-sm small">
-      <span class="me-2">👤</span>
-      <div>
-        <div id="userNombre" class="fw-bold text-truncate" style="max-width: 180px; font-size: 0.75rem;">Cargando...</div>
-        <div id="userPuesto" class="text-info text-uppercase" style="font-size: 0.65rem;">PUESTO: ---</div>
-      </div>
-    </div>
+  <div class="d-flex justify-content-between align-items-center mb-2 mx-auto px-1 gap-2" style="max-width: 720px;">
+    <!-- Badges / Info de Usuario Activo -->
+    <div id="userInfoHeader" class="d-flex align-items-center bg-dark text-white border border-secondary px-2 py-1 rounded shadow-sm small">
+      <span class="me-2">👤</span>
+      <div>
+        <div id="userNombre" class="fw-bold text-truncate" style="max-width: 180px; font-size: 0.75rem;">Cargando...</div>
+        <div id="userPuesto" class="text-info text-uppercase" style="font-size: 0.65rem;">PUESTO: ---</div>
+      </div>
+    </div>
 
-    <div class="d-flex gap-1">
-      <button type="button" class="btn btn-outline-light btn-sm ms-2" onclick="compartirPlanDeTrabajo()" title="Exportar / Enviar Plan de Trabajo">
-        <i class="bi bi-share-fill me-1"></i> Compartir / Calendario
-      </button>
-      <button class="btn btn-outline-warning btn-sm px-2" id="btnThemeToggle">☀️ Día</button>
-      <button class="btn btn-primary btn-sm px-2" data-bs-toggle="modal" data-bs-target="#modalNuevaTarea">+ Nueva</button>
-    </div>
-  </div>
+    <div class="d-flex gap-1">
+      <button type="button" class="btn btn-outline-light btn-sm ms-2" onclick="compartirPlanDeTrabajo()" title="Exportar / Enviar Plan de Trabajo">
+        <i class="bi bi-share-fill me-1"></i> Compartir / Calendario
+      </button>
+      <button class="btn btn-outline-warning btn-sm px-2" id="btnThemeToggle">☀️ Día</button>
+      <button class="btn btn-primary btn-sm px-2" data-bs-toggle="modal" data-bs-target="#modalNuevaTarea">+ Nueva</button>
+    </div>
+  </div>
 
-  <div class="calendar-container">
-    <div id="calendar"></div>
-  </div>
+  <div class="calendar-container">
+    <div id="calendar"></div>
+  </div>
 </div>
 
 <!-- Modal Registrar Nueva Tarea -->
 <div class="modal fade" id="modalNuevaTarea" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title fs-6">Registrar Actividad</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form id="formNuevaTarea">
-        <div class="modal-body">
-          <div class="mb-2">
-            <label for="tareaTitulo" class="form-label small">Título de la actividad</label>
-            <input type="text" class="form-control form-control-sm" id="tareaTitulo" required placeholder="Ej. Sucursal YGriega">
-          </div>
-          <div class="mb-2">
-            <label for="tareaFecha" class="form-label small">Fecha y Hora de inicio</label>
-            <input type="datetime-local" class="form-control form-control-sm" id="tareaFecha" required>
-          </div>
-          <div class="mb-2">
-            <label for="tareaDescripcion" class="form-label small">Descripción / Detalles</label>
-            <textarea class="form-control form-control-sm" id="tareaDescripcion" rows="3" placeholder="Detalle de lo que se va a realizar..."></textarea>
-          </div>
-        </div>
-        <div class="modal-footer p-2">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary btn-sm" id="btnGuardar">Guardar</button>
-        </div>
-      </form>
-    </div>
-  </div>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fs-6">Registrar Actividad</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formNuevaTarea">
+        <div class="modal-body">
+          <div class="mb-2">
+            <label for="tareaTitulo" class="form-label small">Título de la actividad</label>
+            <input type="text" class="form-control form-control-sm" id="tareaTitulo" required placeholder="Ej. Sucursal YGriega">
+          </div>
+          <div class="mb-2">
+            <label for="tareaFecha" class="form-label small">Fecha y Hora de inicio</label>
+            <input type="datetime-local" class="form-control form-control-sm" id="tareaFecha" required>
+          </div>
+          <div class="mb-2">
+            <label for="tareaDescripcion" class="form-label small">Descripción / Detalles</label>
+            <textarea class="form-control form-control-sm" id="tareaDescripcion" rows="3" placeholder="Detalle de lo que se va a realizar..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer p-2">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="btnGuardar">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
 <!-- Modal Detalle Tarea -->
 <div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title fs-6" id="detalleTitulo">Detalle de la Actividad</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p class="mb-2 small"><strong>Estado:</strong> <span id="detalleEstatus" class="badge"></span></p>
-        <p class="mb-2 small"><strong>Fecha y Hora:</strong> <span id="detalleFecha"></span></p>
-        <p class="mb-1 small"><strong>Descripción / Detalles:</strong></p>
-        <div id="detalleDescripcion" class="p-2 border rounded bg-body-tertiary small mb-3"></div>
-        
-        <div id="seccionFolio" class="mb-2">
-          <label for="inputFolio" class="form-label text-warning fw-bold small">Folio de Cierre <span class="text-danger">*</span></label>
-          <input type="text" class="form-control form-control-sm" id="inputFolio" placeholder="Ingrese el folio obligatoriamente">
-          <div class="invalid-feedback small">El folio es requerido para cerrar la actividad.</div>
-        </div>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fs-6" id="detalleTitulo">Detalle de la Actividad</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2 small"><strong>Estado:</strong> <span id="detalleEstatus" class="badge"></span></p>
+        <p class="mb-2 small"><strong>Fecha y Hora:</strong> <span id="detalleFecha"></span></p>
+        <p class="mb-1 small"><strong>Descripción / Detalles:</strong></p>
+        <div id="detalleDescripcion" class="p-2 border rounded bg-body-tertiary small mb-3"></div>
+        
+        <div id="seccionFolio" class="mb-2">
+          <label for="inputFolio" class="form-label text-warning fw-bold small">Folio de Cierre <span class="text-danger">*</span></label>
+          <input type="text" class="form-control form-control-sm" id="inputFolio" placeholder="Ingrese el folio obligatoriamente">
+          <div class="invalid-feedback small">El folio es requerido para cerrar la actividad.</div>
+        </div>
 
-        <div id="seccionFolioGuardado" class="d-none mb-2">
-          <p class="mb-0 small"><strong>Folio de Cierre:</strong> <span id="textFolioGuardado" class="badge bg-secondary fs-6"></span></p>
-        </div>
+        <div id="seccionFolioGuardado" class="d-none mb-2">
+          <p class="mb-0 small"><strong>Folio de Cierre:</strong> <span id="textFolioGuardado" class="badge bg-secondary fs-6"></span></p>
+        </div>
 
-        <input type="hidden" id="detalleTareaId">
-      </div>
-      <div class="modal-footer p-2">
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
-        <button type="button" class="btn btn-success btn-sm" id="btnCompletar">Marcar como Concluida</button>
-      </div>
-    </div>
-  </div>
+        <input type="hidden" id="detalleTareaId">
+      </div>
+      <div class="modal-footer p-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-success btn-sm" id="btnCompletar">Marcar como Concluida</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Módulos de Firebase para Realtime Database -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, push, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, push, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyABXwHVog3oQ8WdSfZ50016vpmq_cYGjwc",
-    authDomain: "ptrabajo-5fe6e.firebaseapp.com",
-    databaseURL: "https://ptrabajo-5fe6e-default-rtdb.firebaseio.com",
-    projectId: "ptrabajo-5fe6e",
-    storageBucket: "ptrabajo-5fe6e.firebasestorage.app",
-    messagingSenderId: "508609780691",
-    appId: "1:508609780691:web:a59b855f5973da9d82ad26"
-  };
+  const firebaseConfig = {
+    apiKey: "AIzaSyABXwHVog3oQ8WdSfZ50016vpmq_cYGjwc",
+    authDomain: "ptrabajo-5fe6e.firebaseapp.com",
+    databaseURL: "https://ptrabajo-5fe6e-default-rtdb.firebaseio.com",
+    projectId: "ptrabajo-5fe6e",
+    storageBucket: "ptrabajo-5fe6e.firebasestorage.app",
+    messagingSenderId: "508609780691",
+    appId: "1:508609780691:web:a59b855f5973da9d82ad26"
+  };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
-  // Declaración global de la instancia del calendario para el módulo
-  let calendar;
+  // Declaración global de la instancia del calendario para el módulo
+  let calendar;
 
-  document.addEventListener('DOMContentLoaded', function() {
-    // 1. OBTENER INFORMACIÓN DE LA SESIÓN ACTIVA
-    const storedName = localStorage.getItem('user_name');
-    const storedRole = localStorage.getItem('user_puesto');
-    const usuarioSesion = JSON.parse(localStorage.getItem('usuario_sesion') || '{}');
+  document.addEventListener('DOMContentLoaded', function() {
+    // 1. OBTENER INFORMACIÓN DE LA SESIÓN ACTIVA
+    const storedName = localStorage.getItem('user_name');
+    const storedRole = localStorage.getItem('user_puesto');
+    const usuarioSesion = JSON.parse(localStorage.getItem('usuario_sesion') || '{}');
 
-    const usuarioNombre = storedName || usuarioSesion.nombre || usuarioSesion.usuario || 'USUARIO ANÓNIMO';
-    const usuarioPuesto = (storedRole || usuarioSesion.puesto || 'SOPORTE TECNICO JR').toUpperCase();
-    const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
+    const usuarioNombre = storedName || usuarioSesion.nombre || usuarioSesion.usuario || 'USUARIO ANÓNIMO';
+    const usuarioPuesto = (storedRole || usuarioSesion.puesto || 'SOPORTE TECNICO JR').toUpperCase();
+    const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
 
-    // Mostrar datos en el widget superior
-    document.getElementById('userNombre').innerText = usuarioNombre;
-    document.getElementById('userPuesto').innerText = `PUESTO: ${usuarioPuesto}`;
+    // Mostrar datos en el widget superior
+    document.getElementById('userNombre').innerText = usuarioNombre;
+    document.getElementById('userPuesto').innerText = `PUESTO: ${usuarioPuesto}`;
 
-    // Definición de Puestos Supervisores / Coordinadores que ven todo
-    const puestosConAccesoTotal = [
-      "COORDINADOR DE SOPORTE TECNICO",
-      "JEFE DE INFRA ESTRUCTURA Y SOPORTE TECNICO",
-      "JEFE DE INFRAESTRUCTURA Y SOPORTE TECNICO"
-    ];
+    // Definición de Puestos Supervisores / Coordinadores que ven todo
+    const puestosConAccesoTotal = [
+      "COORDINADOR DE SOPORTE TECNICO",
+      "JEFE DE INFRA ESTRUCTURA Y SOPORTE TECNICO",
+      "JEFE DE INFRAESTRUCTURA Y SOPORTE TECNICO"
+    ];
 
-    const tieneAccesoTotal = puestosConAccesoTotal.some(puesto => usuarioPuesto.includes(puesto));
+    const tieneAccesoTotal = puestosConAccesoTotal.some(puesto => usuarioPuesto.includes(puesto));
 
-    // 2. INICIALIZAR CALENDARIO
-    const calendarEl = document.getElementById('calendar');
-    const modalDetalle = new bootstrap.Modal(document.getElementById('modalDetalle'));
-    const modalNueva = new bootstrap.Modal(document.getElementById('modalNuevaTarea'));
-    const esMovil = window.innerWidth <= 576;
+    // 2. INICIALIZAR CALENDARIO
+    const calendarEl = document.getElementById('calendar');
+    const modalDetalle = new bootstrap.Modal(document.getElementById('modalDetalle'));
+    const modalNueva = new bootstrap.Modal(document.getElementById('modalNuevaTarea'));
+    const esMovil = window.innerWidth <= 576;
 
-    calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: 'dayGridMonth',
-      locale: 'es',
-      buttonText: { today: 'Hoy', month: 'Mes', week: 'Sem' },
-      headerToolbar: {
-        left: esMovil ? 'prev,next' : 'prev,next today',
-        center: 'title',
-        right: esMovil ? 'today' : 'dayGridMonth,timeGridWeek'
-      },
-      height: 'auto',
-      contentHeight: 'auto',
-      handleWindowResize: true,
-      events: [],
+    calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      locale: 'es',
+      buttonText: { today: 'Hoy', month: 'Mes', week: 'Sem' },
+      headerToolbar: {
+        left: esMovil ? 'prev,next' : 'prev,next today',
+        center: 'title',
+        right: esMovil ? 'today' : 'dayGridMonth,timeGridWeek'
+      },
+      height: 'auto',
+      contentHeight: 'auto',
+      handleWindowResize: true,
+      events: [],
 
-      eventClick: function(info) {
-        const evento = info.event;
-        const props = evento.extendedProps;
+      eventClick: function(info) {
+        const evento = info.event;
+        const props = evento.extendedProps;
 
-        document.getElementById('detalleTareaId').value = evento.id;
-        document.getElementById('detalleTitulo').innerText = evento.title;
-        document.getElementById('detalleDescripcion').innerHTML = `
-          ${props.descripcion || 'Sin descripción guardada.'}<br>
-          <small class="text-muted border-top d-block mt-2 pt-1"><strong>Registrado por:</strong> ${props.usuarioNombre || 'Desconocido'}</small>
-        `;
-        document.getElementById('detalleFecha').innerText = evento.start ? evento.start.toLocaleString('es-MX') : '';
-        
-        const badgeEstatus = document.getElementById('detalleEstatus');
-        const btnCompletar = document.getElementById('btnCompletar');
-        const seccionFolio = document.getElementById('seccionFolio');
-        const seccionFolioGuardado = document.getElementById('seccionFolioGuardado');
-        const inputFolio = document.getElementById('inputFolio');
+        document.getElementById('detalleTareaId').value = evento.id;
+        document.getElementById('detalleTitulo').innerText = evento.title;
+        document.getElementById('detalleDescripcion').innerHTML = `
+          ${props.descripcion || 'Sin descripción guardada.'}<br>
+          <small class="text-muted border-top d-block mt-2 pt-1"><strong>Registrado por:</strong> ${props.usuarioNombre || 'Desconocido'}</small>
+        `;
+        document.getElementById('detalleFecha').innerText = evento.start ? evento.start.toLocaleString('es-MX') : '';
+        
+        const badgeEstatus = document.getElementById('detalleEstatus');
+        const btnCompletar = document.getElementById('btnCompletar');
+        const seccionFolio = document.getElementById('seccionFolio');
+        const seccionFolioGuardado = document.getElementById('seccionFolioGuardado');
+        const inputFolio = document.getElementById('inputFolio');
 
-        inputFolio.value = '';
-        inputFolio.classList.remove('is-invalid');
+        inputFolio.value = '';
+        inputFolio.classList.remove('is-invalid');
 
-        if (props.estatus === 'concluida') {
-          badgeEstatus.className = 'badge bg-success';
-          badgeEstatus.innerText = 'Concluida';
-          btnCompletar.style.display = 'none';
-          seccionFolio.classList.add('d-none');
-          seccionFolioGuardado.classList.remove('d-none');
-          document.getElementById('textFolioGuardado').innerText = props.folio || 'N/A';
-        } else {
-          badgeEstatus.className = 'badge bg-warning text-dark';
-          badgeEstatus.innerText = 'Pendiente';
-          btnCompletar.style.display = 'block';
-          seccionFolio.classList.remove('d-none');
-          seccionFolioGuardado.classList.add('d-none');
-        }
+        if (props.estatus === 'concluida') {
+          badgeEstatus.className = 'badge bg-success';
+          badgeEstatus.innerText = 'Concluida';
+          btnCompletar.style.display = 'none';
+          seccionFolio.classList.add('d-none');
+          seccionFolioGuardado.classList.remove('d-none');
+          document.getElementById('textFolioGuardado').innerText = props.folio || 'N/A';
+        } else {
+          badgeEstatus.className = 'badge bg-warning text-dark';
+          badgeEstatus.innerText = 'Pendiente';
+          btnCompletar.style.display = 'block';
+          seccionFolio.classList.remove('d-none');
+          seccionFolioGuardado.classList.add('d-none');
+        }
 
-        modalDetalle.show();
-      }
-    });
+        modalDetalle.show();
+      }
+    });
 
-    calendar.render();
+    calendar.render();
 
-    // 3. LECTURA Y FILTRADO DE ACTIVIDADES EN TIEMPO REAL
-    const actividadesRef = ref(db, 'actividades');
-    onValue(actividadesRef, (snapshot) => {
-      const eventos = [];
-      if (snapshot.exists()) {
-        snapshot.forEach((childSnapshot) => {
-          const key = childSnapshot.key;
-          const data = childSnapshot.val();
+    // 3. LECTURA Y FILTRADO DE ACTIVIDADES EN TIEMPO REAL
+    const actividadesRef = ref(db, 'actividades');
+    onValue(actividadesRef, (snapshot) => {
+      const eventos = [];
+      if (snapshot.exists()) {
+        snapshot.forEach((childSnapshot) => {
+          const key = childSnapshot.key;
+          const data = childSnapshot.val();
 
-          const esPropio = (data.usuario_id === usuarioId) || (data.usuario_nombre === usuarioNombre);
+          const esPropio = (data.usuario_id === usuarioId) || (data.usuario_nombre === usuarioNombre);
 
-          if (tieneAccesoTotal || esPropio) {
-            eventos.push({
-              id: key,
-              title: tieneAccesoTotal ? `[${data.usuario_nombre || 'Soporte'}] ${data.titulo}` : data.titulo,
-              start: data.fecha_inicio,
-              backgroundColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
-              borderColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
-              extendedProps: {
-                descripcion: data.descripcion,
-                estatus: data.estatus,
-                folio: data.folio || '',
-                usuarioNombre: data.usuario_nombre || 'N/A',
-                usuarioPuesto: data.puesto || 'N/A'
-              }
-            });
-          }
-        });
-      }
-      calendar.removeAllEvents();
-      calendar.addEventSource(eventos);
-    }, (error) => {
-      console.error("Error al leer de Realtime Database:", error);
-    });
+          if (tieneAccesoTotal || esPropio) {
+            eventos.push({
+              id: key,
+              title: tieneAccesoTotal ? `[${data.usuario_nombre || 'Soporte'}] ${data.titulo}` : data.titulo,
+              start: data.fecha_inicio,
+              backgroundColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
+              borderColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
+              extendedProps: {
+                descripcion: data.descripcion,
+                estatus: data.estatus,
+                folio: data.folio || '',
+                usuarioNombre: data.usuario_nombre || 'N/A',
+                usuarioPuesto: data.puesto || 'N/A'
+              }
+            });
+          }
+        });
+      }
+      calendar.removeAllEvents();
+      calendar.addEventSource(eventos);
+    }, (error) => {
+      console.error("Error al leer de Realtime Database:", error);
+    });
 
-    // 4. GUARDAR NUEVA ACTIVIDAD
-    document.getElementById('formNuevaTarea').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const btnGuardar = document.getElementById('btnGuardar');
-      btnGuardar.disabled = true;
+    // 4. GUARDAR NUEVA ACTIVIDAD
+    document.getElementById('formNuevaTarea').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btnGuardar = document.getElementById('btnGuardar');
+      btnGuardar.disabled = true;
 
-      const inputFecha = document.getElementById('tareaFecha').value;
+      const inputFecha = document.getElementById('tareaFecha').value;
 
-      if (!inputFecha) {
-        alert("Por favor selecciona una fecha válida.");
-        btnGuardar.disabled = false;
-        return;
-      }
+      if (!inputFecha) {
+        alert("Por favor selecciona una fecha válida.");
+        btnGuardar.disabled = false;
+        return;
+      }
 
-      try {
-        await push(ref(db, 'actividades'), {
-          titulo: document.getElementById('tareaTitulo').value,
-          fecha_inicio: inputFecha,
-          descripcion: document.getElementById('tareaDescripcion').value,
-          estatus: 'pendiente',
-          folio: '',
-          usuario_id: usuarioId,
-          usuario_nombre: usuarioNombre,
-          puesto: usuarioPuesto,
-          creado_el: new Date().toISOString()
-        });
+      try {
+        await push(ref(db, 'actividades'), {
+          titulo: document.getElementById('tareaTitulo').value,
+          fecha_inicio: inputFecha,
+          descripcion: document.getElementById('tareaDescripcion').value,
+          estatus: 'pendiente',
+          folio: '',
+          usuario_id: usuarioId,
+          usuario_nombre: usuarioNombre,
+          puesto: usuarioPuesto,
+          creado_el: new Date().toISOString()
+        });
 
-        document.getElementById('formNuevaTarea').reset();
-        modalNueva.hide();
-      } catch (error) {
-        console.error("Error al guardar en Realtime Database:", error);
-        alert("No se pudo guardar: " + error.message);
-      } finally {
-        btnGuardar.disabled = false;
-      }
-    });
+        document.getElementById('formNuevaTarea').reset();
+        modalNueva.hide();
+      } catch (error) {
+        console.error("Error al guardar en Realtime Database:", error);
+        alert("No se pudo guardar: " + error.message);
+      } finally {
+        btnGuardar.disabled = false;
+      }
+    });
 
-    // Marcar como Concluida
-    document.getElementById('btnCompletar').addEventListener('click', async function() {
-      const tareaId = document.getElementById('detalleTareaId').value;
-      const inputFolio = document.getElementById('inputFolio');
-      const folioTexto = inputFolio.value.trim();
+    // Marcar como Concluida
+    document.getElementById('btnCompletar').addEventListener('click', async function() {
+      const tareaId = document.getElementById('detalleTareaId').value;
+      const inputFolio = document.getElementById('inputFolio');
+      const folioTexto = inputFolio.value.trim();
 
-      if (folioTexto === '') {
-        inputFolio.classList.add('is-invalid');
-        inputFolio.focus();
-        return;
-      }
+      if (folioTexto === '') {
+        inputFolio.classList.add('is-invalid');
+        inputFolio.focus();
+        return;
+      }
 
-      inputFolio.classList.remove('is-invalid');
+      inputFolio.classList.remove('is-invalid');
 
-      try {
-        const tareaRef = ref(db, `actividades/${tareaId}`);
-        await update(tareaRef, {
-          estatus: 'concluida',
-          folio: folioTexto
-        });
-        modalDetalle.hide();
-      } catch (error) {
-        console.error("Error al actualizar la tarea:", error);
-        alert("Error al actualizar: " + error.message);
-      }
-    });
+      try {
+        const tareaRef = ref(db, `actividades/${tareaId}`);
+        await update(tareaRef, {
+          estatus: 'concluida',
+          folio: folioTexto
+        });
+        modalDetalle.hide();
+      } catch (error) {
+        console.error("Error al actualizar la tarea:", error);
+        alert("Error al actualizar: " + error.message);
+      }
+    });
 
-    // Conmutador Día / Noche
-    const btnTheme = document.getElementById('btnThemeToggle');
-    btnTheme.addEventListener('click', () => {
-      const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      
-      document.documentElement.setAttribute('data-bs-theme', newTheme);
-      btnTheme.innerText = newTheme === 'dark' ? '☀️ Día' : '🌙 Noche';
-      btnTheme.className = newTheme === 'dark' ? 'btn btn-outline-warning btn-sm px-2' : 'btn btn-outline-secondary btn-sm px-2';
-    });
-  });
+    // Conmutador Día / Noche
+    const btnTheme = document.getElementById('btnThemeToggle');
+    btnTheme.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      document.documentElement.setAttribute('data-bs-theme', newTheme);
+      btnTheme.innerText = newTheme === 'dark' ? '☀️ Día' : '🌙 Noche';
+      btnTheme.className = newTheme === 'dark' ? 'btn btn-outline-warning btn-sm px-2' : 'btn btn-outline-secondary btn-sm px-2';
+    });
+  });
 
-  // Exposición de la función al objeto global window
-  window.compartirPlanDeTrabajo = () => {
-    if (!calendar) return;
+  // Exposición de la función al objeto global window
+  window.compartirPlanDeTrabajo = () => {
+    if (!calendar) return;
 
-    const eventos = Array.from(calendar.getEvents());
-    
-    if (eventos.length === 0) {
-        Swal.fire('Atención', 'No hay tareas o eventos agendados para compartir.', 'warning');
-        return;
-    }
+    const eventos = Array.from(calendar.getEvents());
+    
+    if (eventos.length === 0) {
+        Swal.fire('Atención', 'No hay tareas o eventos agendados para compartir.', 'warning');
+        return;
+    }
 
-    let textoPlan = "PLAN DE TRABAJO - RESUMEN DE ACTIVIDADES\n\n";
-    eventos.forEach((ev, idx) => {
-        const inicio = ev.start ? ev.start.toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : 'Sin fecha';
-        textoPlan += `${idx + 1}. [${inicio}] ${ev.title}\n`;
-        if (ev.extendedProps && ev.extendedProps.descripcion) {
-            textoPlan += `   Detalle: ${ev.extendedProps.descripcion}\n`;
-        }
-        textoPlan += "\n";
-    });
+    let textoPlan = "PLAN DE TRABAJO - RESUMEN DE ACTIVIDADES\n\n";
+    eventos.forEach((ev, idx) => {
+        const inicio = ev.start ? ev.start.toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : 'Sin fecha';
+        textoPlan += `${idx + 1}. [${inicio}] ${ev.title}\n`;
+        if (ev.extendedProps && ev.extendedProps.descripcion) {
+            textoPlan += `   Detalle: ${ev.extendedProps.descripcion}\n`;
+        }
+        textoPlan += "\n";
+    });
 
-    textoPlan += "Cualquier duda o comentario estoy al pendiente..!\n";
+    textoPlan += "Cualquier duda o comentario estoy al pendiente..!\n";
 
-    Swal.fire({
-        title: 'Exportar Plan de Trabajo',
-        text: 'Envio de Actividades Semanal, Mensual:',
-        icon: 'question',
-        showCancelButton: true,
-        denyButtonText: '<i class="bi bi-google"></i> Google Calendar',
-        cancelButtonText: 'Cancelar',
-        showDenyButton: true,
-        confirmButtonColor: '#0d6efd',
-        denyButtonColor: '#4285F4'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const subject = encodeURIComponent("Plan de Trabajo / Agenda de Actividades");
-            const body = encodeURIComponent(textoPlan);
-            
-          
+    Swal.fire({
+        title: 'Exportar Plan de Trabajo',
+        text: 'Selecciona una opción para enviar o sincronizar tus actividades:',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-envelope"></i> Enviar por Correo',
+        denyButtonText: '<i class="bi bi-google"></i> Google Calendar',
+        cancelButtonText: 'Cancelar',
+        showDenyButton: true,
+        confirmButtonColor: '#0d6efd',
+        denyButtonColor: '#4285F4'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const subject = encodeURIComponent("Plan de Trabajo / Agenda de Actividades");
+            const body = encodeURIComponent(textoPlan);
+            
+            // Crea un enlace tipo mailto temporal para abrir el cliente predeterminado (Outlook, Mail, etc.)
+            const mailtoLink = document.createElement('a');
+            mailtoLink.href = `mailto:?subject=${subject}&body=${body}`;
+            mailtoLink.click();
 
-        } else if (result.isDenied) {
-            const titulo = encodeURIComponent("Plan de Trabajo - Actividades");
-            const detalles = encodeURIComponent(textoPlan);
-            
-            const urlGoogle = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titulo}&details=${detalles}`;
-            window.open(urlGoogle, '_blank');
-        }
-    });
-  };
+        } else if (result.isDenied) {
+            const titulo = encodeURIComponent("Plan de Trabajo - Actividades");
+            const detalles = encodeURIComponent(textoPlan);
+            
+            const urlGoogle = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titulo}&details=${detalles}`;
+            window.open(urlGoogle, '_blank');
+        }
+    });
+  };
 </script>
 </body>
 </html>
