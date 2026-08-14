@@ -42,6 +42,22 @@
             margin: 0 auto 20px auto;
             max-width: 100%;
             height: auto;
+            transition: filter 0.3s ease;
+        }
+
+        /* Estado de error para logo e imagen */
+        .login-logo.logo-error {
+            filter: hue-rotate(140deg) saturate(250%) brightness(0.9);
+        }
+
+        .title-sistemas {
+            letter-spacing: -1px; 
+            margin-bottom: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .title-sistemas.title-error {
+            color: #ef4444 !important;
         }
 
         /* Botón de Modo Oscuro */
@@ -133,8 +149,8 @@
         <i class="bi bi-sun-fill"></i>
     </div>
     <div class="login-card">
-        <img src="https://gruporoma.com/wp-content/uploads/2023/06/cropped-cropped-procomex-pachuca-logo-350-%C3%97-100-px-1.png" alt="Logo Procomex" class="login-logo">
-        <h2 style="letter-spacing: -1px; margin-bottom: 5px;">SISTEMAS</h2>
+        <img id="logoImg" src="https://gruporoma.com/wp-content/uploads/2023/06/cropped-cropped-procomex-pachuca-logo-350-%C3%97-100-px-1.png" alt="Logo Procomex" class="login-logo">
+        <h2 id="titleSistemas" class="title-sistemas">SISTEMAS</h2>
         <p style="opacity: 0.7; font-size: 14px;">Sistema de Gestion de Actividades</p>
         <form id="loginForm">
             <input type="text" id="user" placeholder="USUARIO" required style="text-transform: uppercase;">
@@ -172,6 +188,18 @@
         const db = getDatabase(app);
         
         emailjs.init("rCrANJZmFHHsk9Yo0");
+
+        let intentosFallidos = 0;
+
+        function activarEstilosError() {
+            document.getElementById('logoImg').classList.add('logo-error');
+            document.getElementById('titleSistemas').classList.add('title-error');
+        }
+
+        function resetearEstilosError() {
+            document.getElementById('logoImg').classList.remove('logo-error');
+            document.getElementById('titleSistemas').classList.remove('title-error');
+        }
 
         async function enviarCodigoCorreo(correo, nombre, codigo) {
             try {
@@ -224,7 +252,12 @@
                         if (encontrado.statusActual === 'BAJA') {
                             msg.style.color = "#ef4444";
                             msg.innerText = "Usuario dado de baja. Acceso denegado.";
+                            activarEstilosError();
                         } else {
+                            // Resetear contadores y estilos en caso de éxito
+                            intentosFallidos = 0;
+                            resetearEstilosError();
+
                             // Se guardan Nombre completo y Puesto en localStorage
                             localStorage.setItem('user_name', encontrado.nombreCompleto || encontrado.usuario || 'USUARIO');
                             localStorage.setItem('user_puesto', encontrado.puesto || 'SIN PUESTO');
@@ -234,12 +267,29 @@
                             setTimeout(() => window.location.href = "info.html", 800);
                         }
                     } else {
+                        intentosFallidos++;
+                        activarEstilosError();
+                        
                         msg.style.color = "#ef4444";
                         msg.innerText = "Usuario o contraseña incorrectos";
+
+                        if (intentosFallidos >= 3) {
+                            setTimeout(() => {
+                                Swal.fire({
+                                    title: "Demasiados intentos fallidos",
+                                    text: "Has superado el límite de 3 intentos. Se iniciará el proceso de recuperación de contraseña.",
+                                    icon: "warning",
+                                    confirmButtonText: "Aceptar"
+                                }).then(() => {
+                                    document.getElementById('btnRecuperar').click();
+                                });
+                            }, 300);
+                        }
                     }
                 } else {
                     msg.style.color = "#ef4444";
                     msg.innerText = "No se encontraron registros de usuarios";
+                    activarEstilosError();
                 }
             } catch (err) {
                 console.error(err);
@@ -392,6 +442,10 @@
                             contraseña: nuevaPassword
                         }
                     );
+
+                    // Reiniciar contador de intentos tras cambiar contraseña con éxito
+                    intentosFallidos = 0;
+                    resetearEstilosError();
 
                     Swal.fire(
                         "Correcto",
