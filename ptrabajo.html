@@ -3,19 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mi Agenda de Actividades</title>
-  
+  <title>Mi Agenda de Actividades</title> 
+ 
   <!-- FullCalendar CSS & JS -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/locales/es.global.min.js"></script>
 
-  <!-- Bootstrap 5 -->
+  <!-- Bootstrap 5 & Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- SweetAlert2 CSS & JS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
     body { padding: 10px; transition: background-color 0.3s, color 0.3s; }
-    
+   
     .calendar-container {
       width: 100%;
       max-width: 720px; 
@@ -67,10 +72,9 @@
     </div>
 
     <div class="d-flex gap-1">
-      <!-- Agrega este botón junto al botón de "Día" / "+ Nueva" -->
-<button type="button" class="btn btn-outline-light btn-sm ms-2" onclick="compartirPlanDeTrabajo()" title="Exportar / Enviar Plan de Trabajo">
-    <i class="bi bi-share-fill me-1"></i> Compartir / Calendario
-</button>
+      <button type="button" class="btn btn-outline-light btn-sm ms-2" onclick="compartirPlanDeTrabajo()" title="Exportar / Enviar Plan de Trabajo">
+        <i class="bi bi-share-fill me-1"></i> Compartir / Calendario
+      </button>
       <button class="btn btn-outline-warning btn-sm px-2" id="btnThemeToggle">☀️ Día</button>
       <button class="btn btn-primary btn-sm px-2" data-bs-toggle="modal" data-bs-target="#modalNuevaTarea">+ Nueva</button>
     </div>
@@ -80,6 +84,7 @@
     <div id="calendar"></div>
   </div>
 </div>
+
 <!-- Modal Registrar Nueva Tarea -->
 <div class="modal fade" id="modalNuevaTarea" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -145,6 +150,7 @@
     </div>
   </div>
 </div>
+
 <!-- Módulos de Firebase para Realtime Database -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -163,16 +169,18 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
+  // Declaración global de la instancia del calendario para el módulo
+  let calendar;
+
   document.addEventListener('DOMContentLoaded', function() {
-    // 1. OBTENER INFORMACIÓN DE LA SESIÓN ACTIVA (Ajusta las claves si usas sessionStorage)
+    // 1. OBTENER INFORMACIÓN DE LA SESIÓN ACTIVA
+    const storedName = localStorage.getItem('user_name');
+    const storedRole = localStorage.getItem('user_puesto');
+    const usuarioSesion = JSON.parse(localStorage.getItem('usuario_sesion') || '{}');
 
-const storedName = localStorage.getItem('user_name');
-const storedRole = localStorage.getItem('user_puesto');
-const usuarioSesion = JSON.parse(localStorage.getItem('usuario_sesion') || '{}');
-
-const usuarioNombre = storedName || usuarioSesion.nombre || usuarioSesion.usuario || 'USUARIO ANÓNIMO';
-const usuarioPuesto = (storedRole || usuarioSesion.puesto || 'SOPORTE TECNICO JR').toUpperCase();
-const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
+    const usuarioNombre = storedName || usuarioSesion.nombre || usuarioSesion.usuario || 'USUARIO ANÓNIMO';
+    const usuarioPuesto = (storedRole || usuarioSesion.puesto || 'SOPORTE TECNICO JR').toUpperCase();
+    const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
 
     // Mostrar datos en el widget superior
     document.getElementById('userNombre').innerText = usuarioNombre;
@@ -193,7 +201,7 @@ const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
     const modalNueva = new bootstrap.Modal(document.getElementById('modalNuevaTarea'));
     const esMovil = window.innerWidth <= 576;
 
-    const calendar = new FullCalendar.Calendar(calendarEl, {
+    calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: 'dayGridMonth',
       locale: 'es',
       buttonText: { today: 'Hoy', month: 'Mes', week: 'Sem' },
@@ -258,9 +266,6 @@ const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
           const key = childSnapshot.key;
           const data = childSnapshot.val();
 
-          // REGLA DE FILTRADO:
-          // Si tiene acceso total (Jefe/Coordinador), ve todo.
-          // Si es Soporte Técnico Jr u otro rol, solo ve sus propios registros.
           const esPropio = (data.usuario_id === usuarioId) || (data.usuario_nombre === usuarioNombre);
 
           if (tieneAccesoTotal || esPropio) {
@@ -287,7 +292,7 @@ const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
       console.error("Error al leer de Realtime Database:", error);
     });
 
-    // 4. GUARDAR NUEVA ACTIVIDAD (ASOCIANDO EL USUARIO DE LA SESIÓN)
+    // 4. GUARDAR NUEVA ACTIVIDAD
     document.getElementById('formNuevaTarea').addEventListener('submit', async function(e) {
       e.preventDefault();
       const btnGuardar = document.getElementById('btnGuardar');
@@ -308,7 +313,6 @@ const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
           descripcion: document.getElementById('tareaDescripcion').value,
           estatus: 'pendiente',
           folio: '',
-          // Campos de auditoría de usuario
           usuario_id: usuarioId,
           usuario_nombre: usuarioNombre,
           puesto: usuarioPuesto,
@@ -363,16 +367,18 @@ const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
       btnTheme.className = newTheme === 'dark' ? 'btn btn-outline-warning btn-sm px-2' : 'btn btn-outline-secondary btn-sm px-2';
     });
   });
+
+  // Exposición de la función al objeto global window
   window.compartirPlanDeTrabajo = () => {
-    // 1. Obtener la fecha seleccionada o los eventos del día/semana
-    const eventos = Array.from(calendar.getEvents()); // Instancia de FullCalendar
+    if (!calendar) return;
+
+    const eventos = Array.from(calendar.getEvents());
     
     if (eventos.length === 0) {
         Swal.fire('Atención', 'No hay tareas o eventos agendados para compartir.', 'warning');
         return;
     }
 
-    // 2. Formatear resumen de actividades
     let textoPlan = "PLAN DE TRABAJO - RESUMEN DE ACTIVIDADES\n\n";
     eventos.forEach((ev, idx) => {
         const inicio = ev.start ? ev.start.toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : 'Sin fecha';
@@ -383,7 +389,6 @@ const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
         textoPlan += "\n";
     });
 
-    // 3. Menú interactivo para elegir la acción
     Swal.fire({
         title: 'Exportar Plan de Trabajo',
         text: 'Selecciona una opción para enviar o sincronizar tus actividades:',
@@ -397,23 +402,19 @@ const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
         denyButtonColor: '#4285F4'
     }).then((result) => {
         if (result.isConfirmed) {
-            // Opción Enviar por Correo (mailto)
             const subject = encodeURIComponent("Plan de Trabajo / Agenda de Actividades");
             const body = encodeURIComponent(textoPlan);
             window.location.href = `mailto:?subject=${subject}&body=${body}`;
 
         } else if (result.isDenied) {
-            // Opción Agregar evento general a Google Calendar
-            const primerEvento = eventos[0];
             const titulo = encodeURIComponent("Plan de Trabajo - Actividades");
             const detalles = encodeURIComponent(textoPlan);
             
-            // Generar enlace a Google Calendar
             const urlGoogle = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titulo}&details=${detalles}`;
             window.open(urlGoogle, '_blank');
         }
     });
-};
+  };
 </script>
 </body>
 </html>
