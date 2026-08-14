@@ -67,6 +67,10 @@
     </div>
 
     <div class="d-flex gap-1">
+      <!-- Agrega este botón junto al botón de "Día" / "+ Nueva" -->
+<button type="button" class="btn btn-outline-light btn-sm ms-2" onclick="compartirPlanDeTrabajo()" title="Exportar / Enviar Plan de Trabajo">
+    <i class="bi bi-share-fill me-1"></i> Compartir / Calendario
+</button>
       <button class="btn btn-outline-warning btn-sm px-2" id="btnThemeToggle">☀️ Día</button>
       <button class="btn btn-primary btn-sm px-2" data-bs-toggle="modal" data-bs-target="#modalNuevaTarea">+ Nueva</button>
     </div>
@@ -359,6 +363,57 @@ const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
       btnTheme.className = newTheme === 'dark' ? 'btn btn-outline-warning btn-sm px-2' : 'btn btn-outline-secondary btn-sm px-2';
     });
   });
+  window.compartirPlanDeTrabajo = () => {
+    // 1. Obtener la fecha seleccionada o los eventos del día/semana
+    const eventos = Array.from(calendar.getEvents()); // Instancia de FullCalendar
+    
+    if (eventos.length === 0) {
+        Swal.fire('Atención', 'No hay tareas o eventos agendados para compartir.', 'warning');
+        return;
+    }
+
+    // 2. Formatear resumen de actividades
+    let textoPlan = "PLAN DE TRABAJO - RESUMEN DE ACTIVIDADES\n\n";
+    eventos.forEach((ev, idx) => {
+        const inicio = ev.start ? ev.start.toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : 'Sin fecha';
+        textoPlan += `${idx + 1}. [${inicio}] ${ev.title}\n`;
+        if (ev.extendedProps && ev.extendedProps.descripcion) {
+            textoPlan += `   Detalle: ${ev.extendedProps.descripcion}\n`;
+        }
+        textoPlan += "\n";
+    });
+
+    // 3. Menú interactivo para elegir la acción
+    Swal.fire({
+        title: 'Exportar Plan de Trabajo',
+        text: 'Selecciona una opción para enviar o sincronizar tus actividades:',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-envelope"></i> Enviar por Correo',
+        denyButtonText: '<i class="bi bi-google"></i> Google Calendar',
+        cancelButtonText: 'Cancelar',
+        showDenyButton: true,
+        confirmButtonColor: '#0d6efd',
+        denyButtonColor: '#4285F4'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Opción Enviar por Correo (mailto)
+            const subject = encodeURIComponent("Plan de Trabajo / Agenda de Actividades");
+            const body = encodeURIComponent(textoPlan);
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+
+        } else if (result.isDenied) {
+            // Opción Agregar evento general a Google Calendar
+            const primerEvento = eventos[0];
+            const titulo = encodeURIComponent("Plan de Trabajo - Actividades");
+            const detalles = encodeURIComponent(textoPlan);
+            
+            // Generar enlace a Google Calendar
+            const urlGoogle = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${titulo}&details=${detalles}`;
+            window.open(urlGoogle, '_blank');
+        }
+    });
+};
 </script>
 </body>
 </html>
