@@ -380,16 +380,6 @@
     }
 
     let textoPlan = "PLAN DE TRABAJO - RESUMEN DE ACTIVIDADES\n\n";
-    
-    // Construcción de la estructura iCalendar (.ics)
-    let icsContent = [
-        "BEGIN:VCALENDAR",
-        "VERSION:2.0",
-        "PRODID:-//Grupo Roma//Agenda Actividades//ES",
-        "CALSCALE:GREGORIAN",
-        "METHOD:PUBLISH"
-    ];
-
     eventos.forEach((ev, idx) => {
         const inicio = ev.start ? ev.start.toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : 'Sin fecha';
         textoPlan += `${idx + 1}. [${inicio}] ${ev.title}\n`;
@@ -397,29 +387,9 @@
             textoPlan += `   Detalle: ${ev.extendedProps.descripcion}\n`;
         }
         textoPlan += "\n";
-
-        // Formato fecha UTC para archivo .ics
-        if (ev.start) {
-            const dtStart = new Date(ev.start).toISOString().replace(/-|:|\.\d\d\d/g, "");
-            const endDate = new Date(ev.start.getTime() + (60 * 60 * 1000)); // +1 hora por defecto
-            const dtEnd = endDate.toISOString().replace(/-|:|\.\d\d\d/g, "");
-            const summary = ev.title.replace(/\n/g, " ");
-            const description = (ev.extendedProps?.descripcion || "").replace(/\n/g, " ");
-
-            icsContent.push(
-                "BEGIN:VEVENT",
-                `UID:${Date.now()}-${idx}@gruporoma.com`,
-                `DTSTAMP:${dtStart}`,
-                `DTSTART:${dtStart}`,
-                `DTEND:${dtEnd}`,
-                `SUMMARY:${summary}`,
-                `DESCRIPTION:${description}`,
-                "END:VEVENT"
-            );
-        }
     });
 
-    icsContent.push("END:VCALENDAR");
+    textoPlan += "Cualquier duda o comentario estoy al pendiente..!\n";
 
     Swal.fire({
         title: 'Exportar Plan de Trabajo',
@@ -434,19 +404,13 @@
         denyButtonColor: '#4285F4'
     }).then((result) => {
         if (result.isConfirmed) {
-            // Generar y descargar el archivo .ics para adjuntar
-            const blob = new Blob([icsContent.join("\r\n")], { type: "text/calendar;charset=utf-8" });
-            const link = document.createElement("a");
-            link.href = window.URL.createObjectURL(blob);
-            link.setAttribute("download", "Plan_de_Trabajo.ics");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            // Abrir correo predeterminado
             const subject = encodeURIComponent("Plan de Trabajo / Agenda de Actividades");
-            const body = encodeURIComponent(textoPlan + "\n* Nota: Se descargó el archivo 'Plan_de_Trabajo.ics' para adjuntar a este correo.");
-            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+            const body = encodeURIComponent(textoPlan);
+            
+            // Crea un enlace tipo mailto temporal para abrir el cliente predeterminado (Outlook, Mail, etc.)
+            const mailtoLink = document.createElement('a');
+            mailtoLink.href = `mailto:?subject=${subject}&body=${body}`;
+            mailtoLink.click();
 
         } else if (result.isDenied) {
             const titulo = encodeURIComponent("Plan de Trabajo - Actividades");
