@@ -131,6 +131,17 @@
         <p class="mb-1 small"><strong>Descripción / Detalles:</strong></p>
         <div id="detalleDescripcion" class="p-2 border rounded bg-body-tertiary small mb-3"></div>
         
+        <!-- Sección para Reclasificar Actividad con Atraso -->
+        <div id="seccionReclasificar" class="mb-3 p-2 border border-warning rounded bg-dark-subtle d-none">
+          <label for="inputNuevaFecha" class="form-label text-warning fw-bold small mb-1">
+            <i class="bi bi-calendar-event me-1"></i> Reclasificar Fecha (Actividad con Atraso)
+          </label>
+          <div class="input-group input-group-sm">
+            <input type="datetime-local" class="form-control" id="inputNuevaFecha">
+            <button class="btn btn-warning" type="button" id="btnReclasificar">Reclasificar</button>
+          </div>
+        </div>
+
         <div id="seccionFolio" class="mb-2">
           <label for="inputFolio" class="form-label text-warning fw-bold small">Folio de Cierre <span class="text-danger">*</span></label>
           <input type="text" class="form-control form-control-sm" id="inputFolio" placeholder="Ingrese el folio obligatoriamente">
@@ -171,6 +182,26 @@
 
   // Declaración global de la instancia del calendario para el módulo
   let calendar;
+
+  // Función para obtener la fecha/hora del último corte (Sábado 12:00 PM)
+  function obtenerUltimoCorte(fechaReferencia = new Date()) {
+    const d = new Date(fechaReferencia);
+    const diaSemana = d.getDay(); // 0 = Dom, 1 = Lun, ..., 6 = Sáb
+    
+    // Días transcurridos desde el último sábado
+    let diasAtras = (diaSemana - 6 + 7) % 7;
+    
+    // Si hoy es sábado pero aún no son las 12:00 PM, el corte previo fue el sábado anterior
+    if (diaSemana === 6 && (d.getHours() < 12)) {
+      diasAtras = 7;
+    }
+
+    const ultimoCorte = new Date(d);
+    ultimoCorte.setDate(d.getDate() - diasAtras);
+    ultimoCorte.setHours(12, 0, 0, 0);
+
+    return ultimoCorte;
+  }
 
   document.addEventListener('DOMContentLoaded', function() {
     // 1. OBTENER INFORMACIÓN DE LA SESIÓN ACTIVA
@@ -231,24 +262,51 @@
         const btnCompletar = document.getElementById('btnCompletar');
         const seccionFolio = document.getElementById('seccionFolio');
         const seccionFolioGuardado = document.getElementById('seccionFolioGuardado');
+        const seccionReclasificar = document.getElementById('seccionReclasificar');
+        const inputNuevaFecha = document.getElementById('inputNuevaFecha');
         const inputFolio = document.getElementById('inputFolio');
 
         inputFolio.value = '';
         inputFolio.classList.remove('is-invalid');
 
+        // Establecer fecha por defecto en input de reclasificación
+        if (evento.start) {
+          const tzOffset = evento.start.getTimezoneOffset() * 60000;
+          const localISOTime = (new Date(evento.start.getTime() - tzOffset)).toISOString().slice(0, 16);
+          inputNuevaFecha.value = localISOTime;
+        } else {
+          inputNuevaFecha.value = '';
+        }
+
+        // Determinar si la tarea concluyó
         if (props.estatus === 'concluida') {
           badgeEstatus.className = 'badge bg-success';
           badgeEstatus.innerText = 'Concluida';
           btnCompletar.style.display = 'none';
           seccionFolio.classList.add('d-none');
           seccionFolioGuardado.classList.remove('d-none');
+          seccionReclasificar.classList.add('d-none');
           document.getElementById('textFolioGuardado').innerText = props.folio || 'N/A';
         } else {
-          badgeEstatus.className = 'badge bg-warning text-dark';
-          badgeEstatus.innerText = 'Pendiente';
+          // Pendiente: Verificar si está atrasada con base en el corte del sábado 12:00 PM
+          const ultimoCorte = obtenerUltimoCorte();
+          const fechaTarea = evento.start ? new Date(evento.start) : new Date();
+          const esAtrasada = fechaTarea < ultimoCorte;
+
+          if (esAtrasada) {
+            badgeEstatus.className = 'badge bg-danger text-white';
+            badgeEstatus.innerText = 'Pendiente (Atrasada)';
+          } else {
+            badgeEstatus.className = 'badge bg-warning text-dark';
+            badgeEstatus.innerText = 'Pendiente';
+          }
+
           btnCompletar.style.display = 'block';
           seccionFolio.classList.remove('d-none');
           seccionFolioGuardado.classList.add('d-none');
+          
+          // Habilitar opción de reclasificar si está pendiente o atrasada
+          seccionReclasificar.classList.remove('d-none');
         }
 
         modalDetalle.show();
@@ -261,6 +319,8 @@
     const actividadesRef = ref(db, 'actividades');
     onValue(actividadesRef, (snapshot) => {
       const eventos = [];
+      const ultimoCorte = obtenerUltimoCorte();
+
       if (snapshot.exists()) {
         snapshot.forEach((childSnapshot) => {
           const key = childSnapshot.key;
@@ -269,18 +329,31 @@
           const esPropio = (data.usuario_id === usuarioId) || (data.usuario_nombre === usuarioNombre);
 
           if (tieneAccesoTotal || esPropio) {
+            const fechaInicio = data.fecha_inicio ? new Date(data.fecha_inicio) : new Date();
+            const esConcluida = data.estatus === 'concluida';
+            const esAtrasada = !esConcluida && (fechaInicio < ultimoCorte);
+
+            // Color: Si está concluida todo va en Verde. Si está atrasada en Rojo, si no en Azul.
+            let colorEvento = '#0d6efd'; // Azul por defecto
+            if (esConcluida) {
+              colorEvento = '#198754'; // Verde para concluidas
+            } else if (esAtrasada) {
+              colorEvento = '#dc3545'; // Rojo para atrasadas
+            }
+
             eventos.push({
               id: key,
               title: tieneAccesoTotal ? `[${data.usuario_nombre || 'Soporte'}] ${data.titulo}` : data.titulo,
               start: data.fecha_inicio,
-              backgroundColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
-              borderColor: data.estatus === 'concluida' ? '#198754' : '#0d6efd',
+              backgroundColor: colorEvento,
+              borderColor: colorEvento,
               extendedProps: {
                 descripcion: data.descripcion,
                 estatus: data.estatus,
                 folio: data.folio || '',
                 usuarioNombre: data.usuario_nombre || 'N/A',
-                usuarioPuesto: data.puesto || 'N/A'
+                usuarioPuesto: data.puesto || 'N/A',
+                esAtrasada: esAtrasada
               }
             });
           }
@@ -329,7 +402,32 @@
       }
     });
 
-    // Marcar como Concluida
+    // RECLASIFICAR ACTIVIDAD A OTRA FECHA
+    document.getElementById('btnReclasificar').addEventListener('click', async function() {
+      const tareaId = document.getElementById('detalleTareaId').value;
+      const nuevaFecha = document.getElementById('inputNuevaFecha').value;
+
+      if (!nuevaFecha) {
+        Swal.fire('Atención', 'Por favor selecciona una nueva fecha y hora para reclasificar.', 'warning');
+        return;
+      }
+
+      try {
+        const tareaRef = ref(db, `actividades/${tareaId}`);
+        await update(tareaRef, {
+          fecha_inicio: nuevaFecha,
+          reclasificado_el: new Date().toISOString()
+        });
+        
+        modalDetalle.hide();
+        Swal.fire('¡Reclasificada!', 'La actividad se ha movido a la nueva fecha correctamente.', 'success');
+      } catch (error) {
+        console.error("Error al reclasificar la tarea:", error);
+        Swal.fire('Error', 'No se pudo reclasificar la actividad: ' + error.message, 'error');
+      }
+    });
+
+    // MARCAR COMO CONCLUIDA
     document.getElementById('btnCompletar').addEventListener('click', async function() {
       const tareaId = document.getElementById('detalleTareaId').value;
       const inputFolio = document.getElementById('inputFolio');
