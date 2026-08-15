@@ -131,15 +131,18 @@
         <p class="mb-1 small"><strong>Descripción / Detalles:</strong></p>
         <div id="detalleDescripcion" class="p-2 border rounded bg-body-tertiary small mb-3"></div>
         
-        <!-- Sección para Reclasificar Actividad con Atraso -->
+        <!-- Sección para Reclasificar Actividad con Atraso (Duplicándola) -->
         <div id="seccionReclasificar" class="mb-3 p-2 border border-warning rounded bg-dark-subtle d-none">
           <label for="inputNuevaFecha" class="form-label text-warning fw-bold small mb-1">
-            <i class="bi bi-calendar-event me-1"></i> Reclasificar Fecha (Actividad con Atraso)
+            <i class="bi bi-calendar-event me-1"></i> Reclasificar / Duplicar a Nueva Fecha
           </label>
           <div class="input-group input-group-sm">
             <input type="datetime-local" class="form-control" id="inputNuevaFecha">
             <button class="btn btn-warning" type="button" id="btnReclasificar">Reclasificar</button>
           </div>
+          <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+            * Conserva la actividad en la fecha original y genera una copia vinculada en la nueva fecha.
+          </small>
         </div>
 
         <div id="seccionFolio" class="mb-2">
@@ -165,7 +168,7 @@
 <!-- Módulos de Firebase para Realtime Database -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, push, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getDatabase, ref, push, update, get, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyABXwHVog3oQ8WdSfZ50016vpmq_cYGjwc",
@@ -180,18 +183,16 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // Declaración global de la instancia del calendario para el módulo
   let calendar;
+  let actividadesCache = {}; // Cache de objetos para referencias rápidas
 
   // Función para obtener la fecha/hora del último corte (Sábado 12:00 PM)
   function obtenerUltimoCorte(fechaReferencia = new Date()) {
     const d = new Date(fechaReferencia);
     const diaSemana = d.getDay(); // 0 = Dom, 1 = Lun, ..., 6 = Sáb
     
-    // Días transcurridos desde el último sábado
     let diasAtras = (diaSemana - 6 + 7) % 7;
     
-    // Si hoy es sábado pero aún no son las 12:00 PM, el corte previo fue el sábado anterior
     if (diaSemana === 6 && (d.getHours() < 12)) {
       diasAtras = 7;
     }
@@ -213,11 +214,9 @@
     const usuarioPuesto = (storedRole || usuarioSesion.puesto || 'SOPORTE TECNICO JR').toUpperCase();
     const usuarioId = usuarioSesion.id || usuarioSesion.uid || usuarioNombre;
 
-    // Mostrar datos en el widget superior
     document.getElementById('userNombre').innerText = usuarioNombre;
     document.getElementById('userPuesto').innerText = `PUESTO: ${usuarioPuesto}`;
 
-    // Definición de Puestos Supervisores / Coordinadores que ven todo
     const puestosConAccesoTotal = [
       "COORDINADOR DE SOPORTE TECNICO",
       "JEFE DE INFRA ESTRUCTURA Y SOPORTE TECNICO",
@@ -269,7 +268,6 @@
         inputFolio.value = '';
         inputFolio.classList.remove('is-invalid');
 
-        // Establecer fecha por defecto en input de reclasificación
         if (evento.start) {
           const tzOffset = evento.start.getTimezoneOffset() * 60000;
           const localISOTime = (new Date(evento.start.getTime() - tzOffset)).toISOString().slice(0, 16);
@@ -278,7 +276,7 @@
           inputNuevaFecha.value = '';
         }
 
-        // Determinar si la tarea concluyó
+        // Si ya está concluida
         if (props.estatus === 'concluida') {
           badgeEstatus.className = 'badge bg-success';
           badgeEstatus.innerText = 'Concluida';
@@ -288,7 +286,7 @@
           seccionReclasificar.classList.add('d-none');
           document.getElementById('textFolioGuardado').innerText = props.folio || 'N/A';
         } else {
-          // Pendiente: Verificar si está atrasada con base en el corte del sábado 12:00 PM
+          // Pendiente: verificar atraso según corte semanal
           const ultimoCorte = obtenerUltimoCorte();
           const fechaTarea = evento.start ? new Date(evento.start) : new Date();
           const esAtrasada = fechaTarea < ultimoCorte;
@@ -304,8 +302,6 @@
           btnCompletar.style.display = 'block';
           seccionFolio.classList.remove('d-none');
           seccionFolioGuardado.classList.add('d-none');
-          
-          // Habilitar opción de reclasificar si está pendiente o atrasada
           seccionReclasificar.classList.remove('d-none');
         }
 
@@ -319,12 +315,15 @@
     const actividadesRef = ref(db, 'actividades');
     onValue(actividadesRef, (snapshot) => {
       const eventos = [];
+      actividadesCache = {};
       const ultimoCorte = obtenerUltimoCorte();
 
       if (snapshot.exists()) {
         snapshot.forEach((childSnapshot) => {
           const key = childSnapshot.key;
           const data = childSnapshot.val();
+
+          actividadesCache[key] = { ...data, key };
 
           const esPropio = (data.usuario_id === usuarioId) || (data.usuario_nombre === usuarioNombre);
 
@@ -333,12 +332,12 @@
             const esConcluida = data.estatus === 'concluida';
             const esAtrasada = !esConcluida && (fechaInicio < ultimoCorte);
 
-            // Color: Si está concluida todo va en Verde. Si está atrasada en Rojo, si no en Azul.
-            let colorEvento = '#0d6efd'; // Azul por defecto
+            // COLOR: Verde si está concluida (#198754), Rojo si está atrasada (#dc3545), Azul por defecto (#0d6efd)
+            let colorEvento = '#0d6efd';
             if (esConcluida) {
-              colorEvento = '#198754'; // Verde para concluidas
+              colorEvento = '#198754';
             } else if (esAtrasada) {
-              colorEvento = '#dc3545'; // Rojo para atrasadas
+              colorEvento = '#dc3545';
             }
 
             eventos.push({
@@ -353,6 +352,7 @@
                 folio: data.folio || '',
                 usuarioNombre: data.usuario_nombre || 'N/A',
                 usuarioPuesto: data.puesto || 'N/A',
+                grupoId: data.grupo_id || key,
                 esAtrasada: esAtrasada
               }
             });
@@ -380,12 +380,16 @@
       }
 
       try {
-        await push(ref(db, 'actividades'), {
+        const nuevaRef = push(ref(db, 'actividades'));
+        const newKey = nuevaRef.key;
+
+        await update(ref(db, `actividades/${newKey}`), {
           titulo: document.getElementById('tareaTitulo').value,
           fecha_inicio: inputFecha,
           descripcion: document.getElementById('tareaDescripcion').value,
           estatus: 'pendiente',
           folio: '',
+          grupo_id: newKey, // Identificador de grupo para vincular duplicados
           usuario_id: usuarioId,
           usuario_nombre: usuarioNombre,
           puesto: usuarioPuesto,
@@ -402,7 +406,7 @@
       }
     });
 
-    // RECLASIFICAR ACTIVIDAD A OTRA FECHA
+    // RECLASIFICAR / DUPLICAR ACTIVIDAD A OTRA FECHA (Mantiene original)
     document.getElementById('btnReclasificar').addEventListener('click', async function() {
       const tareaId = document.getElementById('detalleTareaId').value;
       const nuevaFecha = document.getElementById('inputNuevaFecha').value;
@@ -412,22 +416,44 @@
         return;
       }
 
+      const actividadOriginal = actividadesCache[tareaId];
+      if (!actividadOriginal) {
+        Swal.fire('Error', 'No se encontró la actividad original.', 'error');
+        return;
+      }
+
       try {
-        const tareaRef = ref(db, `actividades/${tareaId}`);
-        await update(tareaRef, {
+        const grupoId = actividadOriginal.grupo_id || tareaId;
+
+        // 1. Asegurar que la actividad original tenga el grupo_id
+        if (!actividadOriginal.grupo_id) {
+          await update(ref(db, `actividades/${tareaId}`), { grupo_id: grupoId });
+        }
+
+        // 2. Crear una copia (duplicado) en la nueva fecha compartiendo el mismo grupo_id
+        await push(ref(db, 'actividades'), {
+          titulo: actividadOriginal.titulo,
           fecha_inicio: nuevaFecha,
-          reclasificado_el: new Date().toISOString()
+          descripcion: (actividadOriginal.descripcion || '') + ' [Reclasificada]',
+          estatus: 'pendiente',
+          folio: '',
+          grupo_id: grupoId,
+          usuario_id: actividadOriginal.usuario_id || usuarioId,
+          usuario_nombre: actividadOriginal.usuario_nombre || usuarioNombre,
+          puesto: actividadOriginal.puesto || usuarioPuesto,
+          creado_el: new Date().toISOString(),
+          reclasificado_de: tareaId
         });
         
         modalDetalle.hide();
-        Swal.fire('¡Reclasificada!', 'La actividad se ha movido a la nueva fecha correctamente.', 'success');
+        Swal.fire('¡Actividad Reclasificada!', 'Se ha creado la nueva fecha manteniendo la actividad en la fecha original.', 'success');
       } catch (error) {
         console.error("Error al reclasificar la tarea:", error);
         Swal.fire('Error', 'No se pudo reclasificar la actividad: ' + error.message, 'error');
       }
     });
 
-    // MARCAR COMO CONCLUIDA
+    // MARCAR COMO CONCLUIDA (Actualiza ambas partes si fue duplicada/reclasificada)
     document.getElementById('btnCompletar').addEventListener('click', async function() {
       const tareaId = document.getElementById('detalleTareaId').value;
       const inputFolio = document.getElementById('inputFolio');
@@ -442,12 +468,29 @@
       inputFolio.classList.remove('is-invalid');
 
       try {
-        const tareaRef = ref(db, `actividades/${tareaId}`);
-        await update(tareaRef, {
-          estatus: 'concluida',
-          folio: folioTexto
+        const actividadActual = actividadesCache[tareaId];
+        const grupoId = actividadActual ? (actividadActual.grupo_id || tareaId) : tareaId;
+
+        // Buscar todas las actividades que pertenezcan al mismo grupo_id o tengan este ID
+        const updatesMultiples = {};
+        
+        Object.keys(actividadesCache).forEach(key => {
+          const act = actividadesCache[key];
+          if (key === tareaId || (act.grupo_id && act.grupo_id === grupoId)) {
+            updatesMultiples[`actividades/${key}/estatus`] = 'concluida';
+            updatesMultiples[`actividades/${key}/folio`] = folioTexto;
+          }
         });
+
+        // Si no se halló en cache, actualizar al menos la seleccionada
+        if (Object.keys(updatesMultiples).length === 0) {
+          updatesMultiples[`actividades/${tareaId}/estatus`] = 'concluida';
+          updatesMultiples[`actividades/${tareaId}/folio`] = folioTexto;
+        }
+
+        await update(ref(db), updatesMultiples);
         modalDetalle.hide();
+        Swal.fire('¡Concluida!', 'La actividad ha sido marcada como concluida en todas sus fechas vinculadas.', 'success');
       } catch (error) {
         console.error("Error al actualizar la tarea:", error);
         alert("Error al actualizar: " + error.message);
@@ -493,7 +536,7 @@
         title: 'Exportar Plan de Trabajo',
         text: 'Selecciona una opción para sincronizar tus actividades:',
         icon: 'question',
-        showConfirmButton: false, // Oculta el botón principal
+        showConfirmButton: false,
         showCancelButton: true,
         denyButtonText: '<i class="bi bi-google"></i> Google Calendar',
         cancelButtonText: 'Cancelar',
