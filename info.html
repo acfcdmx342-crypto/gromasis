@@ -19,6 +19,12 @@
             z-index: 1000; 
             transition: all 0.3s;
             left: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-menu {
+            flex-grow: 1;
+            overflow-y: auto;
         }
         .sidebar a { color: #94a3b8; text-decoration: none; padding: 12px 20px; display: block; transition: 0.3s; cursor: pointer; font-size: 0.9rem; }
         .sidebar a:hover { background: #1e293b; color: var(--accent); }
@@ -82,7 +88,7 @@
         th .filter-trigger:hover, th .filter-trigger.active-filter { color: #0284c7; }
         
         td { vertical-align: middle; text-align: center; font-size: 0.85rem; }
-        input[type="text"]:not(#riAccesoModem):not(#upPassword), input[type="email"], select, textarea { text-transform: uppercase; }
+        input[type="text"]:not(#riAccesoModem):not(#upPassword):not(#modUrlModulo):not(#modIconUrl), input[type="email"], select, textarea { text-transform: uppercase; }
         
         .excel-filter-menu {
             position: absolute; background: white; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
@@ -128,6 +134,47 @@
         .suc-branch-info h5 { margin: 0 0 4px 0; font-weight: 700; color: #1e293b; font-size: 1.05rem; text-transform: uppercase; }
         .suc-branch-info p { margin: 0; font-size: 0.82rem; color: #64748b; line-height: 1.4; }
 
+        /* Estilos para selección de iconos */
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+            gap: 8px;
+            max-height: 160px;
+            overflow-y: auto;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 8px;
+            background: #fff;
+        }
+        .icon-option {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 40px;
+            font-size: 1.25rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #334155;
+        }
+        .icon-option:hover {
+            background-color: #f1f5f9;
+            color: var(--accent);
+        }
+        .icon-option.selected {
+            border-color: var(--accent);
+            background-color: #e0f2fe;
+            color: #0284c7;
+        }
+        .sidebar-custom-icon-img {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
         @media print {
             .no-print { display: none !important; }
             .wpa-key-input { text-transform: none !important; }
@@ -144,15 +191,23 @@
 <button class="btn btn-dark btn-toggle" onclick="toggleSidebar()"><i class="bi bi-list fs-4"></i></button>
 <div class="sidebar" id="sidebar">
     <div class="text-center py-4 border-bottom border-secondary mb-2"><h6 class="mb-0 fw-bold text-white">CATÁLOGOS</h6></div>
-    <a onclick="renderDashboard()" id="link-dashboard" class="active"><i class="bi bi-house-door me-2"></i> Inicio</a>
-    <a onclick="render('empresas')" id="link-empresas"><i class="bi bi-building me-2"></i> Empresas</a>
-    <a onclick="render('servidores')" id="link-servidores"><i class="bi bi-hdd-network me-2"></i> Servidores</a>
-    <a onclick="render('zonas')" id="link-zonas"><i class="bi bi-geo-alt me-2"></i> Zonas</a>
-    <a onclick="render('sucursales')" id="link-sucursales"><i class="bi bi-shop me-2"></i> Sucursales</a>
-    <a onclick="render('usuarios')" id="link-usuarios"><i class="bi bi-person-lines-fill me-2"></i> Usuarios</a>
-    <a onclick="render('personal')" id="link-personal"><i class="bi bi-people me-2"></i> Personal</a>
-    <a onclick="render('redes_inalambricas')" id="link-redes_inalambricas"><i class="bi bi-wifi me-2"></i> Redes Inalámbricas</a>
-    <a onclick="render('colorcenter')" id="link-colorcenter"><i class="bi bi-file-earmark-text me-2"></i> Colorcenter</a>
+    <div class="sidebar-menu">
+        <a onclick="renderDashboard()" id="link-dashboard" class="active"><i class="bi bi-house-door me-2"></i> Inicio</a>
+        <a onclick="render('empresas')" id="link-empresas"><i class="bi bi-building me-2"></i> Empresas</a>
+        <a onclick="render('servidores')" id="link-servidores"><i class="bi bi-hdd-network me-2"></i> Servidores</a>
+        <a onclick="render('zonas')" id="link-zonas"><i class="bi bi-geo-alt me-2"></i> Zonas</a>
+        <a onclick="render('sucursales')" id="link-sucursales"><i class="bi bi-shop me-2"></i> Sucursales</a>
+        <a onclick="render('usuarios')" id="link-usuarios"><i class="bi bi-person-lines-fill me-2"></i> Usuarios</a>
+        <a onclick="render('personal')" id="link-personal"><i class="bi bi-people me-2"></i> Personal</a>
+        <a onclick="render('redes_inalambricas')" id="link-redes_inalambricas"><i class="bi bi-wifi me-2"></i> Redes Inalámbricas</a>
+        <a onclick="render('colorcenter')" id="link-colorcenter"><i class="bi bi-file-earmark-text me-2"></i> Colorcenter</a>
+        <div id="dynamic-modules-container"></div>
+    </div>
+    <div class="p-3 border-top border-secondary">
+        <button class="btn btn-outline-info w-100 btn-sm text-white fw-bold d-flex align-items-center justify-content-center gap-1" onclick="openAddModuleModal()">
+            <i class="bi bi-plus-lg"></i> Agregar Módulo
+        </button>
+    </div>
 </div>
 
 <div class="main-content" id="main-content">
@@ -170,8 +225,8 @@
         <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center p-2" 
         title="Plan de Trabajo" data-bs-toggle="modal" data-bs-target="#modalPlanTrabajo" 
         style="height: 42px; width: 42px; border-radius: 8px;">
-    <i class="bi bi-calendar-event fs-5"></i>
-</button>
+            <i class="bi bi-calendar-event fs-5"></i>
+        </button>
 
         <!-- Botón para Salir -->
         <a href="index.html" class="btn btn-danger d-flex align-items-center justify-content-center p-2" 
@@ -185,6 +240,61 @@
 </div>
 
 <div id="excelFilterMenu" class="excel-filter-menu"></div>
+
+<!-- MODAL PARA AGREGAR MÓDULO -->
+<div class="modal fade" id="modalNuevoModulo" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-dark text-white py-3">
+                <h5 class="modal-title fw-bold"><i class="bi bi-plus-square me-2"></i>Agregar Nuevo Módulo</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Nombre del Módulo</label>
+                    <input type="text" id="modNombreModulo" class="form-control" placeholder="Ej. Inventario">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Página / URL de Redirección</label>
+                    <input type="text" id="modUrlModulo" class="form-control" placeholder="Ej. inventario.html o https://ejemplo.com">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Origen del Icono</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="iconSourceType" id="srcGallery" value="gallery" checked onchange="toggleIconSourceUI()">
+                            <label class="form-check-label small fw-semibold" for="srcGallery">Galería por Defecto</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="iconSourceType" id="srcUrl" value="url" onchange="toggleIconSourceUI()">
+                            <label class="form-check-label small fw-semibold" for="srcUrl">URL Personalizada</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selección de Icono por Galería -->
+                <div id="secGalleryIcon" class="mb-3">
+                    <label class="form-label fw-bold small mb-1">Seleccionar Icono</label>
+                    <input type="hidden" id="selectedIconClass" value="bi-app-indicator">
+                    <div class="icon-grid" id="iconGalleryGrid">
+                        <!-- Llenado dinámicamente con JS -->
+                    </div>
+                </div>
+
+                <!-- Selección de Icono por URL -->
+                <div id="secUrlIcon" class="mb-3 d-none">
+                    <label class="form-label fw-bold small">URL del Icono (Imagen)</label>
+                    <input type="text" id="modIconUrl" class="form-control" placeholder="https://ejemplo.com/icono.png">
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0 px-4 pb-4">
+                <button type="button" class="btn btn-secondary py-2 px-4 fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary py-2 px-4 fw-bold" id="btnSaveModulo">Guardar Módulo</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- MODAL PRINCIPAL -->
 <div class="modal fade" id="modalApp" tabindex="-1">
@@ -463,7 +573,7 @@
     const config = { databaseURL: "https://gromasis-9c094-default-rtdb.firebaseio.com/" };
     const db = getDatabase(initializeApp(config));
     
-    let store = { colorcenter:{}, redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, servidores: {}, sucursales: {}, usuarios: {} };
+    let store = { colorcenter:{}, redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, servidores: {}, sucursales: {}, usuarios: {}, modulos_dinamicos: {} };
     let currentPath = '';
     let loadsPending = Object.keys(store).length;
     const urlParams = new URLSearchParams(window.location.search);
@@ -475,6 +585,102 @@
         comex: ["AXXESS", "VOCACION DE TIENDA", "XADMIN", "XSTORE", "BIG FIX", "SCALEFUSION"],
         correos: ["INSTITUCIONAL", "GMAIL", "WEBEX", "TIENDA"],
         firewall: ["CONTABILIDAD", "NOMINAS", "HUATUSCO", "TESORERIA"]
+    };
+
+    // Galería de iconos por defecto de Bootstrap Icons
+    const defaultIcons = [
+        "bi-app-indicator", "bi-box-seam", "bi-cart-check", "bi-bar-chart", "bi-card-checklist",
+        "bi-cpu", "bi-diagram-3", "bi-file-earmark-spreadsheet", "bi-folder", "bi-gear",
+        "bi-graph-up", "bi-headset", "bi-journal-bookmark", "bi-layers", "bi-receipt",
+        "bi-shield-lock", "bi-sliders", "bi-tools", "bi-truck", "bi-wallet2"
+    ];
+
+    window.toggleIconSourceUI = () => {
+        const isGallery = document.getElementById("srcGallery").checked;
+        document.getElementById("secGalleryIcon").classList.toggle("d-none", !isGallery);
+        document.getElementById("secUrlIcon").classList.toggle("d-none", isGallery);
+    };
+
+    const initIconGallery = () => {
+        const container = document.getElementById("iconGalleryGrid");
+        if (!container) return;
+        container.innerHTML = defaultIcons.map((ic, idx) => `
+            <div class="icon-option ${idx === 0 ? 'selected' : ''}" data-icon="${ic}" onclick="selectGalleryIcon('${ic}', this)">
+                <i class="bi ${ic}"></i>
+            </div>
+        `).join('');
+    };
+
+    window.selectGalleryIcon = (iconClass, el) => {
+        document.querySelectorAll("#iconGalleryGrid .icon-option").forEach(item => item.classList.remove("selected"));
+        el.classList.add("selected");
+        document.getElementById("selectedIconClass").value = iconClass;
+    };
+
+    window.openAddModuleModal = () => {
+        document.getElementById("modNombreModulo").value = "";
+        document.getElementById("modUrlModulo").value = "";
+        document.getElementById("modIconUrl").value = "";
+        document.getElementById("srcGallery").checked = true;
+        toggleIconSourceUI();
+        initIconGallery();
+        document.getElementById("selectedIconClass").value = defaultIcons[0];
+        new bootstrap.Modal(document.getElementById("modalNuevoModulo")).show();
+    };
+
+    document.getElementById("btnSaveModulo").onclick = async () => {
+        const nombre = document.getElementById("modNombreModulo").value.trim().toUpperCase();
+        const url = document.getElementById("modUrlModulo").value.trim();
+        const isGallery = document.getElementById("srcGallery").checked;
+        
+        if (!nombre) {
+            Swal.fire("Atención", "El nombre del módulo es obligatorio.", "warning");
+            return;
+        }
+        if (!url) {
+            Swal.fire("Atención", "La URL o página de redirección es obligatoria.", "warning");
+            return;
+        }
+
+        let moduloData = {
+            nombre: nombre,
+            url: url,
+            tipoIcono: isGallery ? "gallery" : "url",
+            icono: isGallery ? document.getElementById("selectedIconClass").value : document.getElementById("modIconUrl").value.trim()
+        };
+
+        try {
+            await push(ref(db, "modulos_dinamicos"), moduloData);
+            bootstrap.Modal.getInstance(document.getElementById("modalNuevoModulo")).hide();
+            Swal.fire({ icon: "success", title: "Módulo Agregado", timer: 1000, showConfirmButton: false });
+        } catch (e) {
+            Swal.fire("Error", e.message, "error");
+        }
+    };
+
+    const renderDynamicModules = () => {
+        const container = document.getElementById("dynamic-modules-container");
+        if (!container) return;
+
+        const modulos = store.modulos_dinamicos || {};
+        const keys = Object.keys(modulos);
+
+        container.innerHTML = keys.map(id => {
+            const m = modulos[id];
+            const linkId = `link-mod-${id}`;
+            let iconMarkup = '';
+
+            if (m.tipoIcono === 'url' && m.icono) {
+                iconMarkup = `<img src="${m.icono}" class="sidebar-custom-icon-img" alt="icon" onerror="this.style.display='none'">`;
+            } else {
+                const iconClass = m.icono || 'bi-app-indicator';
+                iconMarkup = `<i class="bi ${iconClass} me-2"></i>`;
+            }
+
+            return `<a onclick="window.location.href='${m.url}'" id="${linkId}">${iconMarkup}${m.nombre}</a>`;
+        }).join('');
+
+        aplicarPermisosMenu();
     };
 
     if (urlParams.get('tipo') === 'colorcenter') {
@@ -546,8 +752,12 @@
     Object.keys(store).forEach(path => {
         onValue(ref(db, path), (s) => {
             store[path] = s.val() || {};
+            if (path === 'modulos_dinamicos') {
+                renderDynamicModules();
+            }
             if (loadsPending > 0) loadsPending--;
             if (loadsPending === 0) {
+                renderDynamicModules();
                 aplicarPermisosMenu();
                 if (urlParams.get('tipo') === 'colorcenter') {
                     render('colorcenter');
@@ -1720,7 +1930,7 @@
         sidebarLinks.forEach((link, idx) => {
             const id = link.id || `mod-${idx}`;
             const nombre = link.innerText.trim();
-            const iconHtml = link.querySelector('i')?.outerHTML || '';
+            const iconHtml = link.querySelector('i')?.outerHTML || link.querySelector('img')?.outerHTML || '';
             // Si no tiene registro previo, por defecto vienen seleccionados todos
             const isChecked = modulosGuardados === null ? true : modulosGuardados.includes(id);
 
