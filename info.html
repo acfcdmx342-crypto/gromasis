@@ -57,7 +57,6 @@
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
             border: 1px solid #334155;
-            position: relative;
         }
         .user-name {
             display: block;
@@ -73,26 +72,6 @@
             color: #cbd5e1;
             text-transform: uppercase;
             line-height: 1.2;
-        }
-
-        /* Estilo Notificación Latente */
-        .latente-badge {
-            background-color: #ef4444;
-            color: white;
-            font-size: 0.75rem;
-            font-weight: bold;
-            padding: 4px 8px;
-            border-radius: 12px;
-            cursor: pointer;
-            animation: pulse-red 1.5s infinite;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
         .table-container { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 300px; }
@@ -185,28 +164,14 @@
                 <span class="user-name" id="hdrNombre">LUIS ALBERTO GARCIA SANCHE</span>
                 <span class="user-role" id="hdrPuesto">Puesto: COORDINADOR DE SOPORTE TÉCNICO</span>
             </div>
-            <!-- Notificación Latente al costado del nombre para Soporte Técnico Jr -->
-            <div id="wrapperNotificacionLatente" class="d-none">
-                <span class="latente-badge" onclick="verAlertaLatente()" title="Ver Alerta de Actividad Activa">
-                    <i class="bi bi-bell-fill"></i> <span id="cantAlertasLatentes">1</span>
-                </span>
-            </div>
         </div>
-
-        <!-- Botón para Enviar Alertas (Visible para Jefes/Coordinadores/Soporte Sr) -->
-        <button type="button" id="btnEnviarAlerta" class="btn btn-warning text-dark fw-bold d-none align-items-center justify-content-center p-2" 
-                title="Alertas de Actividad" onclick="abrirModalAlertasAdmin()" 
-                style="height: 42px; border-radius: 8px; gap: 6px;">
-            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
-            <span class="d-none d-md-inline small">Alertas</span>
-        </button>
 
         <!-- Botón de Calendario (Abre el Modal de Plan de Trabajo) -->
         <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center p-2" 
         title="Plan de Trabajo" data-bs-toggle="modal" data-bs-target="#modalPlanTrabajo" 
         style="height: 42px; width: 42px; border-radius: 8px;">
-            <i class="bi bi-calendar-event fs-5"></i>
-        </button>
+    <i class="bi bi-calendar-event fs-5"></i>
+</button>
 
         <!-- Botón para Salir -->
         <a href="index.html" class="btn btn-danger d-flex align-items-center justify-content-center p-2" 
@@ -220,78 +185,6 @@
 </div>
 
 <div id="excelFilterMenu" class="excel-filter-menu"></div>
-
-<!-- MODAL GESTIÓN DE ALERTAS (EMISORES: COORDINADOR, SR, JEFE) -->
-<div class="modal fade" id="modalAlertasAdmin" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Gestión de Alertas de Actividad</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="card p-3 mb-4 bg-light border">
-                    <h6 class="fw-bold text-dark mb-3">Enviar Nueva Alerta a Soporte Técnico Jr</h6>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Seleccionar Soporte Técnico Jr</label>
-                            <select id="alertaDestinatario" class="form-select"></select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Título o Asunto de la Actividad</label>
-                            <input type="text" id="alertaTitulo" class="form-control" placeholder="EJ. REVISIÓN DE CCTV PENDIENTE">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small fw-bold">Mensaje de Alerta / Instrucciones</label>
-                            <textarea id="alertaMensaje" class="form-control" rows="3" placeholder="DESCRIPCIÓN DETALLADA DE LA ACTIVIDAD A REALIZAR..."></textarea>
-                        </div>
-                        <div class="col-12 text-end">
-                            <button class="btn btn-dark fw-bold" onclick="guardarNuevaAlerta()"><i class="bi bi-send me-1"></i> Enviar Alerta Persistentemente</button>
-                        </div>
-                    </div>
-                </div>
-
-                <h6 class="fw-bold text-dark mb-2">Historial y Desactivación de Alertas</h6>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-sm align-middle" style="font-size: 0.8rem;">
-                        <thead class="table-dark text-center">
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Destinatario (Jr)</th>
-                                <th>Título</th>
-                                <th>Mensaje</th>
-                                <th>Emisor</th>
-                                <th>Estatus</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbHistorialAlertas">
-                            <!-- Inyectado dinámicamente -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL VISUALIZACIÓN DE ALERTA PARA SOPORTE JR -->
-<div class="modal fade" id="modalAlertaJr" data-bs-backdrop="static" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-danger border-2">
-            <div class="modal-header bg-danger text-white py-2">
-                <h5 class="modal-title fw-bold fs-6"><i class="bi bi-bell-fill me-2"></i>ALERTA DE ACTIVIDAD PENDIENTE</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4" id="bodyAlertaJr">
-                <!-- Contenido dinámico -->
-            </div>
-            <div class="modal-footer bg-light py-2">
-                <button type="button" class="btn btn-secondary btn-sm fw-bold" data-bs-dismiss="modal">Cerrar (Permanecerá como notificación latente)</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- MODAL PRINCIPAL -->
 <div class="modal fade" id="modalApp" tabindex="-1">
@@ -570,13 +463,12 @@
     const config = { databaseURL: "https://gromasis-9c094-default-rtdb.firebaseio.com/" };
     const db = getDatabase(initializeApp(config));
     
-    let store = { colorcenter:{}, redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, servidores: {}, sucursales: {}, usuarios: {}, alertas_actividad: {} };
+    let store = { colorcenter:{}, redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, servidores: {}, sucursales: {}, usuarios: {} };
     let currentPath = '';
     let loadsPending = Object.keys(store).length;
     const urlParams = new URLSearchParams(window.location.search);
 
     let activeFiltersState = {};
-    let autoAlertaMostrada = false;
 
     const listsRoma = {
         desarrollos: ["SUMMA++", "SUMMA ADV", "TASK", "SALES ENGINE", "MCI", "PEDIDOS FERREPRECIOS", "ST-GR", "CONTROL VEHICULAR", "SOPORTES", "SAS WEB"],
@@ -599,214 +491,6 @@
             usrObj = Object.values(store.personal || {}).find(p => (p.nombreCompleto || '').toUpperCase().trim() === currentUserNombre);
         }
         return usrObj;
-    };
-
-    // VERIFICACIÓN DE ROLES PARA ALERTAS DE ACTIVIDAD
-    const esLiderSoporte = () => {
-        const puesto = (storedRole || '').toUpperCase().trim();
-        return puesto.includes("COORDINADOR DE SOPORTE TÉCNICO") || 
-               puesto.includes("SOPORTE TÉCNICO SR") || 
-               puesto.includes("JEFE DE INFRA ESTRUCTURA Y SOPORTE TÉCNICO") ||
-               puesto.includes("JEFE DE INFRAESTRUCTURA Y SOPORTE TÉCNICO");
-    };
-
-    const esSoporteJr = () => {
-        const puesto = (storedRole || '').toUpperCase().trim();
-        return puesto.includes("SOPORTE TÉCNICO JR") || puesto.includes("SOPORTE TECNICO JR");
-    };
-
-    // GESTIÓN DE ALERTAS PERSISTENTES Y NOTIFICACIÓN LATENTE
-    const procesarAlertasSistema = () => {
-        const currentUserNombre = storedName ? storedName.toUpperCase().trim() : '';
-        const btnEmisor = document.getElementById("btnEnviarAlerta");
-
-        if (esLiderSoporte() && btnEmisor) {
-            btnEmisor.classList.remove("d-none");
-            btnEmisor.classList.add("d-flex");
-        }
-
-        const todasAlertas = Object.keys(store.alertas_actividad || {}).map(k => ({
-            id: k,
-            ...store.alertas_actividad[k]
-        }));
-
-        if (esSoporteJr()) {
-            const misAlertasActivas = todasAlertas.filter(a => 
-                a.activa === true && 
-                (a.destinatarioNombre || '').toUpperCase().trim() === currentUserNombre
-            );
-
-            const badgeWrapper = document.getElementById("wrapperNotificacionLatente");
-            const cantBadge = document.getElementById("cantAlertasLatentes");
-
-            if (misAlertasActivas.length > 0) {
-                if (badgeWrapper) badgeWrapper.classList.remove("d-none");
-                if (cantBadge) cantBadge.innerText = misAlertasActivas.length;
-
-                // Desplegar modal automáticamente una sola vez al cargar
-                if (!autoAlertaMostrada) {
-                    autoAlertaMostrada = true;
-                    verAlertaLatente();
-                }
-            } else {
-                if (badgeWrapper) badgeWrapper.classList.add("d-none");
-            }
-        }
-    };
-
-    window.verAlertaLatente = () => {
-        const currentUserNombre = storedName ? storedName.toUpperCase().trim() : '';
-        const todasAlertas = Object.keys(store.alertas_actividad || {}).map(k => ({
-            id: k,
-            ...store.alertas_actividad[k]
-        }));
-
-        const misAlertasActivas = todasAlertas.filter(a => 
-            a.activa === true && 
-            (a.destinatarioNombre || '').toUpperCase().trim() === currentUserNombre
-        );
-
-        if (misAlertasActivas.length === 0) {
-            Swal.fire("Sin Alertas", "No tienes alertas de actividad pendientes.", "info");
-            return;
-        }
-
-        let htmlContent = misAlertasActivas.map((alt, idx) => `
-            <div class="alert alert-warning border-warning border-2 text-start mb-3 shadow-sm">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="badge bg-danger text-uppercase">Alerta #${idx + 1}</span>
-                    <small class="text-muted fw-bold">${alt.fecha || ''}</small>
-                </div>
-                <h6 class="fw-bold text-dark m-0 mb-2">${alt.titulo || 'AVISO DE ACTIVIDAD'}</h6>
-                <p class="mb-2 text-dark" style="font-size:0.9rem; white-space: pre-line;">${alt.mensaje || ''}</p>
-                <hr class="my-2">
-                <small class="text-secondary d-block"><strong>Enviado por:</strong> ${alt.emisorNombre || 'SUPERVISOR'} (${alt.emisorPuesto || 'SOPORTE'})</small>
-            </div>
-        `).join('');
-
-        document.getElementById("bodyAlertaJr").innerHTML = htmlContent;
-        new bootstrap.Modal(document.getElementById("modalAlertaJr")).show();
-    };
-
-    window.abrirModalAlertasAdmin = () => {
-        if (!esLiderSoporte()) {
-            Swal.fire("Acceso Restringido", "No tienes permisos para administrar alertas.", "error");
-            return;
-        }
-
-        // Cargar combo de Soporte Técnico Jr
-        const selectJr = document.getElementById("alertaDestinatario");
-        let personalYUsuarios = [...Object.values(store.usuarios || {}), ...Object.values(store.personal || {})];
-        
-        let listaJr = personalYUsuarios.filter(u => {
-            const p = (u.puesto || '').toUpperCase();
-            return p.includes("SOPORTE TÉCNICO JR") || p.includes("SOPORTE TECNICO JR");
-        });
-
-        // Eliminar duplicados por nombre
-        const unicosJr = [];
-        const nombresVistos = new Set();
-        listaJr.forEach(j => {
-            const nom = (j.nombreCompleto || '').toUpperCase().trim();
-            if (nom && !nombresVistos.has(nom)) {
-                nombresVistos.add(nom);
-                unicosJr.push(j);
-            }
-        });
-
-        if (unicosJr.length === 0) {
-            selectJr.innerHTML = '<option value="">NO HAY SOPORTE TÉCNICO JR REGISTRADO</option>';
-        } else {
-            selectJr.innerHTML = '<option value="">SELECCIONE SOPORTE JR...</option>' + 
-                unicosJr.map(j => `<option value="${j.nombreCompleto}">${j.nombreCompleto} (${j.puesto})</option>`).join('');
-        }
-
-        renderHistorialAlertasAdmin();
-        new bootstrap.Modal(document.getElementById("modalAlertasAdmin")).show();
-    };
-
-    window.guardarNuevaAlerta = async () => {
-        const dest = document.getElementById("alertaDestinatario").value;
-        const tit = document.getElementById("alertaTitulo").value.trim().toUpperCase();
-        const msj = document.getElementById("alertaMensaje").value.trim().toUpperCase();
-
-        if (!dest) { Swal.fire("Atención", "Seleccione un Soporte Técnico Jr.", "warning"); return; }
-        if (!tit) { Swal.fire("Atención", "Ingrese el título o asunto de la alerta.", "warning"); return; }
-        if (!msj) { Swal.fire("Atención", "Ingrese el mensaje de la alerta.", "warning"); return; }
-
-        const hoy = new Date();
-        const fechaStr = hoy.toLocaleDateString() + ' ' + hoy.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        const nuevaAlerta = {
-            destinatarioNombre: dest,
-            titulo: tit,
-            mensaje: msj,
-            emisorNombre: storedName ? storedName.toUpperCase().trim() : 'COORDINACIÓN DE SOPORTE',
-            emisorPuesto: storedRole ? storedRole.toUpperCase().trim() : 'COORDINADOR',
-            fecha: fechaStr,
-            activa: true
-        };
-
-        await push(ref(db, "alertas_actividad"), nuevaAlerta);
-
-        document.getElementById("alertaTitulo").value = "";
-        document.getElementById("alertaMensaje").value = "";
-
-        Swal.fire({ icon: "success", title: "Alerta Enviada Correctamente", timer: 1500, showConfirmButton: false });
-        renderHistorialAlertasAdmin();
-    };
-
-    const renderHistorialAlertasAdmin = () => {
-        const tbody = document.getElementById("tbHistorialAlertas");
-        if (!tbody) return;
-
-        const todasAlertas = Object.keys(store.alertas_actividad || {}).map(k => ({
-            id: k,
-            ...store.alertas_actividad[k]
-        })).reverse();
-
-        if (todasAlertas.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">No se han registrado alertas de actividad.</td></tr>`;
-            return;
-        }
-
-        tbody.innerHTML = todasAlertas.map(a => `
-            <tr>
-                <td>${a.fecha || '-'}</td>
-                <td class="fw-bold text-start">${a.destinatarioNombre || '-'}</td>
-                <td class="text-start fw-semibold">${a.titulo || '-'}</td>
-                <td class="text-start"><small>${a.mensaje || '-'}</small></td>
-                <td><small>${a.emisorNombre || '-'}</small></td>
-                <td>
-                    <span class="badge ${a.activa ? 'bg-danger' : 'bg-secondary'}">
-                        ${a.activa ? 'ACTIVA' : 'DESACTIVADA'}
-                    </span>
-                </td>
-                <td>
-                    ${a.activa ? 
-                        `<button class="btn btn-sm btn-success py-0 px-2" style="font-size:0.75rem;" onclick="desactivarAlertaAdmin('${a.id}')">Desactivar</button>` : 
-                        `<span class="text-muted small">Inactiva</span>`
-                    }
-                </td>
-            </tr>
-        `).join('');
-    };
-
-    window.desactivarAlertaAdmin = async (idAlerta) => {
-        const res = await Swal.fire({
-            title: '¿Desactivar Alerta?',
-            text: "Esta acción removerá el aviso de actividad del perfil del Soporte Técnico Jr.",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, Desactivar',
-            cancelButtonText: 'Cancelar'
-        });
-
-        if (res.isConfirmed) {
-            await update(ref(db, `alertas_actividad/${idAlerta}`), { activa: false });
-            Swal.fire({ icon: "success", title: "Alerta Desactivada", timer: 1200, showConfirmButton: false });
-            renderHistorialAlertasAdmin();
-        }
     };
 
     // APLICACIÓN DE PERMISOS PARA OCULTAR/MOSTRAR MENÚS LATERALES
@@ -865,7 +549,6 @@
             if (loadsPending > 0) loadsPending--;
             if (loadsPending === 0) {
                 aplicarPermisosMenu();
-                procesarAlertasSistema();
                 if (urlParams.get('tipo') === 'colorcenter') {
                     render('colorcenter');
                 } else if (currentPath === '') {
@@ -873,8 +556,6 @@
                 } else {
                     render(currentPath);
                 }
-            } else {
-                procesarAlertasSistema();
             }
         });
     });
@@ -2098,34 +1779,48 @@
         if (target.classList.contains("emp-check")) {
             const empresa = target.value;
             const grupoZonas = document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`);
-            if (grupoZonas) {
-                grupoZonas.classList.toggle("d-none", !target.checked);
-                if (!target.checked) {
-                    grupoZonas.querySelectorAll("input[type='checkbox']").forEach(chk => chk.checked = false);
-                    grupoZonas.querySelectorAll(".sucursal-group").forEach(sg => sg.classList.add("d-none"));
-                }
+            grupoZonas?.classList.toggle("d-none", !target.checked);
+            if (!target.checked) {
+                grupoZonas?.querySelectorAll("input[type='checkbox']").forEach(chk => {
+                    chk.checked = false;
+                    chk.indeterminate = false;
+                    if (chk.classList.contains("zona-check")) {
+                        document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(chk.value)}"]`)?.classList.add("d-none");
+                    }
+                });
             }
         }
-
         if (target.classList.contains("zona-check")) {
             const empresa = target.dataset.empresa;
             const zona = target.value;
             const grupoSucursales = document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`);
-            if (grupoSucursales) {
-                grupoSucursales.classList.toggle("d-none", !target.checked);
-                if (!target.checked) {
-                    grupoSucursales.querySelectorAll("input[type='checkbox']").forEach(chk => chk.checked = false);
-                }
+            grupoSucursales?.classList.toggle("d-none", !target.checked);
+            if (target.checked) {
+                document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
+                document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
+            } else {
+                grupoSucursales?.querySelectorAll(".suc-check, .all-suc-check").forEach(chk => { chk.checked = false; chk.indeterminate = false; });
             }
         }
-
         if (target.classList.contains("all-suc-check")) {
             const empresa = target.dataset.empresa;
             const zona = target.dataset.zona;
-            const sucursales = document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`);
-            sucursales.forEach(chk => chk.checked = target.checked);
+            const checked = target.checked;
+            document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
+            document.querySelector(`.zona-check[data-empresa="${CSS.escape(empresa)}"][value="${CSS.escape(zona)}"]`).checked = true;
+            document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
+            document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`)?.classList.remove("d-none");
+            document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`).forEach(chk => chk.checked = checked);
+            target.indeterminate = false;
         }
-
+        if (target.classList.contains("suc-check") && target.checked) {
+            const empresa = target.dataset.empresa;
+            const zona = target.dataset.zona;
+            document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
+            document.querySelector(`.zona-check[data-empresa="${CSS.escape(empresa)}"][value="${CSS.escape(zona)}"]`).checked = true;
+            document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
+            document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`)?.classList.remove("d-none");
+        }
         if (target.classList.contains("suc-check")) {
             syncAllSucursalesCheck(target.dataset.empresa, target.dataset.zona);
         }
@@ -2133,49 +1828,58 @@
 
     window.guardarAsignacion = async () => {
         if (!currentUserId) return;
-
         const asignacionSucursales = [];
-        const empresasCheckboxes = document.querySelectorAll(".emp-check:checked");
-
-        empresasCheckboxes.forEach(empChk => {
+        document.querySelectorAll(".emp-check:checked").forEach(empChk => {
             const empresa = empChk.value;
-            const zonasObj = [];
-            const zonasCheckboxes = document.querySelectorAll(`.zona-check[data-empresa="${CSS.escape(empresa)}"]:checked`);
-
-            zonasCheckboxes.forEach(zonaChk => {
+            const zones = [];
+            document.querySelectorAll(`.zona-check[data-empresa="${CSS.escape(empresa)}"]:checked`).forEach(zonaChk => {
                 const zona = zonaChk.value;
-                const sucursalesCheckboxes = document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]:checked`);
-                const sucursales = Array.from(sucursalesCheckboxes).map(sc => sc.value);
-
-                zonasObj.push({
-                    zona: zona,
-                    sucursales: sucursales
-                });
+                const sucursales = Array.from(document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]:checked`)).map(chk => chk.value);
+                zones.push({ zona, sucursales });
             });
-
-            asignacionSucursales.push({
-                empresa: empresa,
-                zonas: zonasObj
-            });
+            asignacionSucursales.push({ empresa, zonas: zones });
         });
 
-        const modulosPermitidos = [];
-        document.querySelectorAll("#modulos-tree .mod-check:checked").forEach(chk => {
-            modulosPermitidos.push(chk.value);
-        });
+        // RECOLECCIÓN DE MÓDULOS PERMITIDOS
+        const modulosPermitidos = Array.from(document.querySelectorAll("#modulos-tree .mod-check:checked")).map(c => c.value);
 
         try {
             await update(ref(db, `${currentPath}/${currentUserId}`), { 
-                asignacionSucursales: asignacionSucursales,
-                modulosPermitidos: modulosPermitidos
+                asignacionSucursales,
+                modulosPermitidos 
             });
-
+            aplicarPermisosMenu();
+            if (currentPath) render(currentPath);
+            Swal.fire({ icon: "success", title: "Asignación y permisos guardados", timer: 1200, showConfirmButton: false });
             bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
-            Swal.fire({ icon: "success", title: "Permisos y Accesos Guardados", timer: 1200, showConfirmButton: false });
-        } catch (error) {
-            Swal.fire("Error", "No se pudieron guardar los permisos: " + error.message, "error");
-        }
+        } catch (e) { Swal.fire("Error", e.message, "error"); }
+    };
+
+    window.renderDashboard = renderDashboard;
+    window.render = render;
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.onkeydown = e => {
+        if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
     };
 </script>
+<!-- MODAL PLAN DE TRABAJO (CALENDARIO) -->
+<div class="modal fade" id="modalPlanTrabajo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white py-2">
+                <h6 class="modal-title fw-bold m-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-calendar-event text-primary"></i> Plan de Trabajo / Agenda
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" style="height: 80vh; min-height: 500px;">
+                <iframe src="ptrabajo.html" style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
