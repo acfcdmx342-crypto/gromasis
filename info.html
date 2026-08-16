@@ -204,7 +204,7 @@
         <div id="dynamic-modules-container"></div>
     </div>
     <div class="p-3 border-top border-secondary">
-        <button id="btnAgregarModulo"class="btn btn-outline-info w-100 btn-sm text-white fw-bold d-flex align-items-center justify-content-center gap-1" onclick="openAddModuleModal()">
+        <button id="btnAgregarModulo" class="btn btn-outline-info w-100 btn-sm text-white fw-bold d-flex align-items-center justify-content-center gap-1" onclick="openAddModuleModal()">
             <i class="bi bi-plus-lg"></i> Agregar Módulo
         </button>
     </div>
@@ -241,12 +241,7 @@
 
 <div id="excelFilterMenu" class="excel-filter-menu"></div>
 
-    <!-- MODAL PARA AGREGAR MÓDULO -->
-   function abrirModalAgregarModulo() {
-    if (usuarioActual.puesto.trim().toUpperCase() !== "COORDINADOR DE SOPORTE TECNICO") {
-        alert("No tienes permisos suficientes para realizar esta acción.");
-        return;
-    }
+<!-- MODAL PARA AGREGAR MÓDULO -->
 <div class="modal fade" id="modalNuevoModulo" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0">
@@ -555,6 +550,8 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -623,6 +620,12 @@
     };
 
     window.openAddModuleModal = () => {
+        const puestoActual = (storedRole || "").trim().toUpperCase();
+        if (puestoActual !== "COORDINADOR DE SOPORTE TÉCNICO" && puestoActual !== "COORDINADOR DE SOPORTE TECNICO") {
+            Swal.fire("Acceso Restringido", "No tienes permisos suficientes para realizar esta acción.", "warning");
+            return;
+        }
+
         document.getElementById("modNombreModulo").value = "";
         document.getElementById("modUrlModulo").value = "";
         document.getElementById("modIconUrl").value = "";
@@ -708,6 +711,14 @@
     const aplicarPermisosMenu = () => {
         const usrObj = getCurrentUserObj();
 
+        // Control visual del botón Agregar Módulo según el rol
+        const btnAgregarModulo = document.getElementById('btnAgregarModulo');
+        if (btnAgregarModulo) {
+            const puestoUsuario = (storedRole || "").trim().toUpperCase();
+            const esCoordinador = puestoUsuario === "COORDINADOR DE SOPORTE TÉCNICO" || puestoUsuario === "COORDINADOR DE SOPORTE TECNICO";
+            btnAgregarModulo.style.display = esCoordinador ? 'flex' : 'none';
+        }
+
         // Si el usuario existe y tiene permisos configurados, ocultar aquellos no marcados
         if (usrObj && Array.isArray(usrObj.modulosPermitidos)) {
             const permitidos = usrObj.modulosPermitidos;
@@ -720,18 +731,7 @@
             });
         }
     };
-// Obtener el puesto del usuario activo (desde localStorage, sessionStorage o Firebase Auth/DB)
-const puestoUsuario = usuarioActual.puesto; // Ejemplo: "COORDINADOR DE SOPORTE TECNICO" o "SOPORTE TECNICO JR"
-const btnAgregarModulo = document.getElementById('btnAgregarModulo');
-if (btnAgregarModulo) {
-    // Definir los roles autorizados (en este caso, solo el Coordinador)
-    const esCoordinador = puestoUsuario.trim().toUpperCase() === "COORDINADOR DE SOPORTE TECNICO";
-    if (esCoordinador) {
-        btnAgregarModulo.style.display = 'block'; // O 'inline-block' / 'flex' según tus estilos
-    } else {
-        btnAgregarModulo.style.display = 'none'; // Se oculta para Soporte Técnico Jr y otros roles
-    }
-}
+
     // HELPER: EVALÚA SI UN REGISTRO ES VISIBLE SEGÚN LAS SUCURSALES/EMPRESAS ASIGNADAS AL USUARIO LOGUEADO
     const esRegistroPermitido = (usrObj, regEmpresa, regZona = null, regSucursal = null) => {
         if (!usrObj || !Array.isArray(usrObj.asignacionSucursales) || usrObj.asignacionSucursales.length === 0) {
@@ -1823,289 +1823,7 @@ if (btnAgregarModulo) {
     document.getElementById("checkMasivo").onchange = (e) => {
         const checked = e.target.checked;
         document.getElementById("secMasivo").classList.toggle('d-none', !checked);
-        
-        if (currentPath === 'redes_inalambricas') {
-            ['riModem','riModelo','riSsidFabrica','riWpaFabrica','riDestinado','riSsidModificado','riWpaModificado','riAccesoModem','riFechaActualizacion']
-            .forEach(id => document.getElementById(id).closest('.col-md-4, .col-md-6, .col-12').classList.toggle('d-none', checked));
-        } else if (['usuarios', 'personal'].includes(currentPath)) {
-            document.getElementById("secFormIndividualUP").classList.toggle('d-none', checked);
-        } else {
-            document.getElementById("secIndividual").classList.toggle('d-none', checked);
-        }
-    };
-
-    let currentUserId = null;
-    const cleanAsignacionId = (txt) => String(txt || '').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const getAsignacionUsuario = () => {
-        const asignacion = store[currentPath][currentUserId]?.asignacionSucursales;
-        return Array.isArray(asignacion) ? asignacion : [];
-    };
-    const getModulosPermitidosUsuario = () => {
-        const modulos = store[currentPath][currentUserId]?.modulosPermitidos;
-        return Array.isArray(modulos) ? modulos : null;
-    };
-    const getEmpresaAsignada = (empresa) => getAsignacionUsuario().find(a => a.empresa === empresa);
-    const getZonaAsignada = (empresa, zona) => getEmpresaAsignada(empresa)?.zonas?.find(z => z.zona === zona);
-
-    const syncAllSucursalesCheck = (empresa, zona) => {
-        const allCheck = document.querySelector(`.all-suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`);
-        if (!allCheck) return;
-        const sucursales = Array.from(document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`));
-        const seleccionadas = sucursales.filter(chk => chk.checked);
-        allCheck.checked = sucursales.length > 0 && seleccionadas.length === sucursales.length;
-        allCheck.indeterminate = seleccionadas.length > 0 && seleccionadas.length < sucursales.length;
-    };
-
-    const syncAllSucursalesChecks = () => {
-        document.querySelectorAll(".all-suc-check").forEach(chk => syncAllSucursalesCheck(chk.dataset.empresa, chk.dataset.zona));
-    };
-
-    const buildAsignacionTree = () => {
-        const empresas = Object.values(store.empresas).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
-        if (!empresas.length) return '<div class="text-center text-muted py-4">No hay empresas registradas.</div>';
-
-        return empresas.map(emp => {
-            const empresa = emp.nombre || '';
-            const empId = `emp-${cleanAsignacionId(empresa)}`;
-            const empresaAsignada = getEmpresaAsignada(empresa);
-            const empresaChecked = empresaAsignada ? 'checked' : '';
-            const empresaVisible = empresaAsignada ? '' : 'd-none';
-            const zonas = Object.values(store.zonas).filter(z => z.empresa === empresa).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
-
-            const zonasHtml = zonas.length ? zonas.map(z => {
-                const zona = z.nombre || '';
-                const zonaId = `zona-${cleanAsignacionId(empresa)}-${cleanAsignacionId(zona)}`;
-                const zonaAsignada = getZonaAsignada(empresa, zona);
-                const zonaChecked = zonaAsignada ? 'checked' : '';
-                const zonaVisible = zonaAsignada ? '' : 'd-none';
-                const sucursalesSeleccionadas = zonaAsignada?.sucursales || [];
-                const sucursales = Object.values(store.sucursales).filter(s => s.empresa === empresa && s.zona === zona).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
-                const allSucId = `all-${cleanAsignacionId(empresa)}-${cleanAsignacionId(zona)}`;
-                const todasSeleccionadas = sucursales.length > 0 && sucursales.every(s => sucursalesSeleccionadas.includes(s.nombre || ''));
-                const allSucChecked = todasSeleccionadas ? 'checked' : '';
-
-                const sucursalesHtml = sucursales.length ? sucursales.map(s => {
-                    const sucursal = s.nombre || '';
-                    const sucId = `suc-${cleanAsignacionId(empresa)}-${cleanAsignacionId(zona)}-${cleanAsignacionId(sucursal)}`;
-                    const sucChecked = sucursalesSeleccionadas.includes(sucursal) ? 'checked' : '';
-                    return `
-                        <div class="form-check tree-row">
-                            <input class="form-check-input suc-check" type="checkbox" value="${sucursal}" id="${sucId}" data-empresa="${empresa}" data-zona="${zona}" ${sucChecked}>
-                            <label class="form-check-label small" for="${sucId}">${sucursal}</label>
-                        </div>`;
-                }).join('') : '<div class="tree-muted">Sin sucursales.</div>';
-                
-                const seleccionarTodasHtml = sucursales.length ? `
-                    <div class="form-check tree-row">
-                        <input class="form-check-input all-suc-check" type="checkbox" id="${allSucId}" data-empresa="${empresa}" data-zona="${zona}" ${allSucChecked}>
-                        <label class="form-check-label small tree-select-all" for="${allSucId}">Seleccionar todas</label>
-                    </div>` : '';
-
-                return `
-                    <div class="mb-1">
-                        <div class="form-check tree-row">
-                            <input class="form-check-input zona-check" type="checkbox" value="${zona}" id="${zonaId}" data-empresa="${empresa}" ${zonaChecked}>
-                            <label class="form-check-label small fw-semibold" for="${zonaId}">${zona}</label>
-                        </div>
-                        <div class="tree-level sucursal-group ${zonaVisible}" data-empresa="${empresa}" data-zona="${zona}">
-                            ${seleccionarTodasHtml}
-                            ${sucursalesHtml}
-                        </div>
-                    </div>`;
-            }).join('') : '<div class="tree-muted">Sin zonas.</div>';
-
-            return `
-                <div class="mb-2">
-                    <div class="form-check tree-row">
-                        <input class="form-check-input emp-check" type="checkbox" value="${empresa}" id="${empId}" ${empresaChecked}>
-                        <label class="form-check-label fw-semibold" for="${empId}">${empresa}</label>
-                    </div>
-                    <div class="tree-level zona-group ${empresaVisible}" data-empresa="${empresa}">
-                        ${zonasHtml}
-                    </div>
-                </div>`;
-        }).join('');
-    };
-
-    // CONSTRUCCIÓN DINÁMICA DEL ÁRBOL DE MÓDULOS DESDE EL SIDEBAR
-    const buildModulosTree = () => {
-        const sidebarLinks = Array.from(document.querySelectorAll(".sidebar a"));
-        if (!sidebarLinks.length) return '<div class="text-center text-muted py-3">No hay módulos disponibles.</div>';
-
-        const modulosGuardados = getModulosPermitidosUsuario();
-
-        let html = `
-            <div class="mb-3 pb-2 border-bottom">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="chkAllModulos" onchange="toggleSelectAllModulos(this)">
-                    <label class="form-check-label fw-bold text-primary" for="chkAllModulos">(Seleccionar todos los módulos)</label>
-                </div>
-            </div>
-            <div class="row g-2">`;
-
-        sidebarLinks.forEach((link, idx) => {
-            const id = link.id || `mod-${idx}`;
-            const nombre = link.innerText.trim();
-            const iconHtml = link.querySelector('i')?.outerHTML || link.querySelector('img')?.outerHTML || '';
-            // Si no tiene registro previo, por defecto vienen seleccionados todos
-            const isChecked = modulosGuardados === null ? true : modulosGuardados.includes(id);
-
-            html += `
-                <div class="col-md-6">
-                    <div class="p-2 border rounded bg-light d-flex align-items-center">
-                        <div class="form-check m-0 w-100">
-                            <input class="form-check-input mod-check" type="checkbox" value="${id}" id="chkMod_${id}" ${isChecked ? 'checked' : ''} onchange="syncMasterModuloCheck()">
-                            <label class="form-check-label small fw-semibold text-dark cursor-pointer d-flex align-items-center gap-2" for="chkMod_${id}">
-                                ${iconHtml} <span>${nombre}</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>`;
-        });
-
-        html += `</div>`;
-        return html;
-    };
-
-    window.toggleSelectAllModulos = (master) => {
-        document.querySelectorAll("#modulos-tree .mod-check").forEach(chk => {
-            chk.checked = master.checked;
-        });
-    };
-
-    window.syncMasterModuloCheck = () => {
-        const master = document.getElementById("chkAllModulos");
-        if (!master) return;
-        const checks = Array.from(document.querySelectorAll("#modulos-tree .mod-check"));
-        const checkedCount = checks.filter(c => c.checked).length;
-
-        if (checkedCount === checks.length) {
-            master.checked = true;
-            master.indeterminate = false;
-        } else if (checkedCount === 0) {
-            master.checked = false;
-            master.indeterminate = false;
-        } else {
-            master.checked = false;
-            master.indeterminate = true;
-        }
-    };
-
-    window.openEmpresaModal = (userId) => {
-        currentUserId = userId;
-        document.getElementById("empresa-tree").innerHTML = buildAsignacionTree();
-        document.getElementById("modulos-tree").innerHTML = buildModulosTree();
-        syncAllSucursalesChecks();
-        syncMasterModuloCheck();
-        new bootstrap.Modal(document.getElementById("modalEmpresas")).show();
-    };
-
-    document.getElementById("empresa-tree").addEventListener("change", (e) => {
-        const target = e.target;
-        if (target.classList.contains("emp-check")) {
-            const empresa = target.value;
-            const grupoZonas = document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`);
-            grupoZonas?.classList.toggle("d-none", !target.checked);
-            if (!target.checked) {
-                grupoZonas?.querySelectorAll("input[type='checkbox']").forEach(chk => {
-                    chk.checked = false;
-                    chk.indeterminate = false;
-                    if (chk.classList.contains("zona-check")) {
-                        document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(chk.value)}"]`)?.classList.add("d-none");
-                    }
-                });
-            }
-        }
-        if (target.classList.contains("zona-check")) {
-            const empresa = target.dataset.empresa;
-            const zona = target.value;
-            const grupoSucursales = document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`);
-            grupoSucursales?.classList.toggle("d-none", !target.checked);
-            if (target.checked) {
-                document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
-                document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
-            } else {
-                grupoSucursales?.querySelectorAll(".suc-check, .all-suc-check").forEach(chk => { chk.checked = false; chk.indeterminate = false; });
-            }
-        }
-        if (target.classList.contains("all-suc-check")) {
-            const empresa = target.dataset.empresa;
-            const zona = target.dataset.zona;
-            const checked = target.checked;
-            document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
-            document.querySelector(`.zona-check[data-empresa="${CSS.escape(empresa)}"][value="${CSS.escape(zona)}"]`).checked = true;
-            document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
-            document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`)?.classList.remove("d-none");
-            document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`).forEach(chk => chk.checked = checked);
-            target.indeterminate = false;
-        }
-        if (target.classList.contains("suc-check") && target.checked) {
-            const empresa = target.dataset.empresa;
-            const zona = target.dataset.zona;
-            document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
-            document.querySelector(`.zona-check[data-empresa="${CSS.escape(empresa)}"][value="${CSS.escape(zona)}"]`).checked = true;
-            document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
-            document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`)?.classList.remove("d-none");
-        }
-        if (target.classList.contains("suc-check")) {
-            syncAllSucursalesCheck(target.dataset.empresa, target.dataset.zona);
-        }
-    });
-
-    window.guardarAsignacion = async () => {
-        if (!currentUserId) return;
-        const asignacionSucursales = [];
-        document.querySelectorAll(".emp-check:checked").forEach(empChk => {
-            const empresa = empChk.value;
-            const zones = [];
-            document.querySelectorAll(`.zona-check[data-empresa="${CSS.escape(empresa)}"]:checked`).forEach(zonaChk => {
-                const zona = zonaChk.value;
-                const sucursales = Array.from(document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]:checked`)).map(chk => chk.value);
-                zones.push({ zona, sucursales });
-            });
-            asignacionSucursales.push({ empresa, zonas: zones });
-        });
-
-        // RECOLECCIÓN DE MÓDULOS PERMITIDOS
-        const modulosPermitidos = Array.from(document.querySelectorAll("#modulos-tree .mod-check:checked")).map(c => c.value);
-
-        try {
-            await update(ref(db, `${currentPath}/${currentUserId}`), { 
-                asignacionSucursales,
-                modulosPermitidos 
-            });
-            aplicarPermisosMenu();
-            if (currentPath) render(currentPath);
-            Swal.fire({ icon: "success", title: "Asignación y permisos guardados", timer: 1200, showConfirmButton: false });
-            bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
-        } catch (e) { Swal.fire("Error", e.message, "error"); }
-    };
-
-    window.renderDashboard = renderDashboard;
-    window.render = render;
-</script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.onkeydown = e => {
-        if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
     };
 </script>
-<!-- MODAL PLAN DE TRABAJO (CALENDARIO) -->
-<div class="modal fade" id="modalPlanTrabajo" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-dark text-white py-2">
-                <h6 class="modal-title fw-bold m-0 d-flex align-items-center gap-2">
-                    <i class="bi bi-calendar-event text-primary"></i> Plan de Trabajo / Agenda
-                </h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0" style="height: 80vh; min-height: 500px;">
-                <iframe src="ptrabajo.html" style="width: 100%; height: 100%; border: none;"></iframe>
-            </div>
-        </div>
-    </div>
-</div>
 </body>
 </html>
