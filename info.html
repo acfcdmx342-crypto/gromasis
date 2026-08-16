@@ -204,7 +204,7 @@
         <div id="dynamic-modules-container"></div>
     </div>
     <div class="p-3 border-top border-secondary">
-        <button class="btn btn-outline-info w-100 btn-sm text-white fw-bold d-flex align-items-center justify-content-center gap-1" onclick="openAddModuleModal()">
+        <button id="btnAgregarModulo"class="btn btn-outline-info w-100 btn-sm text-white fw-bold d-flex align-items-center justify-content-center gap-1" onclick="openAddModuleModal()">
             <i class="bi bi-plus-lg"></i> Agregar Módulo
         </button>
     </div>
@@ -241,7 +241,12 @@
 
 <div id="excelFilterMenu" class="excel-filter-menu"></div>
 
-<!-- MODAL PARA AGREGAR MÓDULO -->
+    <!-- MODAL PARA AGREGAR MÓDULO -->
+   function abrirModalAgregarModulo() {
+    if (usuarioActual.puesto.trim().toUpperCase() !== "COORDINADOR DE SOPORTE TECNICO") {
+        alert("No tienes permisos suficientes para realizar esta acción.");
+        return;
+    }
 <div class="modal fade" id="modalNuevoModulo" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0">
@@ -715,7 +720,18 @@
             });
         }
     };
-
+// Obtener el puesto del usuario activo (desde localStorage, sessionStorage o Firebase Auth/DB)
+const puestoUsuario = usuarioActual.puesto; // Ejemplo: "COORDINADOR DE SOPORTE TECNICO" o "SOPORTE TECNICO JR"
+const btnAgregarModulo = document.getElementById('btnAgregarModulo');
+if (btnAgregarModulo) {
+    // Definir los roles autorizados (en este caso, solo el Coordinador)
+    const esCoordinador = puestoUsuario.trim().toUpperCase() === "COORDINADOR DE SOPORTE TECNICO";
+    if (esCoordinador) {
+        btnAgregarModulo.style.display = 'block'; // O 'inline-block' / 'flex' según tus estilos
+    } else {
+        btnAgregarModulo.style.display = 'none'; // Se oculta para Soporte Técnico Jr y otros roles
+    }
+}
     // HELPER: EVALÚA SI UN REGISTRO ES VISIBLE SEGÚN LAS SUCURSALES/EMPRESAS ASIGNADAS AL USUARIO LOGUEADO
     const esRegistroPermitido = (usrObj, regEmpresa, regZona = null, regSucursal = null) => {
         if (!usrObj || !Array.isArray(usrObj.asignacionSucursales) || usrObj.asignacionSucursales.length === 0) {
