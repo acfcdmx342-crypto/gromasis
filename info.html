@@ -464,7 +464,6 @@
         </div>
     </div>
 </div>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -636,7 +635,6 @@
     const aplicarPermisosMenu = () => {
         const usrObj = getCurrentUserObj();
 
-        // Si el usuario existe y tiene permisos configurados, ocultar aquellos no marcados
         if (usrObj && Array.isArray(usrObj.modulosPermitidos)) {
             const permitidos = usrObj.modulosPermitidos;
             document.querySelectorAll('.sidebar a').forEach(link => {
@@ -652,19 +650,16 @@
     // HELPER: EVALÚA SI UN REGISTRO ES VISIBLE SEGÚN LAS SUCURSALES/EMPRESAS ASIGNADAS AL USUARIO LOGUEADO
     const esRegistroPermitido = (usrObj, regEmpresa, regZona = null, regSucursal = null) => {
         if (!usrObj || !Array.isArray(usrObj.asignacionSucursales) || usrObj.asignacionSucursales.length === 0) {
-            return true; // Si no hay asignaciones configuradas, se le permite acceso total
+            return true;
         }
 
         const asignaciones = usrObj.asignacionSucursales;
         
-        // Comprobar si tiene acceso a la empresa
         const empMatch = asignaciones.find(a => (a.empresa || '').toUpperCase() === (regEmpresa || '').toUpperCase());
         if (!empMatch) return false;
 
-        // Si no se especifica sucursal ni zona para el registro (o no aplica), la empresa ya coincide
         if (!regSucursal && !regZona) return true;
 
-        // Validar filtro por zona/sucursal si se proporciona sucursal o zona
         if (Array.isArray(empMatch.zonas)) {
             if (regZona && !regSucursal) {
                 return empMatch.zonas.some(z => (z.zona || '').toUpperCase() === (regZona || '').toUpperCase());
@@ -690,11 +685,11 @@
                 aplicarPermisosMenu();
                 escucharNotificaciones();
                 if (urlParams.get('tipo') === 'colorcenter') {
-                    render('colorcenter');
+                    window.render('colorcenter');
                 } else if (currentPath === '') {
-                    renderDashboard();
+                    window.renderDashboard();
                 } else {
-                    render(currentPath);
+                    window.render(currentPath);
                 }
             } else {
                 escucharNotificaciones();
@@ -709,7 +704,6 @@
 
         const usrObj = getCurrentUserObj();
 
-        // Filtrar empresas visibles según asignación
         const empsDisponibles = Object.values(store.empresas)
             .filter(e => e.nombre && esRegistroPermitido(usrObj, e.nombre))
             .map(e => e.nombre)
@@ -910,7 +904,6 @@
         const usrObj = getCurrentUserObj();
         const items = store[path] || {};
         
-        // Filtrado dinámico según asignación de empresa/sucursal para el usuario logueado
         const keys = Object.keys(items).filter(id => {
             const r = items[id];
             const emp = r.empresa || (path === 'empresas' ? r.nombre : null);
@@ -1358,7 +1351,6 @@
             document.getElementById('check-camaras').checked = false;
             document.getElementById('desplegable-camaras').style.display = 'none';
 
-            // MOSTRAR U OCULTAR CAMPOS DE USUARIO/CORREO/PASSWORD SEGÚN MÓDULO
             const wrapUsuario = document.getElementById("wrapUpUsuario");
             const wrapCorreo = document.getElementById("wrapUpCorreo");
             const wrapPassword = document.getElementById("wrapUpPassword");
@@ -1757,28 +1749,12 @@
     let currentUserId = null;
     const cleanAsignacionId = (txt) => String(txt || '').replace(/[^a-zA-Z0-9_-]/g, '_');
     const getAsignacionUsuario = () => {
-        const asignacion = store[currentPath][currentUserId]?.asignacionSucursales;
+        const asignacion = store[currentPath]?.[currentUserId]?.asignacionSucursales;
         return Array.isArray(asignacion) ? asignacion : [];
     };
-    const getModulosPermitidosUsuario = () => {
-        const modulos = store[currentPath][currentUserId]?.modulosPermitidos;
-        return Array.isArray(modulos) ? modulos : null;
-    };
+
     const getEmpresaAsignada = (empresa) => getAsignacionUsuario().find(a => a.empresa === empresa);
     const getZonaAsignada = (empresa, zona) => getEmpresaAsignada(empresa)?.zonas?.find(z => z.zona === zona);
-
-    const syncAllSucursalesCheck = (empresa, zona) => {
-        const allCheck = document.querySelector(`.all-suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`);
-        if (!allCheck) return;
-        const sucursales = Array.from(document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`));
-        const seleccionadas = sucursales.filter(chk => chk.checked);
-        allCheck.checked = sucursales.length > 0 && seleccionadas.length === sucursales.length;
-        allCheck.indeterminate = seleccionadas.length > 0 && seleccionadas.length < sucursales.length;
-    };
-
-    const syncAllSucursalesChecks = () => {
-        document.querySelectorAll(".all-suc-check").forEach(chk => syncAllSucursalesCheck(chk.dataset.empresa, chk.dataset.zona));
-    };
 
     const buildAsignacionTree = () => {
         const empresas = Object.values(store.empresas).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
@@ -1810,211 +1786,46 @@
                     const sucChecked = sucursalesSeleccionadas.includes(sucursal) ? 'checked' : '';
                     return `
                         <div class="form-check tree-row">
-                            <input class="form-check-input suc-check" type="checkbox" value="${sucursal}" id="${sucId}" data-empresa="${empresa}" data-zona="${zona}" ${sucChecked}>
+                            <input class="form-check-input suc-check" type="checkbox" id="${sucId}" data-empresa="${empresa}" data-zona="${zona}" value="${sucursal}" ${sucChecked}>
                             <label class="form-check-label small" for="${sucId}">${sucursal}</label>
                         </div>`;
-                }).join('') : '<div class="tree-muted">Sin sucursales.</div>';
-                
-                const seleccionarTodasHtml = sucursales.length ? `
-                    <div class="form-check tree-row">
-                        <input class="form-check-input all-suc-check" type="checkbox" id="${allSucId}" data-empresa="${empresa}" data-zona="${zona}" ${allSucChecked}>
-                        <label class="form-check-label small tree-select-all" for="${allSucId}">Seleccionar todas</label>
-                    </div>` : '';
+                }).join('') : '<div class="text-muted small ps-2">Sin sucursales</div>';
 
                 return `
-                    <div class="mb-1">
-                        <div class="form-check tree-row">
-                            <input class="form-check-input zona-check" type="checkbox" value="${zona}" id="${zonaId}" data-empresa="${empresa}" ${zonaChecked}>
-                            <label class="form-check-label small fw-semibold" for="${zonaId}">${zona}</label>
+                    <div class="tree-row">
+                        <div class="form-check">
+                            <input class="form-check-input zona-check" type="checkbox" id="${zonaId}" data-empresa="${empresa}" value="${zona}" ${zonaChecked}>
+                            <label class="form-check-label fw-bold small text-secondary" for="${zonaId}">${zona}</label>
                         </div>
-                        <div class="tree-level sucursal-group ${zonaVisible}" data-empresa="${empresa}" data-zona="${zona}">
-                            ${seleccionarTodasHtml}
+                        <div class="tree-level ${zonaVisible}" id="box-${zonaId}">
+                            <div class="form-check tree-row border-bottom pb-1 mb-1">
+                                <input class="form-check-input all-suc-check" type="checkbox" id="${allSucId}" data-empresa="${empresa}" data-zona="${zona}" ${allSucChecked}>
+                                <label class="form-check-label fw-bold small text-primary" for="${allSucId}">(TODAS LAS SUCURSALES)</label>
+                            </div>
                             ${sucursalesHtml}
                         </div>
                     </div>`;
-            }).join('') : '<div class="tree-muted">Sin zonas.</div>';
+            }).join('') : '<div class="text-muted small ps-2">Sin zonas</div>';
 
             return `
                 <div class="mb-2">
                     <div class="form-check tree-row">
-                        <input class="form-check-input emp-check" type="checkbox" value="${empresa}" id="${empId}" ${empresaChecked}>
-                        <label class="form-check-label fw-semibold" for="${empId}">${empresa}</label>
+                        <input class="form-check-input empresa-check" type="checkbox" id="${empId}" value="${empresa}" ${empresaChecked}>
+                        <label class="form-check-label fw-bold text-dark" for="${empId}">${empresa}</label>
                     </div>
-                    <div class="tree-level zona-group ${empresaVisible}" data-empresa="${empresa}">
+                    <div class="tree-level ${empresaVisible}" id="box-${empId}">
                         ${zonasHtml}
                     </div>
                 </div>`;
         }).join('');
     };
 
-    // CONSTRUCCIÓN DINÁMICA DEL ÁRBOL DE MÓDULOS DESDE EL SIDEBAR
-    const buildModulosTree = () => {
-        const sidebarLinks = Array.from(document.querySelectorAll(".sidebar a"));
-        if (!sidebarLinks.length) return '<div class="text-center text-muted py-3">No hay módulos disponibles.</div>';
-
-        const modulosGuardados = getModulosPermitidosUsuario();
-
-        let html = `
-            <div class="mb-3 pb-2 border-bottom">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="chkAllModulos" onchange="toggleSelectAllModulos(this)">
-                    <label class="form-check-label fw-bold text-primary" for="chkAllModulos">(Seleccionar todos los módulos)</label>
-                </div>
-            </div>
-            <div class="row g-2">`;
-
-        sidebarLinks.forEach((link, idx) => {
-            const id = link.id || `mod-${idx}`;
-            const nombre = link.innerText.trim();
-            const iconHtml = link.querySelector('i')?.outerHTML || '';
-            // Si no tiene registro previo, por defecto vienen seleccionados todos
-            const isChecked = modulosGuardados === null ? true : modulosGuardados.includes(id);
-
-            html += `
-                <div class="col-md-6">
-                    <div class="p-2 border rounded bg-light d-flex align-items-center">
-                        <div class="form-check m-0 w-100">
-                            <input class="form-check-input mod-check" type="checkbox" value="${id}" id="chkMod_${id}" ${isChecked ? 'checked' : ''} onchange="syncMasterModuloCheck()">
-                            <label class="form-check-label small fw-semibold text-dark cursor-pointer d-flex align-items-center gap-2" for="chkMod_${id}">
-                                ${iconHtml} <span>${nombre}</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>`;
-        });
-
-        html += `</div>`;
-        return html;
-    };
-
-    window.toggleSelectAllModulos = (master) => {
-        document.querySelectorAll("#modulos-tree .mod-check").forEach(chk => {
-            chk.checked = master.checked;
-        });
-    };
-
-    window.syncMasterModuloCheck = () => {
-        const master = document.getElementById("chkAllModulos");
-        if (!master) return;
-        const checks = Array.from(document.querySelectorAll("#modulos-tree .mod-check"));
-        const checkedCount = checks.filter(c => c.checked).length;
-
-        if (checkedCount === checks.length) {
-            master.checked = true;
-            master.indeterminate = false;
-        } else if (checkedCount === 0) {
-            master.checked = false;
-            master.indeterminate = false;
-        } else {
-            master.checked = false;
-            master.indeterminate = true;
-        }
-    };
-
     window.openEmpresaModal = (userId) => {
         currentUserId = userId;
         document.getElementById("empresa-tree").innerHTML = buildAsignacionTree();
-        document.getElementById("modulos-tree").innerHTML = buildModulosTree();
-        syncAllSucursalesChecks();
-        syncMasterModuloCheck();
         new bootstrap.Modal(document.getElementById("modalEmpresas")).show();
     };
-
-    document.getElementById("empresa-tree").addEventListener("change", (e) => {
-        const target = e.target;
-        if (target.classList.contains("emp-check")) {
-            const empresa = target.value;
-            const grupoZonas = document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`);
-            if (grupoZonas) {
-                grupoZonas.classList.toggle("d-none", !target.checked);
-                if (!target.checked) {
-                    grupoZonas.querySelectorAll("input[type='checkbox']").forEach(chk => { chk.checked = false; chk.indeterminate = false; });
-                    grupoZonas.querySelectorAll(".sucursal-group").forEach(sGroup => sGroup.classList.add("d-none"));
-                }
-            }
-        } else if (target.classList.contains("zona-check")) {
-            const empresa = target.dataset.empresa;
-            const zona = target.value;
-            const grupoSucursales = document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`);
-            if (grupoSucursales) {
-                grupoSucursales.classList.toggle("d-none", !target.checked);
-                if (!target.checked) {
-                    grupoSucursales.querySelectorAll("input[type='checkbox']").forEach(chk => { chk.checked = false; chk.indeterminate = false; });
-                }
-            }
-        } else if (target.classList.contains("all-suc-check")) {
-            const empresa = target.dataset.empresa;
-            const zona = target.dataset.zona;
-            const sucursales = document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`);
-            sucursales.forEach(chk => chk.checked = target.checked);
-            target.indeterminate = false;
-        } else if (target.classList.contains("suc-check")) {
-            const empresa = target.dataset.empresa;
-            const zona = target.dataset.zona;
-            syncAllSucursalesCheck(empresa, zona);
-        }
-    });
-
-    window.guardarAsignacion = async () => {
-        if (!currentUserId || !currentPath) return;
-
-        const asignacionSucursales = [];
-        const empChecks = document.querySelectorAll("#empresa-tree .emp-check:checked");
-
-        empChecks.forEach(empChk => {
-            const empresa = empChk.value;
-            const zonaChecks = document.querySelectorAll(`#empresa-tree .zona-check[data-empresa="${CSS.escape(empresa)}"]:checked`);
-            const zonasData = [];
-
-            zonaChecks.forEach(zonaChk => {
-                const zona = zonaChk.value;
-                const sucChecks = document.querySelectorAll(`#empresa-tree .suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]:checked`);
-                const sucursalesData = Array.from(sucChecks).map(s => s.value);
-
-                zonasData.push({
-                    zona: zona,
-                    sucursales: sucursalesData
-                });
-            });
-
-            asignacionSucursales.push({
-                empresa: empresa,
-                zonas: zonasData
-            });
-        });
-
-        const modulosPermitidos = Array.from(document.querySelectorAll("#modulos-tree .mod-check:checked")).map(c => c.value);
-
-        await update(ref(db, `${currentPath}/${currentUserId}`), {
-            asignacionSucursales: asignacionSucursales,
-            modulosPermitidos: modulosPermitidos
-        });
-
-        bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
-        Swal.fire({ icon: "success", title: "Permisos Guardados", timer: 1200, showConfirmButton: false });
-    };
-
-    // Exponer funciones necesarias globalmente
-    window.showModal = showModal;
-    window.del = del;
-    window.openEmpresaModal = openEmpresaModal;
-    window.guardarAsignacion = guardarAsignacion;
-    window.toggleSidebar = toggleSidebar;
-    window.togglePasswordVisibility = togglePasswordVisibility;
-    window.updateStatusStyle = updateStatusStyle;
-    window.toggleCamaras = toggleCamaras;
-    window.openExcelFilterMenu = openExcelFilterMenu;
-    window.filterExcelList = filterExcelList;
-    window.toggleSelectAllExcel = toggleSelectAllExcel;
-    window.syncSelectAllExcel = syncSelectAllExcel;
-    window.closeExcelMenu = closeExcelMenu;
-    window.submitExcelFilter = submitExcelFilter;
-    window.clearColumnFilter = clearColumnFilter;
-    window.sortColumn = sortColumn;
-    window.toggleSelectAllModulos = toggleSelectAllModulos;
-    window.syncMasterModuloCheck = syncMasterModuloCheck;
-    window.verNotificacionesModal = verNotificacionesModal;
-    window.enviarNotificacion = enviarNotificacion;
 </script>
+
 </body>
 </html>
