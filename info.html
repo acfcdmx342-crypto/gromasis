@@ -158,6 +158,16 @@
 <div class="main-content" id="main-content">
     <!-- Header superior con el usuario logueado y botones de acción -->
     <div class="top-header">
+        <!-- Botón de Notificaciones -->
+        <button type="button" class="btn btn-outline-dark position-relative d-flex align-items-center justify-content-center p-2" 
+                title="Notificaciones" onclick="verNotificacionesModal()" 
+                style="height: 42px; width: 42px; border-radius: 8px; background: #fff;">
+            <i class="bi bi-bell-fill fs-5"></i>
+            <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+                0
+            </span>
+        </button>
+
         <div class="user-info-card">
             <i class="bi bi-person-fill text-primary fs-5"></i>
             <div>
@@ -170,8 +180,8 @@
         <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center p-2" 
         title="Plan de Trabajo" data-bs-toggle="modal" data-bs-target="#modalPlanTrabajo" 
         style="height: 42px; width: 42px; border-radius: 8px;">
-    <i class="bi bi-calendar-event fs-5"></i>
-</button>
+            <i class="bi bi-calendar-event fs-5"></i>
+        </button>
 
         <!-- Botón para Salir -->
         <a href="index.html" class="btn btn-danger d-flex align-items-center justify-content-center p-2" 
@@ -440,6 +450,21 @@
   </div>
 </div>
 
+<!-- MODAL PARA VER NOTIFICACIONES -->
+<div class="modal fade" id="modalNotificaciones" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-bell me-2"></i>Notificaciones Recibidas</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3" id="notifListContainer">
+                <div class="text-center text-muted py-4">No tienes notificaciones.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -463,7 +488,7 @@
     const config = { databaseURL: "https://gromasis-9c094-default-rtdb.firebaseio.com/" };
     const db = getDatabase(initializeApp(config));
     
-    let store = { colorcenter:{}, redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, servidores: {}, sucursales: {}, usuarios: {} };
+    let store = { colorcenter:{}, redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, servidores: {}, sucursales: {}, usuarios: {}, notificaciones: {} };
     let currentPath = '';
     let loadsPending = Object.keys(store).length;
     const urlParams = new URLSearchParams(window.location.search);
@@ -491,6 +516,120 @@
             usrObj = Object.values(store.personal || {}).find(p => (p.nombreCompleto || '').toUpperCase().trim() === currentUserNombre);
         }
         return usrObj;
+    };
+
+    // PUESTOS PERMITIDOS PARA ENVIAR NOTIFICACIONES
+    const PUESTOS_EMISORES = [
+        "COORDINADOR DE SOPORTE TECNICO",
+        "COORDINADOR DE SOPORTE TÉCNICO",
+        "SOPORTE TECNICO SR",
+        "SOPORTE TÉCNICO SR",
+        "JEFE DE INFRA ESTRUCTURA Y SOPORTE TECNICO",
+        "JEFE DE INFRAESTRUCTURA Y SOPORTE TÉCNICO",
+        "JEFE DE INFRAESTRUCTURA Y SOPORTE TECNICO"
+    ];
+
+    const puedeEnviarNotificacion = () => {
+        const p = (storedRole || '').toUpperCase().trim();
+        return PUESTOS_EMISORES.some(emisor => p.includes(emisor) || emisor.includes(p));
+    };
+
+    // ESCUCHAR NOTIFICACIONES EN TIEMPO REAL
+    const escucharNotificaciones = () => {
+        const currentUser = getCurrentUserObj();
+        if (!currentUser) return;
+        const targetNombre = (currentUser.nombreCompleto || storedName || '').toUpperCase().trim();
+
+        const notifs = Object.entries(store.notificaciones || {})
+            .map(([id, val]) => ({ id, ...val }))
+            .filter(n => (n.destinatarioNombre || '').toUpperCase().trim() === targetNombre);
+
+        const badge = document.getElementById('notifBadge');
+        const noLeidas = notifs.filter(n => !n.leida).length;
+
+        if (badge) {
+            if (noLeidas > 0) {
+                badge.innerText = noLeidas;
+                badge.classList.remove('d-none');
+            } else {
+                badge.classList.add('d-none');
+            }
+        }
+    };
+
+    window.verNotificacionesModal = () => {
+        const currentUser = getCurrentUserObj();
+        const targetNombre = currentUser ? (currentUser.nombreCompleto || storedName || '').toUpperCase().trim() : (storedName || '').toUpperCase().trim();
+
+        const notifs = Object.entries(store.notificaciones || {})
+            .map(([id, val]) => ({ id, ...val }))
+            .filter(n => (n.destinatarioNombre || '').toUpperCase().trim() === targetNombre)
+            .sort((a,b) => (b.fecha || '').localeCompare(a.fecha || ''));
+
+        const container = document.getElementById('notifListContainer');
+        if (!notifs.length) {
+            container.innerHTML = '<div class="text-center text-muted py-4">No tienes notificaciones.</div>';
+        } else {
+            container.innerHTML = notifs.map(n => `
+                <div class="card mb-2 ${!n.leida ? 'border-primary bg-light' : ''}">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-primary small"><i class="bi bi-person-fill"></i> ${n.remitenteNombre || 'SISTEMA'}</span>
+                            <span class="text-muted" style="font-size:0.7rem;">${n.fecha || ''}</span>
+                        </div>
+                        <p class="card-text mb-0 small text-dark">${n.mensaje || ''}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            // Marcar notificaciones como leídas
+            notifs.forEach(n => {
+                if (!n.leida) {
+                    update(ref(db, `notificaciones/${n.id}`), { leida: true });
+                }
+            });
+        }
+
+        new bootstrap.Modal(document.getElementById('modalNotificaciones')).show();
+    };
+
+    window.enviarNotificacion = (idUsuarioDestino) => {
+        const dest = store.usuarios[idUsuarioDestino];
+        if (!dest) return;
+
+        Swal.fire({
+            title: `Enviar notificación a:`,
+            html: `<div class="fw-bold text-primary mb-2">${dest.nombreCompleto || 'USUARIO'}</div>
+                   <div class="text-muted small mb-3">Puesto: ${dest.puesto || '-'}</div>`,
+            input: 'textarea',
+            inputPlaceholder: 'Escribe tu mensaje aquí...',
+            showCancelButton: true,
+            confirmButtonText: 'Enviar Notificación',
+            cancelButtonText: 'Cancelar',
+            inputValidator: (value) => {
+                if (!value || !value.trim()) {
+                    return '¡Debes escribir un mensaje!';
+                }
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const now = new Date();
+                const fechaStr = now.toLocaleDateString('es-MX') + ' ' + now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+                
+                const nuevaNotif = {
+                    destinatarioId: idUsuarioDestino,
+                    destinatarioNombre: (dest.nombreCompleto || '').toUpperCase().trim(),
+                    remitenteNombre: (storedName || 'SOPORTE').toUpperCase().trim(),
+                    remitentePuesto: (storedRole || '').toUpperCase().trim(),
+                    mensaje: result.value.trim(),
+                    fecha: fechaStr,
+                    leida: false
+                };
+
+                await push(ref(db, 'notificaciones'), nuevaNotif);
+                Swal.fire({ icon: 'success', title: 'Notificación enviada con éxito', timer: 1500, showConfirmButton: false });
+            }
+        });
     };
 
     // APLICACIÓN DE PERMISOS PARA OCULTAR/MOSTRAR MENÚS LATERALES
@@ -549,6 +688,7 @@
             if (loadsPending > 0) loadsPending--;
             if (loadsPending === 0) {
                 aplicarPermisosMenu();
+                escucharNotificaciones();
                 if (urlParams.get('tipo') === 'colorcenter') {
                     render('colorcenter');
                 } else if (currentPath === '') {
@@ -556,6 +696,8 @@
                 } else {
                     render(currentPath);
                 }
+            } else {
+                escucharNotificaciones();
             }
         });
     });
@@ -841,7 +983,7 @@
                 `;
             }
             
-            html += `<th class="text-end" style="width: 120px;">Acciones</th>
+            html += `<th class="text-end" style="width: 140px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>`;
@@ -854,6 +996,9 @@
                     const rawPass = r.password || r.contrasena || '';
                     const passMostrar = rawPass ? '••••••••' : '-';
                     const usuarioMostrar = r.usuario || '-';
+
+                    const esSoporteJr = (r.puesto || '').toUpperCase().includes('SOPORTE TECNICO JR') || (r.puesto || '').toUpperCase().includes('SOPORTE TÉCNICO JR');
+                    const puedeNotificar = puedeEnviarNotificacion();
 
                     html += `<tr>
                         <td><small>${r.empresa || '-'}</small></td>
@@ -869,6 +1014,7 @@
                         ${path !== 'personal' ? `<td><small>${passMostrar}</small></td>` : ''}
                         <td><span class="badge ${badgeClass}">${r.statusActual || 'ACTIVO'}</span></td>
                         <td class="text-end">
+                            ${(path === 'usuarios' && puedeNotificar && esSoporteJr) ? `<button class="btn btn-sm btn-outline-primary border-0" title="Enviar Notificación" onclick="enviarNotificacion('${id}')"><i class="bi bi-send-fill"></i></button>` : ''}
                             <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
                             ${path !== 'personal' ? `<button class="btn btn-sm btn-outline-success border-0" onclick="openEmpresaModal('${id}')"><i class="bi bi-building"></i></button>` : ''}
@@ -1779,107 +1925,96 @@
         if (target.classList.contains("emp-check")) {
             const empresa = target.value;
             const grupoZonas = document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`);
-            grupoZonas?.classList.toggle("d-none", !target.checked);
-            if (!target.checked) {
-                grupoZonas?.querySelectorAll("input[type='checkbox']").forEach(chk => {
-                    chk.checked = false;
-                    chk.indeterminate = false;
-                    if (chk.classList.contains("zona-check")) {
-                        document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(chk.value)}"]`)?.classList.add("d-none");
-                    }
-                });
+            if (grupoZonas) {
+                grupoZonas.classList.toggle("d-none", !target.checked);
+                if (!target.checked) {
+                    grupoZonas.querySelectorAll("input[type='checkbox']").forEach(chk => { chk.checked = false; chk.indeterminate = false; });
+                    grupoZonas.querySelectorAll(".sucursal-group").forEach(sGroup => sGroup.classList.add("d-none"));
+                }
             }
-        }
-        if (target.classList.contains("zona-check")) {
+        } else if (target.classList.contains("zona-check")) {
             const empresa = target.dataset.empresa;
             const zona = target.value;
             const grupoSucursales = document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`);
-            grupoSucursales?.classList.toggle("d-none", !target.checked);
-            if (target.checked) {
-                document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
-                document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
-            } else {
-                grupoSucursales?.querySelectorAll(".suc-check, .all-suc-check").forEach(chk => { chk.checked = false; chk.indeterminate = false; });
+            if (grupoSucursales) {
+                grupoSucursales.classList.toggle("d-none", !target.checked);
+                if (!target.checked) {
+                    grupoSucursales.querySelectorAll("input[type='checkbox']").forEach(chk => { chk.checked = false; chk.indeterminate = false; });
+                }
             }
-        }
-        if (target.classList.contains("all-suc-check")) {
+        } else if (target.classList.contains("all-suc-check")) {
             const empresa = target.dataset.empresa;
             const zona = target.dataset.zona;
-            const checked = target.checked;
-            document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
-            document.querySelector(`.zona-check[data-empresa="${CSS.escape(empresa)}"][value="${CSS.escape(zona)}"]`).checked = true;
-            document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
-            document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`)?.classList.remove("d-none");
-            document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`).forEach(chk => chk.checked = checked);
+            const sucursales = document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`);
+            sucursales.forEach(chk => chk.checked = target.checked);
             target.indeterminate = false;
-        }
-        if (target.classList.contains("suc-check") && target.checked) {
+        } else if (target.classList.contains("suc-check")) {
             const empresa = target.dataset.empresa;
             const zona = target.dataset.zona;
-            document.querySelector(`.emp-check[value="${CSS.escape(empresa)}"]`).checked = true;
-            document.querySelector(`.zona-check[data-empresa="${CSS.escape(empresa)}"][value="${CSS.escape(zona)}"]`).checked = true;
-            document.querySelector(`.zona-group[data-empresa="${CSS.escape(empresa)}"]`)?.classList.remove("d-none");
-            document.querySelector(`.sucursal-group[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]`)?.classList.remove("d-none");
-        }
-        if (target.classList.contains("suc-check")) {
-            syncAllSucursalesCheck(target.dataset.empresa, target.dataset.zona);
+            syncAllSucursalesCheck(empresa, zona);
         }
     });
 
     window.guardarAsignacion = async () => {
-        if (!currentUserId) return;
+        if (!currentUserId || !currentPath) return;
+
         const asignacionSucursales = [];
-        document.querySelectorAll(".emp-check:checked").forEach(empChk => {
+        const empChecks = document.querySelectorAll("#empresa-tree .emp-check:checked");
+
+        empChecks.forEach(empChk => {
             const empresa = empChk.value;
-            const zones = [];
-            document.querySelectorAll(`.zona-check[data-empresa="${CSS.escape(empresa)}"]:checked`).forEach(zonaChk => {
+            const zonaChecks = document.querySelectorAll(`#empresa-tree .zona-check[data-empresa="${CSS.escape(empresa)}"]:checked`);
+            const zonasData = [];
+
+            zonaChecks.forEach(zonaChk => {
                 const zona = zonaChk.value;
-                const sucursales = Array.from(document.querySelectorAll(`.suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]:checked`)).map(chk => chk.value);
-                zones.push({ zona, sucursales });
+                const sucChecks = document.querySelectorAll(`#empresa-tree .suc-check[data-empresa="${CSS.escape(empresa)}"][data-zona="${CSS.escape(zona)}"]:checked`);
+                const sucursalesData = Array.from(sucChecks).map(s => s.value);
+
+                zonasData.push({
+                    zona: zona,
+                    sucursales: sucursalesData
+                });
             });
-            asignacionSucursales.push({ empresa, zonas: zones });
+
+            asignacionSucursales.push({
+                empresa: empresa,
+                zonas: zonasData
+            });
         });
 
-        // RECOLECCIÓN DE MÓDULOS PERMITIDOS
         const modulosPermitidos = Array.from(document.querySelectorAll("#modulos-tree .mod-check:checked")).map(c => c.value);
 
-        try {
-            await update(ref(db, `${currentPath}/${currentUserId}`), { 
-                asignacionSucursales,
-                modulosPermitidos 
-            });
-            aplicarPermisosMenu();
-            if (currentPath) render(currentPath);
-            Swal.fire({ icon: "success", title: "Asignación y permisos guardados", timer: 1200, showConfirmButton: false });
-            bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
-        } catch (e) { Swal.fire("Error", e.message, "error"); }
+        await update(ref(db, `${currentPath}/${currentUserId}`), {
+            asignacionSucursales: asignacionSucursales,
+            modulosPermitidos: modulosPermitidos
+        });
+
+        bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
+        Swal.fire({ icon: "success", title: "Permisos Guardados", timer: 1200, showConfirmButton: false });
     };
 
-    window.renderDashboard = renderDashboard;
-    window.render = render;
+    // Exponer funciones necesarias globalmente
+    window.showModal = showModal;
+    window.del = del;
+    window.openEmpresaModal = openEmpresaModal;
+    window.guardarAsignacion = guardarAsignacion;
+    window.toggleSidebar = toggleSidebar;
+    window.togglePasswordVisibility = togglePasswordVisibility;
+    window.updateStatusStyle = updateStatusStyle;
+    window.toggleCamaras = toggleCamaras;
+    window.openExcelFilterMenu = openExcelFilterMenu;
+    window.filterExcelList = filterExcelList;
+    window.toggleSelectAllExcel = toggleSelectAllExcel;
+    window.syncSelectAllExcel = syncSelectAllExcel;
+    window.closeExcelMenu = closeExcelMenu;
+    window.submitExcelFilter = submitExcelFilter;
+    window.clearColumnFilter = clearColumnFilter;
+    window.sortColumn = sortColumn;
+    window.toggleSelectAllModulos = toggleSelectAllModulos;
+    window.syncMasterModuloCheck = syncMasterModuloCheck;
+    window.verNotificacionesModal = verNotificacionesModal;
+    window.enviarNotificacion = enviarNotificacion;
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.onkeydown = e => {
-        if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
-    };
-</script>
-<!-- MODAL PLAN DE TRABAJO (CALENDARIO) -->
-<div class="modal fade" id="modalPlanTrabajo" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-dark text-white py-2">
-                <h6 class="modal-title fw-bold m-0 d-flex align-items-center gap-2">
-                    <i class="bi bi-calendar-event text-primary"></i> Plan de Trabajo / Agenda
-                </h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0" style="height: 80vh; min-height: 500px;">
-                <iframe src="ptrabajo.html" style="width: 100%; height: 100%; border: none;"></iframe>
-            </div>
-        </div>
-    </div>
-</div>
 </body>
 </html>
