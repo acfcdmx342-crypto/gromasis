@@ -109,11 +109,9 @@
         .btn-toggle { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 1001; width: 50px; height: 50px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         @media (max-width: 768px) { .btn-toggle { display: block; } }
         
-        #empresa-tree { padding-left: 28px; }
-        #empresa-tree .form-check { padding-left: 1.75rem; }
-        #empresa-tree .form-check-input { margin-left: -1.45rem; }
-        .tree-level { border-left: 1px solid #e2e8f0; margin-left: 10px; padding-left: 16px; }
-        .tree-row { padding: 4px 0; }
+        #empresa-tree { padding-left: 0; }
+        .tree-level { border-left: 2px dashed #cbd5e1; margin-left: 10px; padding-left: 16px; margin-top: 4px; margin-bottom: 8px; }
+        .tree-row { padding: 4px 0; display: flex; align-items: center; gap: 8px; }
 
         .select-status-activo { background-color: #d1e7dd !important; color: #0f5132 !important; }
         .select-status-baja { background-color: #f8d7da !important; color: #842029 !important; }
@@ -521,7 +519,7 @@
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title">Asignar Sucursales y Permisos</h5>
+        <h5 class="modal-title fw-bold" id="modalEmpresasTitle">Asignar Sucursales y Permisos</h5>
         <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body p-3">
@@ -543,12 +541,14 @@
             </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary" onclick="guardarAsignacion()">Guardar Permisos</button>
+      <div class="modal-footer bg-light border-0">
+        <button class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary fw-bold" onclick="guardarAsignacion()">Guardar Permisos</button>
       </div>
     </div>
   </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script type="module">
@@ -576,6 +576,7 @@
     
     let store = { colorcenter:{}, redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, servidores: {}, sucursales: {}, usuarios: {}, modulos_dinamicos: {} };
     let currentPath = '';
+    let currentAssignUserId = null;
     let loadsPending = Object.keys(store).length;
     const urlParams = new URLSearchParams(window.location.search);
 
@@ -1822,23 +1823,342 @@
     document.getElementById("checkMasivo").onchange = (e) => {
         const checked = e.target.checked;
         document.getElementById("secMasivo").classList.toggle('d-none', !checked);
+        document.getElementById("secIndividual").classList.toggle('d-none', checked);
+        if (currentPath === 'redes_inalambricas') {
+            document.getElementById("secRedesInalambricas").classList.toggle('d-none', checked);
+        } else if (['usuarios', 'personal'].includes(currentPath)) {
+            document.getElementById("secFormIndividualUP").classList.toggle('d-none', checked);
+        }
+    };
+
+    // ==========================================
+    // RECONSTRUCCIÓN DEL MODAL DE ASIGNACIÓN (SUCURSALES Y MÓDULOS)
+    // ==========================================
+
+    window.openEmpresaModal = (userId) => {
+        currentAssignUserId = userId;
+        const userObj = store.usuarios[userId] || store.personal[userId] || {};
+        
+        const modalTitle = document.getElementById('modalEmpresasTitle');
+        if (modalTitle) {
+            modalTitle.innerText = `Asignar Permisos a: ${userObj.nombreCompleto || 'Usuario'}`;
+        }
+
+        renderEmpresaTree(userObj);
+        renderModulosTree(userObj);
+
+        const tabEl = document.querySelector('#tabAsignacion button[data-bs-target="#tab-sucursales"]');
+        if (tabEl) {
+            const tab = bootstrap.Tab.getOrCreateInstance(tabEl);
+            tab.show();
+        }
+
+        new bootstrap.Modal(document.getElementById("modalEmpresas")).show();
+    };
+
+    const renderEmpresaTree = (userObj) => {
+        const treeContainer = document.getElementById('empresa-tree');
+        if (!treeContainer) return;
+
+        const asignacionesActuales = userObj.asignacionSucursales || [];
+        const empresas = Object.values(store.empresas || {}).map(e => e.nombre).filter(Boolean).sort();
+        const zonas = Object.values(store.zonas || {});
+        const sucursales = Object.values(store.sucursales || {});
+
+        if (empresas.length === 0) {
+            treeContainer.innerHTML = '<div class="text-muted small">No hay empresas registradas.</div>';
+            return;
+        }
+
+        let html = '';
+
+        empresas.forEach((emp, empIdx) => {
+            const empId = `tree_emp_${empIdx}`;
+            const empMatch = asignacionesActuales.find(a => (a.empresa || '').toUpperCase() === emp.toUpperCase());
+            const empChecked = !!empMatch;
+
+            const zonasEmp = zonas.filter(z => (z.empresa || '').toUpperCase() === emp.toUpperCase()).map(z => z.nombre).filter(Boolean).sort();
+
+            html += `
+                <div class="tree-node mb-2">
+                    <div class="tree-row">
+                        <input class="form-check-input chk-tree-emp" type="checkbox" id="${empId}" data-empresa="${emp}" ${empChecked ? 'checked' : ''} onchange="toggleEmpTreeBranch('${empId}')">
+                        <label class="form-check-label fw-bold text-dark small" for="${empId}">
+                            <i class="bi bi-building me-1 text-primary"></i> ${emp}
+                        </label>
+                    </div>
+                    <div class="tree-level ms-3" id="sub_${empId}">
+            `;
+
+            zonasEmp.forEach((zona, zonIdx) => {
+                const zonId = `${empId}_zon_${zonIdx}`;
+                const zonaMatch = empMatch && Array.isArray(empMatch.zonas) ? empMatch.zonas.find(z => (z.zona || '').toUpperCase() === zona.toUpperCase()) : null;
+                const zonChecked = !!zonaMatch;
+
+                const sucsZona = sucursales.filter(s => (s.empresa || '').toUpperCase() === emp.toUpperCase() && (s.zona || '').toUpperCase() === zona.toUpperCase()).map(s => s.nombre).filter(Boolean).sort();
+
+                html += `
+                    <div class="tree-node mb-1">
+                        <div class="tree-row">
+                            <input class="form-check-input chk-tree-zon" type="checkbox" id="${zonId}" data-empresa="${emp}" data-zona="${zona}" ${zonChecked ? 'checked' : ''} onchange="toggleZonTreeBranch('${zonId}', '${empId}')">
+                            <label class="form-check-label fw-semibold text-secondary small" for="${zonId}">
+                                <i class="bi bi-geo-alt me-1 text-info"></i> ${zona}
+                            </label>
+                        </div>
+                        <div class="tree-level ms-3" id="sub_${zonId}">
+                `;
+
+                sucsZona.forEach((suc, sucIdx) => {
+                    const sucId = `${zonId}_suc_${sucIdx}`;
+                    const sucChecked = zonaMatch && Array.isArray(zonaMatch.sucursales) ? zonaMatch.sucursales.some(s => s.toUpperCase() === suc.toUpperCase()) : false;
+
+                    html += `
+                        <div class="tree-row">
+                            <input class="form-check-input chk-tree-suc" type="checkbox" id="${sucId}" data-empresa="${emp}" data-zona="${zona}" data-sucursal="${suc}" ${sucChecked ? 'checked' : ''} onchange="syncBranchState('${zonId}', '${empId}')">
+                            <label class="form-check-label text-dark small" for="${sucId}">
+                                <i class="bi bi-shop me-1 text-success"></i> ${suc}
+                            </label>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+        });
+
+        treeContainer.innerHTML = html;
+
+        // Sincronizar estado inicial (indeterminate/checked)
+        empresas.forEach((emp, empIdx) => {
+            const empId = `tree_emp_${empIdx}`;
+            const subEmp = document.getElementById(`sub_${empId}`);
+            if (!subEmp) return;
+            const zonChecks = subEmp.querySelectorAll('.chk-tree-zon');
+            zonChecks.forEach(zc => {
+                const zonId = zc.id;
+                syncBranchState(zonId, empId);
+            });
+        });
+    };
+
+    window.toggleEmpTreeBranch = (empId) => {
+        const empChk = document.getElementById(empId);
+        const subContainer = document.getElementById(`sub_${empId}`);
+        if (!empChk || !subContainer) return;
+
+        const isChecked = empChk.checked;
+        subContainer.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+            chk.checked = isChecked;
+            chk.indeterminate = false;
+        });
+        empChk.indeterminate = false;
+    };
+
+    window.toggleZonTreeBranch = (zonId, empId) => {
+        const zonChk = document.getElementById(zonId);
+        const subContainer = document.getElementById(`sub_${zonId}`);
+        if (!zonChk || !subContainer) return;
+
+        const isChecked = zonChk.checked;
+        subContainer.querySelectorAll('.chk-tree-suc').forEach(chk => {
+            chk.checked = isChecked;
+        });
+        zonChk.indeterminate = false;
+
+        syncBranchState(zonId, empId);
+    };
+
+    window.syncBranchState = (zonId, empId) => {
+        const zonChk = document.getElementById(zonId);
+        const subZon = document.getElementById(`sub_${zonId}`);
+        
+        if (zonChk && subZon) {
+            const sucChecks = Array.from(subZon.querySelectorAll('.chk-tree-suc'));
+            if (sucChecks.length > 0) {
+                const checkedCount = sucChecks.filter(c => c.checked).length;
+                if (checkedCount === sucChecks.length) {
+                    zonChk.checked = true;
+                    zonChk.indeterminate = false;
+                } else if (checkedCount === 0) {
+                    zonChk.checked = false;
+                    zonChk.indeterminate = false;
+                } else {
+                    zonChk.checked = false;
+                    zonChk.indeterminate = true;
+                }
+            }
+        }
+
+        const empChk = document.getElementById(empId);
+        const subEmp = document.getElementById(`sub_${empId}`);
+        if (empChk && subEmp) {
+            const allChildChecks = Array.from(subEmp.querySelectorAll('.chk-tree-zon, .chk-tree-suc'));
+            const checkedCount = allChildChecks.filter(c => c.checked || c.indeterminate).length;
+            const fullyCheckedCount = allChildChecks.filter(c => c.checked && !c.indeterminate).length;
+
+            if (fullyCheckedCount === allChildChecks.length) {
+                empChk.checked = true;
+                empChk.indeterminate = false;
+            } else if (checkedCount === 0) {
+                empChk.checked = false;
+                empChk.indeterminate = false;
+            } else {
+                empChk.checked = false;
+                empChk.indeterminate = true;
+            }
+        }
+    };
+
+    const renderModulosTree = (userObj) => {
+        const modulosContainer = document.getElementById('modulos-tree');
+        if (!modulosContainer) return;
+
+        const permitidos = userObj.modulosPermitidos || [];
+
+        const staticModules = [
+            { id: 'link-dashboard', label: 'Inicio', icon: 'bi-house-door' },
+            { id: 'link-empresas', label: 'Empresas', icon: 'bi-building' },
+            { id: 'link-servidores', label: 'Servidores', icon: 'bi-hdd-network' },
+            { id: 'link-zonas', label: 'Zonas', icon: 'bi-geo-alt' },
+            { id: 'link-sucursales', label: 'Sucursales', icon: 'bi-shop' },
+            { id: 'link-usuarios', label: 'Usuarios', icon: 'bi-person-lines-fill' },
+            { id: 'link-personal', label: 'Personal', icon: 'bi-people' },
+            { id: 'link-redes_inalambricas', label: 'Redes Inalámbricas', icon: 'bi-wifi' },
+            { id: 'link-colorcenter', label: 'Colorcenter', icon: 'bi-file-earmark-text' }
+        ];
+
+        const dynamicMods = store.modulos_dinamicos || {};
+        const dynamicList = Object.keys(dynamicMods).map(key => ({
+            id: `link-mod-${key}`,
+            label: dynamicMods[key].nombre,
+            icon: dynamicMods[key].tipoIcono === 'gallery' ? (dynamicMods[key].icono || 'bi-app-indicator') : 'bi-app-indicator'
+        }));
+
+        const allModules = [...staticModules, ...dynamicList];
+
+        let html = `
+            <div class="mb-2 pb-2 border-bottom d-flex justify-content-between align-items-center">
+                <span class="fw-bold small text-secondary">MÓDULOS DEL SISTEMA</span>
+                <div class="form-check form-check-inline m-0">
+                    <input class="form-check-input" type="checkbox" id="chkSelectAllModulos" onchange="toggleAllModulosPermisos(this)">
+                    <label class="form-check-label small fw-bold" for="chkSelectAllModulos">Seleccionar Todos</label>
+                </div>
+            </div>
+            <div class="row g-2">
+        `;
+
+        allModules.forEach((m, idx) => {
+            const isChecked = permitidos.length === 0 || permitidos.includes(m.id);
+            html += `
+                <div class="col-md-6">
+                    <div class="form-check p-2 border rounded background-light">
+                        <input class="form-check-input chk-modulo-permiso" type="checkbox" value="${m.id}" id="chkMod_${idx}" ${isChecked ? 'checked' : ''} onchange="syncSelectAllModulosHeader()">
+                        <label class="form-check-label small fw-semibold text-dark ms-1" for="chkMod_${idx}">
+                            <i class="bi ${m.icon} me-1 text-primary"></i> ${m.label}
+                        </label>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        modulosContainer.innerHTML = html;
+        syncSelectAllModulosHeader();
+    };
+
+    window.toggleAllModulosPermisos = (master) => {
+        const checks = document.querySelectorAll('#modulos-tree .chk-modulo-permiso');
+        checks.forEach(c => c.checked = master.checked);
+    };
+
+    window.syncSelectAllModulosHeader = () => {
+        const master = document.getElementById('chkSelectAllModulos');
+        if (!master) return;
+        const checks = Array.from(document.querySelectorAll('#modulos-tree .chk-modulo-permiso'));
+        if (checks.length === 0) return;
+        const checkedCount = checks.filter(c => c.checked).length;
+
+        if (checkedCount === checks.length) {
+            master.checked = true;
+            master.indeterminate = false;
+        } else if (checkedCount === 0) {
+            master.checked = false;
+            master.indeterminate = false;
+        } else {
+            master.checked = false;
+            master.indeterminate = true;
+        }
+    };
+
+    window.guardarAsignacion = async () => {
+        if (!currentAssignUserId) return;
+
+        // 1. Recolectar Árbol de Sucursales
+        let asignacionSucursales = [];
+        const empTreeNodes = document.querySelectorAll('#empresa-tree > .tree-node');
+
+        empTreeNodes.forEach(empNode => {
+            const empChk = empNode.querySelector('.chk-tree-emp');
+            if (!empChk || (!empChk.checked && !empChk.indeterminate)) return;
+
+            const empresaNombre = empChk.dataset.empresa;
+            let zonasList = [];
+
+            const zonNodes = empNode.querySelectorAll('.tree-level > .tree-node');
+            zonNodes.forEach(zonNode => {
+                const zonChk = zonNode.querySelector('.chk-tree-zon');
+                if (!zonChk || (!zonChk.checked && !zonChk.indeterminate)) return;
+
+                const zonaNombre = zonChk.dataset.zona;
+                let sucursalesList = [];
+
+                const sucChks = zonNode.querySelectorAll('.chk-tree-suc:checked');
+                sucChks.forEach(sc => {
+                    if (sc.dataset.sucursal) sucursalesList.push(sc.dataset.sucursal);
+                });
+
+                zonasList.push({
+                    zona: zonaNombre,
+                    sucursales: sucursalesList
+                });
+            });
+
+            asignacionSucursales.push({
+                empresa: empresaNombre,
+                zonas: zonasList
+            });
+        });
+
+        // 2. Recolectar Módulos Permitidos
+        const modulosChecks = document.querySelectorAll('#modulos-tree .chk-modulo-permiso:checked');
+        const modulosPermitidos = Array.from(modulosChecks).map(c => c.value);
+
+        const path = store.usuarios[currentAssignUserId] ? 'usuarios' : 'personal';
+
+        try {
+            await update(ref(db, `${path}/${currentAssignUserId}`), {
+                asignacionSucursales: asignacionSucursales,
+                modulosPermitidos: modulosPermitidos
+            });
+
+            bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
+            Swal.fire({ icon: "success", title: "Permisos Guardados Correctamente", timer: 1200, showConfirmButton: false });
+            
+            aplicarPermisosMenu();
+            if (currentPath === '') renderDashboard();
+            else render(currentPath);
+        } catch (e) {
+            Swal.fire("Error", e.message, "error");
+        }
     };
 </script>
-<!-- MODAL PLAN DE TRABAJO (CALENDARIO) -->
-<div class="modal fade" id="modalPlanTrabajo" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-dark text-white py-2">
-                <h6 class="modal-title fw-bold m-0 d-flex align-items-center gap-2">
-                    <i class="bi bi-calendar-event text-primary"></i> Plan de Trabajo / Agenda
-                </h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0" style="height: 80vh; min-height: 500px;">
-                <iframe src="ptrabajo.html" style="width: 100%; height: 100%; border: none;"></iframe>
-            </div>
-        </div>
-    </div>
-</div>
 </body>
 </html>
