@@ -219,16 +219,6 @@
             </div>
         </div>
 
-        <!-- Botón de Notificaciones para Soporte Técnico Jr -->
-        <button type="button" class="btn btn-warning position-relative d-none align-items-center justify-content-center p-2" 
-                id="btnNotificacionesJr" title="Notificaciones Pendientes" onclick="verNotificacionesJr()"
-                style="height: 42px; width: 42px; border-radius: 8px;">
-            <i class="bi bi-bell-fill fs-5"></i>
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="badgeNotificaciones">
-                0
-            </span>
-        </button>
-
         <!-- Botón de Calendario (Abre el Modal de Plan de Trabajo) -->
         <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center p-2" 
         title="Plan de Trabajo" data-bs-toggle="modal" data-bs-target="#modalPlanTrabajo" 
@@ -559,52 +549,6 @@
   </div>
 </div>
 
-<!-- MODAL GESTIÓN DE NOTIFICACIONES (COORDINADOR / ADMIN) -->
-<div class="modal fade" id="modalNotificaciones" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0">
-            <div class="modal-header bg-dark text-white py-3">
-                <h5 class="modal-title fw-bold"><i class="bi bi-bell me-2"></i>Gestión de Notificaciones para Soporte Jr</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <input type="hidden" id="notifTargetItemPath">
-                <input type="hidden" id="notifTargetItemId">
-                <div class="mb-3">
-                    <label class="form-label fw-bold small">Mensaje / Indicación para Soporte Técnico Jr</label>
-                    <textarea id="txtNotifMensaje" class="form-control" rows="3" placeholder="Escriba la indicación o notificación para los perfiles de Soporte Técnico Jr..."></textarea>
-                </div>
-                <div class="mb-2 fw-bold small text-secondary">Notificaciones enviadas anteriormente para este registro:</div>
-                <div id="listaNotificacionesRegistro" style="max-height: 180px; overflow-y: auto;" class="border rounded p-2 bg-light">
-                    <!-- Contenido dinámico de mensajes -->
-                </div>
-            </div>
-            <div class="modal-footer bg-light border-0 px-4 pb-4">
-                <button type="button" class="btn btn-secondary py-2 px-4 fw-bold" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary py-2 px-4 fw-bold" onclick="enviarNotificacion()">Enviar Mensaje</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL VER NOTIFICACIONES (SOPORTE JR) -->
-<div class="modal fade" id="modalVerNotificacionesJr" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0">
-            <div class="modal-header bg-warning text-dark py-3">
-                <h5 class="modal-title fw-bold"><i class="bi bi-bell-fill me-2"></i>Notificaciones de Soporte Técnico</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4" id="contenedorNotificacionesJr">
-                <!-- Contenido dinámico para Soporte Jr -->
-            </div>
-            <div class="modal-footer bg-light border-0">
-                <button type="button" class="btn btn-secondary py-2 px-4 fw-bold" data-bs-dismiss="modal">Cerrar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script type="module">
@@ -630,7 +574,7 @@
     const config = { databaseURL: "https://gromasis-9c094-default-rtdb.firebaseio.com/" };
     const db = getDatabase(initializeApp(config));
     
-    let store = { colorcenter:{}, redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, servidores: {}, sucursales: {}, usuarios: {}, modulos_dinamicos: {}, notificaciones: {} };
+    let store = { colorcenter:{}, redes_inalambricas: {}, personal: {}, zonas: {}, empresas: {}, servidores: {}, sucursales: {}, usuarios: {}, modulos_dinamicos: {} };
     let currentPath = '';
     let currentAssignUserId = null;
     let loadsPending = Object.keys(store).length;
@@ -649,7 +593,7 @@
     const defaultIcons = [
         "bi-app-indicator", "bi-box-seam", "bi-cart-check", "bi-bar-chart", "bi-card-checklist",
         "bi-cpu", "bi-diagram-3", "bi-file-earmark-spreadsheet", "bi-folder", "bi-gear",
-        "bi-graph-up", "bi-headset", "bi-journal-bookmark", "bi-layers", "bi-truck",
+        "bi-graph-up", "bi-headset", "bi-journal-bookmark", "bi-layers", "bi-receipt",
         "bi-shield-lock", "bi-sliders", "bi-tools", "bi-truck", "bi-wallet2"
     ];
 
@@ -786,9 +730,6 @@
                 }
             });
         }
-
-        // Actualizar interfaz y botón de notificaciones para Soporte JR
-        actualizarUINotificacionesJr();
     };
 
     // HELPER: EVALÚA SI UN REGISTRO ES VISIBLE SEGÚN LAS SUCURSALES/EMPRESAS ASIGNADAS AL USUARIO LOGUEADO
@@ -824,160 +765,11 @@
         return true;
     };
 
-    // FUNCIONALIDADES DE NOTIFICACIONES PARA SOPORTE TÉCNICO JR Y COORDINADOR
-    const esSoporteJr = () => {
-        const puesto = (storedRole || "").trim().toUpperCase();
-        return puesto.includes("SOPORTE TÉCNICO JR") || puesto.includes("SOPORTE TECNICO JR") || puesto.includes("JR");
-    };
-
-    const actualizarUINotificacionesJr = () => {
-        const btnNotif = document.getElementById("btnNotificacionesJr");
-        const badgeNotif = document.getElementById("badgeNotificaciones");
-        if (!btnNotif || !badgeNotif) return;
-
-        if (esSoporteJr()) {
-            btnNotif.classList.remove("d-none");
-            btnNotif.classList.add("d-flex");
-
-            const notifs = store.notificaciones || {};
-            const totalCount = Object.keys(notifs).length;
-            badgeNotif.innerText = totalCount;
-            if (totalCount > 0) {
-                btnNotif.classList.add("btn-warning");
-                btnNotif.classList.remove("btn-outline-warning");
-            } else {
-                btnNotif.classList.remove("btn-warning");
-                btnNotif.classList.add("btn-outline-warning");
-            }
-        } else {
-            btnNotif.classList.add("d-none");
-            btnNotif.classList.remove("d-flex");
-        }
-    };
-
-    window.openModalNotificaciones = (itemPath, itemId) => {
-        document.getElementById("notifTargetItemPath").value = itemPath;
-        document.getElementById("notifTargetItemId").value = itemId;
-        document.getElementById("txtNotifMensaje").value = "";
-
-        renderListaNotificacionesRegistro(itemPath, itemId);
-        new bootstrap.Modal(document.getElementById("modalNotificaciones")).show();
-    };
-
-    const renderListaNotificacionesRegistro = (itemPath, itemId) => {
-        const container = document.getElementById("listaNotificacionesRegistro");
-        if (!container) return;
-
-        const notifs = store.notificaciones || {};
-        const filtradas = Object.keys(notifs).filter(k => notifs[k].itemPath === itemPath && notifs[k].itemId === itemId);
-
-        if (filtradas.length === 0) {
-            container.innerHTML = `<div class="text-muted small text-center py-2">No hay notificaciones enviadas para este registro.</div>`;
-            return;
-        }
-
-        container.innerHTML = filtradas.map(k => {
-            const n = notifs[k];
-            return `
-                <div class="card mb-2 shadow-sm border-0">
-                    <div class="card-body p-2 d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="fw-bold text-dark small">${n.mensaje || ''}</div>
-                            <div class="text-muted" style="font-size:0.7rem;">De: ${n.emisor || 'ADMIN'} | Fecha: ${n.fecha || ''}</div>
-                        </div>
-                        <button class="btn btn-sm btn-outline-danger border-0" onclick="quitarNotificacion('${k}')" title="Quitar mensaje">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    };
-
-    window.enviarNotificacion = async () => {
-        const itemPath = document.getElementById("notifTargetItemPath").value;
-        const itemId = document.getElementById("notifTargetItemId").value;
-        const mensaje = document.getElementById("txtNotifMensaje").value.trim();
-
-        if (!mensaje) {
-            Swal.fire("Atención", "Por favor ingrese un mensaje de notificación.", "warning");
-            return;
-        }
-
-        const notifData = {
-            itemPath,
-            itemId,
-            mensaje,
-            emisor: storedName ? storedName.toUpperCase() : "COORDINADOR",
-            fecha: new Date().toLocaleString('es-MX')
-        };
-
-        try {
-            await push(ref(db, "notificaciones"), notifData);
-            document.getElementById("txtNotifMensaje").value = "";
-            renderListaNotificacionesRegistro(itemPath, itemId);
-            Swal.fire({ icon: "success", title: "Notificación Enviada a Soporte Jr", timer: 1200, showConfirmButton: false });
-        } catch (e) {
-            Swal.fire("Error", e.message, "error");
-        }
-    };
-
-    window.quitarNotificacion = async (notifId) => {
-        try {
-            await remove(ref(db, `notificaciones/${notifId}`));
-            const itemPath = document.getElementById("notifTargetItemPath").value;
-            const itemId = document.getElementById("notifTargetItemId").value;
-            renderListaNotificacionesRegistro(itemPath, itemId);
-            Swal.fire({ icon: "success", title: "Notificación Eliminada", timer: 1000, showConfirmButton: false });
-        } catch (e) {
-            Swal.fire("Error", e.message, "error");
-        }
-    };
-
-    window.verNotificacionesJr = () => {
-        const container = document.getElementById("contenedorNotificacionesJr");
-        if (!container) return;
-
-        const notifs = store.notificaciones || {};
-        const keys = Object.keys(notifs);
-
-        if (keys.length === 0) {
-            container.innerHTML = `<div class="text-center text-muted py-4"><i class="bi bi-bell-slash fs-1 d-block mb-2"></i>No tienes notificaciones pendientes.</div>`;
-        } else {
-            container.innerHTML = keys.map(k => {
-                const n = notifs[k];
-                return `
-                    <div class="card mb-3 border-warning shadow-sm">
-                        <div class="card-header bg-warning bg-opacity-25 fw-bold d-flex justify-content-between align-items-center">
-                            <span><i class="bi bi-chat-left-dots-fill me-2 text-dark"></i>Mensaje de Soporte</span>
-                            <small class="text-muted" style="font-size:0.75rem;">${n.fecha || ''}</small>
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text fw-semibold text-dark fs-6">${n.mensaje || ''}</p>
-                            <div class="text-end text-secondary small">Enviado por: <strong>${n.emisor || 'COORDINACIÓN'}</strong></div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        new bootstrap.Modal(document.getElementById("modalVerNotificacionesJr")).show();
-    };
-
     Object.keys(store).forEach(path => {
         onValue(ref(db, path), (s) => {
             store[path] = s.val() || {};
             if (path === 'modulos_dinamicos') {
                 renderDynamicModules();
-            }
-            if (path === 'notificaciones') {
-                actualizarUINotificacionesJr();
-                const modalNotifEl = document.getElementById("modalNotificaciones");
-                if (modalNotifEl && modalNotifEl.classList.contains('show')) {
-                    const itemPath = document.getElementById("notifTargetItemPath").value;
-                    const itemId = document.getElementById("notifTargetItemId").value;
-                    renderListaNotificacionesRegistro(itemPath, itemId);
-                }
             }
             if (loadsPending > 0) loadsPending--;
             if (loadsPending === 0) {
@@ -1275,7 +1067,7 @@
                 `;
             }
             
-            html += `<th class="text-end" style="width: 150px;">Acciones</th>
+            html += `<th class="text-end" style="width: 120px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>`;
@@ -1303,7 +1095,6 @@
                         ${path !== 'personal' ? `<td><small>${passMostrar}</small></td>` : ''}
                         <td><span class="badge ${badgeClass}">${r.statusActual || 'ACTIVO'}</span></td>
                         <td class="text-end">
-                            <button class="btn btn-sm btn-outline-warning border-0" onclick="openModalNotificaciones('${path}', '${id}')" title="Notificar a Soporte Jr"><i class="bi bi-bell"></i></button>
                             <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
                             ${path !== 'personal' ? `<button class="btn btn-sm btn-outline-success border-0" onclick="openEmpresaModal('${id}')"><i class="bi bi-building"></i></button>` : ''}
@@ -1319,7 +1110,6 @@
                         <td>${r.modeloRevolvedora || '-'}</td>
                         <td>${r.imgRevolvedora ? `<img src="${r.imgRevolvedora}" style="height:40px; border-radius:4px;">` : '-'}</td>
                         <td class="text-end">
-                            <button class="btn btn-sm btn-outline-warning border-0" onclick="openModalNotificaciones('${path}', '${id}')" title="Notificar a Soporte Jr"><i class="bi bi-bell"></i></button>
                             <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
                         </td>
@@ -1339,7 +1129,6 @@
                         <td>${r.accesoModem || '-'}</td>
                         <td><small>${r.fechaActualizacion || '-'}</small></td>
                         <td class="text-end">
-                            <button class="btn btn-sm btn-outline-warning border-0" onclick="openModalNotificaciones('${path}', '${id}')" title="Notificar a Soporte Jr"><i class="bi bi-bell"></i></button>
                             <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
                         </td>
@@ -1351,7 +1140,6 @@
                         <td class="text-start">${r.nombre || ''}</td>
                         ${path === 'sucursales' ? `<td><span class="badge bg-secondary">${r.camaras || '0'}</span></td>` : ''}
                         <td class="text-end">
-                            <button class="btn btn-sm btn-outline-warning border-0" onclick="openModalNotificaciones('${path}', '${id}')" title="Notificar a Soporte Jr"><i class="bi bi-bell"></i></button>
                             <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
                         </td>
@@ -2018,17 +1806,382 @@
             }
         }
 
-        bootstrap.Modal.getInstance(document.getElementById("modalApp")).show();
+        bootstrap.Modal.getInstance(document.getElementById("modalApp")).hide();
         Swal.fire({ icon: "success", title: "Guardado Completado", timer: 1000, showConfirmButton: false });
     };
 
     window.del = async (p, id) => {
         const res = await Swal.fire({ title: '¿Eliminar?', icon: 'warning', showCancelButton: true });
-        if(res.isConfirmed) {
-            await remove(ref(db, `${p}/${id}`));
-            Swal.fire({ icon: "success", title: "Eliminado", timer: 1000, showConfirmButton: false });
+        if (res.isConfirmed) await remove(ref(db, `${p}/${id}`));
+    };
+
+    window.toggleSidebar = () => {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('main-content').classList.toggle('shifted');
+    };
+
+    document.getElementById("checkMasivo").onchange = (e) => {
+        const checked = e.target.checked;
+        document.getElementById("secMasivo").classList.toggle('d-none', !checked);
+        document.getElementById("secIndividual").classList.toggle('d-none', checked);
+        if (currentPath === 'redes_inalambricas') {
+            document.getElementById("secRedesInalambricas").classList.toggle('d-none', checked);
+        } else if (['usuarios', 'personal'].includes(currentPath)) {
+            document.getElementById("secFormIndividualUP").classList.toggle('d-none', checked);
         }
     };
+
+    // ==========================================
+    // RECONSTRUCCIÓN DEL MODAL DE ASIGNACIÓN (SUCURSALES Y MÓDULOS)
+    // ==========================================
+
+    window.openEmpresaModal = (userId) => {
+        currentAssignUserId = userId;
+        const userObj = store.usuarios[userId] || store.personal[userId] || {};
+        
+        const modalTitle = document.getElementById('modalEmpresasTitle');
+        if (modalTitle) {
+            modalTitle.innerText = `Asignar Permisos a: ${userObj.nombreCompleto || 'Usuario'}`;
+        }
+
+        renderEmpresaTree(userObj);
+        renderModulosTree(userObj);
+
+        const tabEl = document.querySelector('#tabAsignacion button[data-bs-target="#tab-sucursales"]');
+        if (tabEl) {
+            const tab = bootstrap.Tab.getOrCreateInstance(tabEl);
+            tab.show();
+        }
+
+        new bootstrap.Modal(document.getElementById("modalEmpresas")).show();
+    };
+
+    const renderEmpresaTree = (userObj) => {
+        const treeContainer = document.getElementById('empresa-tree');
+        if (!treeContainer) return;
+
+        const asignacionesActuales = userObj.asignacionSucursales || [];
+        const empresas = Object.values(store.empresas || {}).map(e => e.nombre).filter(Boolean).sort();
+        const zonas = Object.values(store.zonas || {});
+        const sucursales = Object.values(store.sucursales || {});
+
+        if (empresas.length === 0) {
+            treeContainer.innerHTML = '<div class="text-muted small">No hay empresas registradas.</div>';
+            return;
+        }
+
+        let html = '';
+
+        empresas.forEach((emp, empIdx) => {
+            const empId = `tree_emp_${empIdx}`;
+            const empMatch = asignacionesActuales.find(a => (a.empresa || '').toUpperCase() === emp.toUpperCase());
+            const empChecked = !!empMatch;
+
+            const zonasEmp = zonas.filter(z => (z.empresa || '').toUpperCase() === emp.toUpperCase()).map(z => z.nombre).filter(Boolean).sort();
+
+            html += `
+                <div class="tree-node mb-2">
+                    <div class="tree-row">
+                        <input class="form-check-input chk-tree-emp" type="checkbox" id="${empId}" data-empresa="${emp}" ${empChecked ? 'checked' : ''} onchange="toggleEmpTreeBranch('${empId}')">
+                        <label class="form-check-label fw-bold text-dark small" for="${empId}">
+                            <i class="bi bi-building me-1 text-primary"></i> ${emp}
+                        </label>
+                    </div>
+                    <div class="tree-level ms-3" id="sub_${empId}">
+            `;
+
+            zonasEmp.forEach((zona, zonIdx) => {
+                const zonId = `${empId}_zon_${zonIdx}`;
+                const zonaMatch = empMatch && Array.isArray(empMatch.zonas) ? empMatch.zonas.find(z => (z.zona || '').toUpperCase() === zona.toUpperCase()) : null;
+                const zonChecked = !!zonaMatch;
+
+                const sucsZona = sucursales.filter(s => (s.empresa || '').toUpperCase() === emp.toUpperCase() && (s.zona || '').toUpperCase() === zona.toUpperCase()).map(s => s.nombre).filter(Boolean).sort();
+
+                html += `
+                    <div class="tree-node mb-1">
+                        <div class="tree-row">
+                            <input class="form-check-input chk-tree-zon" type="checkbox" id="${zonId}" data-empresa="${emp}" data-zona="${zona}" ${zonChecked ? 'checked' : ''} onchange="toggleZonTreeBranch('${zonId}', '${empId}')">
+                            <label class="form-check-label fw-semibold text-secondary small" for="${zonId}">
+                                <i class="bi bi-geo-alt me-1 text-info"></i> ${zona}
+                            </label>
+                        </div>
+                        <div class="tree-level ms-3" id="sub_${zonId}">
+                `;
+
+                sucsZona.forEach((suc, sucIdx) => {
+                    const sucId = `${zonId}_suc_${sucIdx}`;
+                    const sucChecked = zonaMatch && Array.isArray(zonaMatch.sucursales) ? zonaMatch.sucursales.some(s => s.toUpperCase() === suc.toUpperCase()) : false;
+
+                    html += `
+                        <div class="tree-row">
+                            <input class="form-check-input chk-tree-suc" type="checkbox" id="${sucId}" data-empresa="${emp}" data-zona="${zona}" data-sucursal="${suc}" ${sucChecked ? 'checked' : ''} onchange="syncBranchState('${zonId}', '${empId}')">
+                            <label class="form-check-label text-dark small" for="${sucId}">
+                                <i class="bi bi-shop me-1 text-success"></i> ${suc}
+                            </label>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+        });
+
+        treeContainer.innerHTML = html;
+
+        // Sincronizar estado inicial (indeterminate/checked)
+        empresas.forEach((emp, empIdx) => {
+            const empId = `tree_emp_${empIdx}`;
+            const subEmp = document.getElementById(`sub_${empId}`);
+            if (!subEmp) return;
+            const zonChecks = subEmp.querySelectorAll('.chk-tree-zon');
+            zonChecks.forEach(zc => {
+                const zonId = zc.id;
+                syncBranchState(zonId, empId);
+            });
+        });
+    };
+
+    window.toggleEmpTreeBranch = (empId) => {
+        const empChk = document.getElementById(empId);
+        const subContainer = document.getElementById(`sub_${empId}`);
+        if (!empChk || !subContainer) return;
+
+        const isChecked = empChk.checked;
+        subContainer.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+            chk.checked = isChecked;
+            chk.indeterminate = false;
+        });
+        empChk.indeterminate = false;
+    };
+
+    window.toggleZonTreeBranch = (zonId, empId) => {
+        const zonChk = document.getElementById(zonId);
+        const subContainer = document.getElementById(`sub_${zonId}`);
+        if (!zonChk || !subContainer) return;
+
+        const isChecked = zonChk.checked;
+        subContainer.querySelectorAll('.chk-tree-suc').forEach(chk => {
+            chk.checked = isChecked;
+        });
+        zonChk.indeterminate = false;
+
+        syncBranchState(zonId, empId);
+    };
+
+    window.syncBranchState = (zonId, empId) => {
+        const zonChk = document.getElementById(zonId);
+        const subZon = document.getElementById(`sub_${zonId}`);
+        
+        if (zonChk && subZon) {
+            const sucChecks = Array.from(subZon.querySelectorAll('.chk-tree-suc'));
+            if (sucChecks.length > 0) {
+                const checkedCount = sucChecks.filter(c => c.checked).length;
+                if (checkedCount === sucChecks.length) {
+                    zonChk.checked = true;
+                    zonChk.indeterminate = false;
+                } else if (checkedCount === 0) {
+                    zonChk.checked = false;
+                    zonChk.indeterminate = false;
+                } else {
+                    zonChk.checked = false;
+                    zonChk.indeterminate = true;
+                }
+            }
+        }
+
+        const empChk = document.getElementById(empId);
+        const subEmp = document.getElementById(`sub_${empId}`);
+        if (empChk && subEmp) {
+            const allChildChecks = Array.from(subEmp.querySelectorAll('.chk-tree-zon, .chk-tree-suc'));
+            const checkedCount = allChildChecks.filter(c => c.checked || c.indeterminate).length;
+            const fullyCheckedCount = allChildChecks.filter(c => c.checked && !c.indeterminate).length;
+
+            if (fullyCheckedCount === allChildChecks.length) {
+                empChk.checked = true;
+                empChk.indeterminate = false;
+            } else if (checkedCount === 0) {
+                empChk.checked = false;
+                empChk.indeterminate = false;
+            } else {
+                empChk.checked = false;
+                empChk.indeterminate = true;
+            }
+        }
+    };
+
+    const renderModulosTree = (userObj) => {
+        const modulosContainer = document.getElementById('modulos-tree');
+        if (!modulosContainer) return;
+
+        const permitidos = userObj.modulosPermitidos || [];
+
+        const staticModules = [
+            { id: 'link-dashboard', label: 'Inicio', icon: 'bi-house-door' },
+            { id: 'link-empresas', label: 'Empresas', icon: 'bi-building' },
+            { id: 'link-servidores', label: 'Servidores', icon: 'bi-hdd-network' },
+            { id: 'link-zonas', label: 'Zonas', icon: 'bi-geo-alt' },
+            { id: 'link-sucursales', label: 'Sucursales', icon: 'bi-shop' },
+            { id: 'link-usuarios', label: 'Usuarios', icon: 'bi-person-lines-fill' },
+            { id: 'link-personal', label: 'Personal', icon: 'bi-people' },
+            { id: 'link-redes_inalambricas', label: 'Redes Inalámbricas', icon: 'bi-wifi' },
+            { id: 'link-colorcenter', label: 'Colorcenter', icon: 'bi-file-earmark-text' }
+        ];
+
+        const dynamicMods = store.modulos_dinamicos || {};
+        const dynamicList = Object.keys(dynamicMods).map(key => ({
+            id: `link-mod-${key}`,
+            label: dynamicMods[key].nombre,
+            icon: dynamicMods[key].tipoIcono === 'gallery' ? (dynamicMods[key].icono || 'bi-app-indicator') : 'bi-app-indicator'
+        }));
+
+        const allModules = [...staticModules, ...dynamicList];
+
+        let html = `
+            <div class="mb-2 pb-2 border-bottom d-flex justify-content-between align-items-center">
+                <span class="fw-bold small text-secondary">MÓDULOS DEL SISTEMA</span>
+                <div class="form-check form-check-inline m-0">
+                    <input class="form-check-input" type="checkbox" id="chkSelectAllModulos" onchange="toggleAllModulosPermisos(this)">
+                    <label class="form-check-label small fw-bold" for="chkSelectAllModulos">Seleccionar Todos</label>
+                </div>
+            </div>
+            <div class="row g-2">
+        `;
+
+        allModules.forEach((m, idx) => {
+            const isChecked = permitidos.length === 0 || permitidos.includes(m.id);
+            html += `
+                <div class="col-md-6">
+                    <div class="form-check p-2 border rounded background-light">
+                        <input class="form-check-input chk-modulo-permiso" type="checkbox" value="${m.id}" id="chkMod_${idx}" ${isChecked ? 'checked' : ''} onchange="syncSelectAllModulosHeader()">
+                        <label class="form-check-label small fw-semibold text-dark ms-1" for="chkMod_${idx}">
+                            <i class="bi ${m.icon} me-1 text-primary"></i> ${m.label}
+                        </label>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        modulosContainer.innerHTML = html;
+        syncSelectAllModulosHeader();
+    };
+
+    window.toggleAllModulosPermisos = (master) => {
+        const checks = document.querySelectorAll('#modulos-tree .chk-modulo-permiso');
+        checks.forEach(c => c.checked = master.checked);
+    };
+
+    window.syncSelectAllModulosHeader = () => {
+        const master = document.getElementById('chkSelectAllModulos');
+        if (!master) return;
+        const checks = Array.from(document.querySelectorAll('#modulos-tree .chk-modulo-permiso'));
+        if (checks.length === 0) return;
+        const checkedCount = checks.filter(c => c.checked).length;
+
+        if (checkedCount === checks.length) {
+            master.checked = true;
+            master.indeterminate = false;
+        } else if (checkedCount === 0) {
+            master.checked = false;
+            master.indeterminate = false;
+        } else {
+            master.checked = false;
+            master.indeterminate = true;
+        }
+    };
+
+    window.guardarAsignacion = async () => {
+        if (!currentAssignUserId) return;
+
+        // 1. Recolectar Árbol de Sucursales
+        let asignacionSucursales = [];
+        const empTreeNodes = document.querySelectorAll('#empresa-tree > .tree-node');
+
+        empTreeNodes.forEach(empNode => {
+            const empChk = empNode.querySelector('.chk-tree-emp');
+            if (!empChk || (!empChk.checked && !empChk.indeterminate)) return;
+
+            const empresaNombre = empChk.dataset.empresa;
+            let zonasList = [];
+
+            const zonNodes = empNode.querySelectorAll('.tree-level > .tree-node');
+            zonNodes.forEach(zonNode => {
+                const zonChk = zonNode.querySelector('.chk-tree-zon');
+                if (!zonChk || (!zonChk.checked && !zonChk.indeterminate)) return;
+
+                const zonaNombre = zonChk.dataset.zona;
+                let sucursalesList = [];
+
+                const sucChks = zonNode.querySelectorAll('.chk-tree-suc:checked');
+                sucChks.forEach(sc => {
+                    if (sc.dataset.sucursal) sucursalesList.push(sc.dataset.sucursal);
+                });
+
+                zonasList.push({
+                    zona: zonaNombre,
+                    sucursales: sucursalesList
+                });
+            });
+
+            asignacionSucursales.push({
+                empresa: empresaNombre,
+                zonas: zonasList
+            });
+        });
+
+        // 2. Recolectar Módulos Permitidos
+        const modulosChecks = document.querySelectorAll('#modulos-tree .chk-modulo-permiso:checked');
+        const modulosPermitidos = Array.from(modulosChecks).map(c => c.value);
+
+        const path = store.usuarios[currentAssignUserId] ? 'usuarios' : 'personal';
+
+        try {
+            await update(ref(db, `${path}/${currentAssignUserId}`), {
+                asignacionSucursales: asignacionSucursales,
+                modulosPermitidos: modulosPermitidos
+            });
+
+            bootstrap.Modal.getInstance(document.getElementById("modalEmpresas")).hide();
+            Swal.fire({ icon: "success", title: "Permisos Guardados Correctamente", timer: 1200, showConfirmButton: false });
+            
+            aplicarPermisosMenu();
+            if (currentPath === '') renderDashboard();
+            else render(currentPath);
+        } catch (e) {
+            Swal.fire("Error", e.message, "error");
+        }
+    };
+   
 </script>
+    <script>
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.onkeydown = e => {
+        if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || (e.ctrlKey && e.keyCode == 85)) return false;
+    };
+</script>
+<!-- MODAL PLAN DE TRABAJO (CALENDARIO) -->
+<div class="modal fade" id="modalPlanTrabajo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white py-2">
+                <h6 class="modal-title fw-bold m-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-calendar-event text-primary"></i> Plan de Trabajo / Agenda
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" style="height: 80vh; min-height: 500px;">
+                <iframe src="ptrabajo.html" style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
