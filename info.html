@@ -225,7 +225,13 @@
         style="height: 42px; width: 42px; border-radius: 8px;">
             <i class="bi bi-calendar-event fs-5"></i>
         </button>
-
+        <!-- Botón de Actividades (Solo visible para Soporte Técnico JR) -->
+        <button type="button" id="btnMisActividades" class="btn btn-warning d-none align-items-center justify-content-center p-2 position-relative" 
+        title="Mis Actividades" onclick="verMisActividades()" 
+        style="height: 42px; width: 42px; border-radius: 8px;">
+            <i class="bi bi-bell-fill fs-5"></i>
+            <span id="badgeActividades" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size:0.6rem;">0</span>
+        </button>
         <!-- Botón para Salir -->
         <a href="index.html" class="btn btn-danger d-flex align-items-center justify-content-center p-2" 
            title="Cerrar Sesión" style="height: 42px; width: 42px; border-radius: 8px;">
@@ -548,7 +554,34 @@
     </div>
   </div>
 </div>
-
+<!-- MODAL ASIGNAR ACTIVIDADES / AVISOS -->
+<div class="modal fade" id="modalActividades" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0">
+      <div class="modal-header bg-dark text-white py-3">
+        <h5 class="modal-title fw-bold"><i class="bi bi-bell-fill me-2 text-warning"></i>Asignar Actividades / Avisos</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <input type="hidden" id="actUserId">
+        <div class="mb-3">
+          <label class="form-label fw-bold small">Nueva Actividad / Mensaje</label>
+          <textarea id="actMensaje" class="form-control" rows="3" placeholder="Escribe la actividad o aviso para el técnico..."></textarea>
+        </div>
+        <div class="mb-2">
+          <label class="form-label fw-bold small">Actividades Asignadas Actualmente</label>
+          <ul class="list-group" id="listaActividades">
+            <li class="list-group-item text-muted small">Sin actividades</li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer bg-light border-0 px-4 pb-4">
+        <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-warning fw-bold text-dark" onclick="guardarActividad()"><i class="bi bi-plus-lg me-1"></i>Agregar Aviso</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script type="module">
@@ -775,6 +808,7 @@
             if (loadsPending === 0) {
                 renderDynamicModules();
                 aplicarPermisosMenu();
+                verificarMisActividades(); // <-- AGREGA ESTA LÍNEA
                 if (urlParams.get('tipo') === 'colorcenter') {
                     render('colorcenter');
                 } else if (currentPath === '') {
@@ -1098,6 +1132,11 @@
                             <button class="btn btn-sm btn-outline-secondary border-0" onclick="showModal('${path}', '${id}')"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-danger border-0" onclick="del('${path}', '${id}')"><i class="bi bi-trash"></i></button>
                             ${path !== 'personal' ? `<button class="btn btn-sm btn-outline-success border-0" onclick="openEmpresaModal('${id}')"><i class="bi bi-building"></i></button>` : ''}
+                            ${path !== 'personal' && (r.puesto || '').toUpperCase().includes('SOPORTE TECNICO JR') ? `
+                            <button class="btn btn-sm btn-outline-warning border-0 position-relative" onclick="openActividadesModal('${id}')" title="Asignar Actividades">
+                                <i class="bi bi-bell-fill"></i>
+                                ${(r.actividadesAsignadas && r.actividadesAsignadas.length > 0) ? `<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.55rem;">${r.actividadesAsignadas.length}</span>` : ''}
+                            </button>` : ''}
                         </td>
                     </tr>`;
                 } else if (path === 'colorcenter') {
@@ -2159,7 +2198,145 @@
             Swal.fire("Error", e.message, "error");
         }
     };
-   
+       // ==========================================
+    // FUNCIONES PARA ASIGNAR ACTIVIDADES / AVISOS
+    // ==========================================
+
+    window.openActividadesModal = (userId) => {
+        const userObj = store.usuarios[userId] || {};
+        document.getElementById('actUserId').value = userId;
+        
+        const lista = document.getElementById('listaActividades');
+        const acts = userObj.actividadesAsignadas || [];
+        
+        if (acts.length === 0) {
+            lista.innerHTML = '<li class="list-group-item text-muted small">Sin actividades asignadas</li>';
+        } else {
+            lista.innerHTML = acts.map((act, idx) => `
+                <li class="list-group-item d-flex justify-content-between align-items-start small py-2">
+                    <div class="text-start">
+                        <div class="fw-semibold text-dark">${act.mensaje || ''}</div>
+                        <small class="text-muted">${act.fecha || ''}</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger border-0 ms-2" onclick="eliminarActividad('${userId}', ${idx})" title="Quitar actividad">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </li>
+            `).join('');
+        }
+        
+        document.getElementById('actMensaje').value = '';
+        new bootstrap.Modal(document.getElementById("modalActividades")).show();
+    };
+
+    window.guardarActividad = async () => {
+        const userId = document.getElementById('actUserId').value;
+        const mensaje = document.getElementById('actMensaje').value.trim();
+        
+        if (!mensaje) {
+            Swal.fire("Atención", "Escribe un mensaje para la actividad.", "warning");
+            return;
+        }
+        
+        const userObj = store.usuarios[userId] || {};
+        const actividades = userObj.actividadesAsignadas ? [...userObj.actividadesAsignadas] : [];
+        
+        actividades.push({
+            mensaje: mensaje.toUpperCase(),
+            fecha: new Date().toLocaleDateString('es-MX'),
+            leido: false
+        });
+        
+        try {
+            await update(ref(db, `usuarios/${userId}`), { actividadesAsignadas: actividades });
+            Swal.fire({ icon: "success", title: "Actividad Asignada", timer: 1000, showConfirmButton: false });
+            openActividadesModal(userId);
+            if (currentPath === 'usuarios') render('usuarios');
+        } catch (e) {
+            Swal.fire("Error", e.message, "error");
+        }
+    };
+
+    window.eliminarActividad = async (userId, idx) => {
+        const userObj = store.usuarios[userId] || {};
+        const actividades = userObj.actividadesAsignadas ? [...userObj.actividadesAsignadas] : [];
+        actividades.splice(idx, 1);
+        
+        try {
+            await update(ref(db, `usuarios/${userId}`), { actividadesAsignadas: actividades.length > 0 ? actividades : null });
+            openActividadesModal(userId);
+            if (currentPath === 'usuarios') render('usuarios');
+        } catch (e) {
+            Swal.fire("Error", e.message, "error");
+        }
+    };
+
+    // Helper para obtener ID y path del usuario logueado
+    const getCurrentUserKey = () => {
+        const currentUserNombre = storedName ? storedName.toUpperCase().trim() : '';
+        if (!currentUserNombre) return null;
+        
+        let key = Object.keys(store.usuarios || {}).find(k => (store.usuarios[k].nombreCompleto || '').toUpperCase().trim() === currentUserNombre);
+        if (key) return { key, path: 'usuarios' };
+        
+        key = Object.keys(store.personal || {}).find(k => (store.personal[k].nombreCompleto || '').toUpperCase().trim() === currentUserNombre);
+        if (key) return { key, path: 'personal' };
+        return null;
+    };
+
+    window.verMisActividades = async () => {
+        const usrObj = getCurrentUserObj();
+        if (!usrObj) return;
+        
+        const acts = usrObj.actividadesAsignadas || [];
+        if (acts.length === 0) {
+            Swal.fire("Sin Actividades", "No tienes actividades asignadas actualmente.", "info");
+            return;
+        }
+        
+        const html = acts.map((act) => `
+            <div class="text-start mb-2 p-2 border rounded bg-light">
+                <div class="fw-bold small text-dark">${act.mensaje || ''}</div>
+                <div class="text-muted" style="font-size:0.75rem;">${act.fecha || 'Sin fecha'}</div>
+            </div>
+        `).join('');
+        
+        await Swal.fire({
+            title: '<i class="bi bi-bell-fill text-warning"></i> Mis Actividades / Avisos',
+            html: `<div style="max-height:300px; overflow-y:auto;">${html}</div>`,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#0f172a',
+            width: '500px'
+        });
+        
+        // Marcar como leídas
+        const userRef = getCurrentUserKey();
+        if (userRef) {
+            const updatedActs = acts.map(a => ({...a, leido: true}));
+            await update(ref(db, `${userRef.path}/${userRef.key}`), { actividadesAsignadas: updatedActs });
+            verificarMisActividades();
+        }
+    };
+
+    const verificarMisActividades = () => {
+        const usrObj = getCurrentUserObj();
+        const puesto = (usrObj?.puesto || storedRole || "").toUpperCase();
+        const btn = document.getElementById('btnMisActividades');
+        if (!btn) return;
+        
+        if (puesto.includes('SOPORTE TECNICO JR')) {
+            btn.classList.remove('d-none');
+            const acts = usrObj?.actividadesAsignadas || [];
+            const noLeidos = acts.filter(a => !a.leido).length;
+            const badge = document.getElementById('badgeActividades');
+            if (noLeidos > 0) {
+                badge.innerText = noLeidos;
+                badge.classList.remove('d-none');
+            } else {
+                badge.classList.add('d-none');
+            }
+        }
+    };
 </script>
     <script>
     document.addEventListener('contextmenu', e => e.preventDefault());
@@ -2185,3 +2362,5 @@
 </div>
 </body>
 </html>
+
+
